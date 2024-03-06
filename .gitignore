@@ -1,44 +1,34 @@
-# Archivos generados por el compilador y paquetes
-/target/
-/build/
-/out/
-/dist/
+# Archivos generados por el compilador de Java
+gestor-gastos-back/target/
+gestor-gastos-back/build/
 
-# Directorios de dependencias
-/node_modules/
+# Dependencias de Node (Frontend)
+gestor-gastos-front/node_modules/
 
-# Archivos de paquete
+# Archivos de paquete y directorios de salida de compilación
 *.jar
 *.war
 *.ear
 *.zip
 *.tar.gz
 *.rar
+/gestor-gastos-front/dist/
+/gestor-gastos-front/build/
 
-# Archivos de configuración del IDE (VS Code)
-.vscode/
+# Archivos de configuración del IDE y sistema
 .idea/
 *.iml
-*.code-workspace
-.classpath
-.project
-.settings/
-
-# Sistema de archivos del sistema operativo
+.vscode/
 .DS_Store
 Thumbs.db
 
-# Archivos de logs y directorios
+# Archivos de logs
 *.log
-logs
 *.log.*
 
-# Directorios de entorno virtual
+# Directorios de entorno virtual y archivos de entorno
 venv/
 env/
-virtualenv/
-
-# Archivos de entorno
 .env
 .env.local
 .env.*.local
@@ -47,6 +37,3 @@ virtualenv/
 *.pem
 *.cert
 *.key
-
-# Directorio de salida de compilación para el frontend
-/public/
