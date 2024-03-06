@@ -1,58 +1,52 @@
-HELP.md
-target/
-!.mvn/wrapper/maven-wrapper.jar
-!**/src/main/**/target/
-!**/src/test/**/target/
-
-### STS ###
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-.sts4-cache
-
-### IntelliJ IDEA ###
-.idea
-*.iws
-*.iml
-*.ipr
-
-### NetBeans ###
-/nbproject/private/
-/nbbuild/
+# Archivos generados por el compilador y paquetes
+/target/
+/build/
+/out/
 /dist/
-/nbdist/
-/.nb-gradle/
-build/
-!**/src/main/**/build/
-!**/src/test/**/build/
 
-### VS Code ###
+# Directorios de dependencias
+/node_modules/
+
+# Archivos de paquete
+*.jar
+*.war
+*.ear
+*.zip
+*.tar.gz
+*.rar
+
+# Archivos de configuración del IDE (VS Code)
 .vscode/
+.idea/
+*.iml
+*.code-workspace
+.classpath
+.project
+.settings/
 
+# Sistema de archivos del sistema operativo
 .DS_Store
-node_modules
-/dist
+Thumbs.db
 
+# Archivos de logs y directorios
+*.log
+logs
+*.log.*
 
-# local env files
+# Directorios de entorno virtual
+venv/
+env/
+virtualenv/
+
+# Archivos de entorno
+.env
 .env.local
 .env.*.local
 
-# Log files
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-pnpm-debug.log*
+# Archivos de configuración de seguridad
+*.pem
+*.cert
+*.key
 
-# Editor directories and files
-.idea
-.vscode
-*.suo
-*.ntvs*
-*.njsproj
-*.sln
-*.sw?
-
+# Directorio de salida de compilación para el frontend
+/public/
