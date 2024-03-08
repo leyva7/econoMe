@@ -1,8 +1,15 @@
-import { createApp } from 'vue'
-import App from './App.vue'
+import { createApp } from 'vue';
+import App from './App.vue';
+import router from './router'; // Importa Vue Router
 
 import './assets/global.css'; 
 import '@fontsource/poppins';
 
+// Crea una instancia de la aplicación Vue
+const app = createApp(App);
 
-createApp(App).mount('#app')
+// Usa Vue Router
+app.use(router);
+
+// Monta la aplicación
+app.mount('#app');
