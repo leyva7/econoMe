@@ -1,6 +1,7 @@
 // src/router/index.js
 import { createRouter, createWebHistory } from 'vue-router';
 import FirstView from '@/views/First-view.vue';
+import UserRegister from '@/views/UserRegister.vue';
 
 const routes = [
   {
@@ -8,7 +9,11 @@ const routes = [
     name: 'login',
     component: FirstView,
   },
-  // Agrega más rutas según sea necesario
+  {
+    path: '/register',
+    name: 'register',
+    component: UserRegister, // Define la ruta para la vista de registro
+  },
 ];
 
 const router = createRouter({

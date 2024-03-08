@@ -30,7 +30,7 @@ methods: {
 };
 </script>
   
-  <!-- Agrega aquí tus estilos -->
+  
   <style scoped>
   .form-container {
     padding: 40px;
