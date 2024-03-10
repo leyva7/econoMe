@@ -13,8 +13,8 @@
         </div>
 
         <div class="form-group">
-          <label for="email">Correo Electrónico</label>
-          <input type="email" id="email" v-model.trim="user.email" required>
+          <label for="mail">Correo Electrónico</label>
+          <input type="email" id="mail" v-model.trim="user.mail" required>
         </div>
 
         <div class="form-group">
@@ -32,6 +32,7 @@
 
 <script>
 import { ref } from 'vue';
+import axios from 'axios'; // Importa Axios
 
 export default {
   name: 'UserRegister',
@@ -39,23 +40,41 @@ export default {
     const user = ref({
       name: '',
       surname: '',
-      email: '',
+      mail: '',
       password: ''
     });
 
-    const submitForm = () => {
-      if (!user.value.name || !user.value.surname || !user.value.email || !user.value.password) {
-        alert('Por favor, completa todos los campos.');
-        return;
-      }
-      console.log('Formulario enviado:', user.value);
-      // Aquí iría la lógica para procesar los datos del formulario
-    };
+    
 
-    return { user, submitForm };
+const submitForm = async () => {
+  if (!user.value.name || !user.value.surname || !user.value.mail || !user.value.password) {
+    alert('Por favor, completa todos los campos.');
+    return;
   }
+
+  try {
+    await axios.post('http://localhost:8081/api/users', user.value);
+    alert('Usuario registrado exitosamente.');
+    user.value = {
+      name: '',
+      surname: '',
+      mail: '',
+      password: ''
+    };
+  } catch (error) {
+    console.error('Error al registrar usuario:', error);
+    alert('Ocurrió un error al registrar el usuario. Por favor, inténtalo de nuevo.');
+  }
+
+
+};
+
+  return { user, submitForm };
+
+}
 };
 </script>
+
 
 <style scoped>
 .main-container{
@@ -89,7 +108,7 @@ export default {
 }
 
 input[type="text"],
-input[type="email"],
+input[type="mail"],
 input[type="password"] {
   padding: 10px 0;
   border: none;
@@ -99,7 +118,7 @@ input[type="password"] {
 }
 
 input[type="text"]:focus,
-input[type="email"]:focus,
+input[type="mail"]:focus,
 input[type="password"]:focus {
   outline: none;
   border-bottom-color: #007bff;

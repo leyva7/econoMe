@@ -1,19 +1,21 @@
 package com.econoMe.gestorgastosback.model;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
+import jakarta.persistence.*;
 
 @Entity
+@Table(name = "usuario")
 public class Usuario {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
     
+    @Column
     private String name;
+    @Column
     private String surname;
+    @Column
     private String mail;
+    @Column
     private String password;
 
     // Constructor sin argumentos
