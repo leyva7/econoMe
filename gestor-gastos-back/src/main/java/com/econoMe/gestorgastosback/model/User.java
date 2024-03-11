@@ -3,8 +3,8 @@ package com.econoMe.gestorgastosback.model;
 import jakarta.persistence.*;
 
 @Entity
-@Table(name = "usuario")
-public class Usuario {
+@Table(name = "users")
+public class User {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -19,11 +19,11 @@ public class Usuario {
     private String password;
 
     // Constructor sin argumentos
-    public Usuario() {
+    public User() {
     }
 
     // Constructor con todos los argumentos excepto el ID
-    public Usuario(String name, String surname, String mail, String password) {
+    public User(String name, String surname, String mail, String password) {
         this.name = name;
         this.surname = surname;
         this.mail = mail;
