@@ -18,10 +18,6 @@ public class User {
     @Column
     private String password;
 
-    // Constructor sin argumentos
-    public User() {
-    }
-
     // Constructor con todos los argumentos excepto el ID
     public User(String name, String surname, String mail, String password) {
         this.name = name;

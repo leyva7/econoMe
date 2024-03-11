@@ -15,24 +15,14 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-        http
-                // Inicia la configuración de autorización de solicitudes
-                .authorizeHttpRequests(authorize -> authorize
-                        // Configura rutas específicas
-                        .requestMatchers("/api/users/all").permitAll() // Permite el acceso sin autenticación a /api/users/all
-                        .requestMatchers("/home", "/").permitAll() // Ejemplo adicional, ajusta según tus necesidades
-                        .anyRequest().authenticated() // Requiere autenticación para cualquier otra solicitud
-                )
-                .formLogin(form -> form
-                        .loginPage("/login")
-                        .permitAll()
-                )
-                .logout(logout -> logout
-                        .permitAll()
-                )
-                .cors(Customizer.withDefaults()); // Habilita CORS con configuración predeterminada
-
-        return http.build();
+        return http
+                .authorizeHttpRequests()
+                    .requestMatchers("/api/users/all").permitAll()
+                    .anyRequest().authenticated()
+                .and()
+                .formLogin().permitAll()
+                .and()
+                .build();
     }
 
 
