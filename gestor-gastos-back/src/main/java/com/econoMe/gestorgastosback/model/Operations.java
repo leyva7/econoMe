@@ -6,77 +6,91 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 
 @Entity
+@Table(name = "operation")
 public class Operations {
+        public enum OperationType {
+            SPENT, INCOME
+        }
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+        @Id
+        @GeneratedValue(strategy = GenerationType.IDENTITY)
+        private Long id;
 
-    @ManyToOne
-    @JoinColumn(name = "id_accounting", referencedColumnName = "id")
-    private Accounting accounting;
+        @ManyToOne
+        @JoinColumn(name = "accounting_id", nullable = false)
+        private Accounting accounting;
 
-    @ManyToOne
-    @JoinColumn(name = "id_category", referencedColumnName = "id")
-    private Entrys category;
+        @Column(nullable = false)
+        private String description;
 
-    private String description;
-    private BigDecimal quantity;
-    private LocalDate fecha;
+        @Column(nullable = false)
+        private BigDecimal quantity;
 
-    public Operations(Accounting accounting, Entrys category, String description, BigDecimal quantity, LocalDate fecha) {
-        this.accounting = accounting;
-        this.category = category;
-        this.description = description;
-        this.quantity = quantity;
-        this.fecha = fecha;
-    }
+        @Column(nullable = false)
+        private LocalDate date;
 
-    public Long getId() {
-        return id;
-    }
+        @Enumerated(EnumType.STRING)
+        private OperationType type; // Enum para gasto o ingreso
 
-    public void setId(Long id) {
-        this.id = id;
-    }
 
-    public Accounting getAccounting() {
-        return accounting;
-    }
 
-    public void setAccounting(Accounting accounting) {
-        this.accounting = accounting;
-    }
+        public Operations() {
 
-    public Entrys getCategory() {
-        return category;
-    }
+        }
 
-    public void setCategory(Entrys category) {
-        this.category = category;
-    }
+        public Operations(Accounting accounting, OperationType type, String description, BigDecimal quantity, LocalDate date) {
+            this.accounting = accounting;
+            this.type = type;
+            this.description = description;
+            this.quantity = quantity;
+            this.date = date;
+        }
 
-    public String getDescription() {
-        return description;
-    }
+        public Long getId() {
+            return id;
+        }
 
-    public void setDescription(String description) {
-        this.description = description;
-    }
+        public void setId(Long id) {
+            this.id = id;
+        }
 
-    public BigDecimal getQuantity() {
-        return quantity;
-    }
+        public Accounting getAccounting() {
+            return accounting;
+        }
 
-    public void setQuantity(BigDecimal quantity) {
-        this.quantity = quantity;
-    }
+        public void setAccounting(Accounting accounting) {
+            this.accounting = accounting;
+        }
 
-    public LocalDate getFecha() {
-        return fecha;
-    }
+        public OperationType getType() {
+            return type;
+        }
 
-    public void setFecha(LocalDate fecha) {
-        this.fecha = fecha;
-    }
+        public void setType(OperationType type) {
+            this.type = type;
+        }
+
+        public String getDescription() {
+            return description;
+        }
+
+        public void setDescription(String description) {
+            this.description = description;
+        }
+
+        public BigDecimal getQuantity() {
+            return quantity;
+        }
+
+        public void setQuantity(BigDecimal quantity) {
+            this.quantity = quantity;
+        }
+
+        public LocalDate getDate() {
+            return date;
+        }
+
+        public void setDate(LocalDate date) {
+            this.date = date;
+        }
 }

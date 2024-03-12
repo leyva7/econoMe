@@ -31,19 +31,19 @@ public class UserController {
     }
 
     // Actualización de datos del usuario
-    @PutMapping("/{id}")
-    public ResponseEntity<User> updateUser(@PathVariable Long id, @RequestBody User userDetails) {
-        User updatedUser = userService.updateUser(id, userDetails);
+    @PutMapping("/{username}")
+    public ResponseEntity<User> updateUser(@PathVariable String username, @RequestBody User userDetails) {
+        User updatedUser = userService.updateUser(username, userDetails);
         return ResponseEntity.ok(updatedUser);
     }
 
     // Actualización de contraseña
-    @PutMapping("/{id}/password")
-    public ResponseEntity<?> updatePassword(@PathVariable Long id, @RequestBody Map<String, String> passwordDetails) {
+    @PutMapping("/{username}/password")
+    public ResponseEntity<?> updatePassword(@PathVariable String username, @RequestBody Map<String, String> passwordDetails) {
         String currentPassword = passwordDetails.get("currentPassword");
         String newPassword = passwordDetails.get("newPassword");
         try {
-            userService.updatePassword(id, currentPassword, newPassword);
+            userService.updatePassword(username, currentPassword, newPassword);
             return ResponseEntity.ok().build(); // Puedes devolver un mensaje de éxito si lo prefieres
         } catch (InvalidPasswordException e) {
             return ResponseEntity.badRequest().body("Contraseña actual incorrecta.");
@@ -55,9 +55,9 @@ public class UserController {
 
     // Aquí puedes agregar otros endpoints que necesites, siguiendo el mismo patrón
 
-    @GetMapping("/{id}")
-    public ResponseEntity<User> getUserById(@PathVariable Long id) {
-        User user = userService.getUserByID(id);
+    @GetMapping("/{username}")
+    public ResponseEntity<User> getUserByUsername(@PathVariable String username) {
+        User user = userService.getUserByUsername(username);
         return ResponseEntity.ok(user);
     }
 
@@ -69,9 +69,9 @@ public class UserController {
 
 
     // Ejemplo: Eliminar usuario
-    @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteUser(@PathVariable Long id) {
-        userService.deleteUser(id);
+    @DeleteMapping("/{username}")
+    public ResponseEntity<?> deleteUser(@PathVariable String username) {
+        userService.deleteUser(username);
         return ResponseEntity.ok().build();
     }
 }

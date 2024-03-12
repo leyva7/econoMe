@@ -3,18 +3,25 @@ package com.econoMe.gestorgastosback.model;
 import jakarta.persistence.*;
 
 @Entity
+@Table(name="accounting")
 public class Accounting {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
+    @Column(nullable = false)
     private String name;
+    @Column
     private String description;
 
     @ManyToOne
-    @JoinColumn(name = "id_creator", referencedColumnName = "id")
+    @JoinColumn(name = "creator_username", nullable = false)
     private User userCreator;
+
+    public Accounting() {
+
+    }
 
     public Accounting(String name, String description, User userCreator) {
         this.name = name;

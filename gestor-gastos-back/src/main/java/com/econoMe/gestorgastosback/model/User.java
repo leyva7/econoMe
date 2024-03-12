@@ -5,21 +5,26 @@ import jakarta.persistence.*;
 @Entity
 @Table(name = "users")
 public class User {
+
     @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
-    
-    @Column
+    private String username;
+
+    @Column(nullable = false)
     private String name;
-    @Column
+    @Column(nullable = false)
     private String surname;
-    @Column
+    @Column(nullable = false, unique = true)
     private String mail;
-    @Column
+    @Column(nullable = false)
     private String password;
 
-    // Constructor con todos los argumentos excepto el ID
-    public User(String name, String surname, String mail, String password) {
+    public User() {
+
+    }
+
+    // Constructor con todos los argumentos
+    public User(String username, String name, String surname, String mail, String password) {
+        this.username = username;
         this.name = name;
         this.surname = surname;
         this.mail = mail;
@@ -27,8 +32,8 @@ public class User {
     }
 
     // Getters
-    public Long getId() {
-        return id;
+    public String getUsername() {
+        return username;
     }
 
     public String getName() {
@@ -48,10 +53,10 @@ public class User {
     }
 
     // Setters
-    public void setId(Long id) {
-        this.id = id;
-    }
 
+    public void setUsername(String username) {
+        this.username = username;
+    }
     public void setName(String name) {
         this.name = name;
     }

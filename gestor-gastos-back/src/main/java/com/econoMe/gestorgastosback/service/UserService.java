@@ -3,7 +3,6 @@ package com.econoMe.gestorgastosback.service;
 import com.econoMe.gestorgastosback.model.User;
 import com.econoMe.gestorgastosback.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
@@ -23,6 +22,9 @@ public class UserService{
     @Autowired
     private PasswordEncoder passwordEncoder;
 
+    public UserService(UserRepository userRepository){
+        this.userRepository = userRepository;
+    }
     public User createUser(User user){
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         return userRepository.save(user);
@@ -32,21 +34,20 @@ public class UserService{
         return userRepository.findAll();
     }
 
-    public User getUserByID(Long id){
-        return userRepository.findById(id).orElseThrow(() -> new NoSuchElementException("No se encontró el usuario de ID: " + id));
+    public User getUserByUsername(String username){
+        return userRepository.findByUsername(username).orElseThrow(() -> new NoSuchElementException("No se encontró el usuario de ID: " + username));
     }
 
-    public User updateUser(Long id, User userData) {
-        User user = getUserByID(id);
-        user.setName(userData.getName());
-        user.setSurname(userData.getSurname());
-        user.setMail(userData.getMail());
+    public User updateUser(String username, User user){
+        if(user.getUsername() == null || !userRepository.existsById(username){
+            throw new IllegalStateException("La cuenta con el nombre de usuario " + user.getUsername() + " no existe.");
+        }
 
         return userRepository.save(user);
     }
 
-    public void updatePassword(Long userId, String passwordUser, String newPassword) {
-        User user = userRepository.findById(userId)
+    public void updatePassword(String username, String passwordUser, String newPassword) {
+        User user = userRepository.findById(username)
                 .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
 
         if (passwordEncoder.matches(passwordUser, user.getPassword())) {
@@ -58,8 +59,8 @@ public class UserService{
         }
     }
 
-    public void deleteUser(Long id) {
-        userRepository.deleteById(id);
+    public void deleteUser(String username) {
+        userRepository.deleteById(username);
     }
 
     public boolean validateCredentials(String mail, String password) {
