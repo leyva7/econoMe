@@ -1,5 +1,6 @@
 package com.econoMe.gestorgastosback.service;
 
+import com.econoMe.gestorgastosback.model.Accounting;
 import com.econoMe.gestorgastosback.model.Roles;
 import com.econoMe.gestorgastosback.model.RolesId;
 import com.econoMe.gestorgastosback.repository.AccountingRepository;
@@ -54,26 +55,30 @@ public class RolesService {
     }
 
     public boolean deleteRole(RolesId rolesId) {
-        // Comprueba si el rol existe antes de eliminarlo
         return rolesRepository.findById(rolesId).map(role -> {
             rolesRepository.delete(role);
             return true;
         }).orElse(false);
     }
 
-    public Optional<Roles> getRoleById(RolesId rolesId) {
+    public Optional<Roles> findRoleById(RolesId rolesId) {
         return rolesRepository.findById(rolesId);
     }
 
-    public List<Roles> getAllRoles() {
+    public List<Roles> findAllRoles() {
         return rolesRepository.findAll();
     }
 
-    // Método de ejemplo para comprobar si un usuario y una contabilidad existen
     public boolean validateUserAndAccountingExistence(String userUsername, Long accountingId) {
         boolean userExists = userRepository.existsById(userUsername);
         boolean accountingExists = accountingRepository.existsById(accountingId);
         return userExists && accountingExists;
     }
+
+    public void deleteByAccounting(Accounting accounting) {
+
+        rolesRepository.deleteByAccounting(accounting);
+    }
+
 
 }

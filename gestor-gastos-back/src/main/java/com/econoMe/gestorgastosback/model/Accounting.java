@@ -6,6 +6,10 @@ import jakarta.persistence.*;
 @Table(name="accounting")
 public class Accounting {
 
+    public enum Type {
+        PERSONAL, SHARED;
+    }
+
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
@@ -19,6 +23,9 @@ public class Accounting {
     @JoinColumn(name = "creator_username", nullable = false)
     private User userCreator;
 
+    @Enumerated(EnumType.STRING)
+    private Type type;
+
     public Accounting() {
 
     }
@@ -28,6 +35,15 @@ public class Accounting {
         this.description = description;
         this.userCreator = userCreator;
     }
+
+    public Type getType() {
+        return type;
+    }
+
+    public void setType(Type type) {
+        this.type = type;
+    }
+
     public Long getId() {
         return id;
     }

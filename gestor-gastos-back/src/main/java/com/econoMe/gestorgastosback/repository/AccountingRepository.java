@@ -9,4 +9,5 @@ import java.util.List;
 public interface AccountingRepository extends JpaRepository<Accounting, Long> {
 
     List<Accounting> findByUserCreator(User userCreator);
+
 }

@@ -31,13 +31,13 @@ public class OperationsController {
 
     @GetMapping("/{id}")
     public ResponseEntity<Operations> getUserById(@PathVariable Long id) {
-        Operations operation = operationsService.getOperationById(id);
+        Operations operation = operationsService.findById(id);
         return ResponseEntity.ok(operation);
     }
 
     @GetMapping("/all")
     public ResponseEntity<List<Operations>> getAllAccounting() {
-        List<Operations> operations = operationsService.getAllOperations();
+        List<Operations> operations = operationsService.findAllOperations();
         return ResponseEntity.ok(operations);
     }
 

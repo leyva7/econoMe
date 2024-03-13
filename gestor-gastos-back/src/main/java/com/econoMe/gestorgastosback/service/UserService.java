@@ -1,5 +1,6 @@
 package com.econoMe.gestorgastosback.service;
 
+import com.econoMe.gestorgastosback.exception.UserAlreadyExistsException;
 import com.econoMe.gestorgastosback.model.User;
 import com.econoMe.gestorgastosback.repository.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,8 +26,17 @@ public class UserService{
     public UserService(UserRepository userRepository){
         this.userRepository = userRepository;
     }
-    public User createUser(User user){
-        user.setPassword(passwordEncoder.encode(user.getPassword()));
+    public User createUser(User user) throws UserAlreadyExistsException {
+        // Verificar si el correo electrónico ya está en uso
+        if (userRepository.existsByMail(user.getMail())) {
+            throw new UserAlreadyExistsException("El correo electrónico ya está en uso");
+        }
+
+        // Verificar si el nombre de usuario ya está en uso
+        if (userRepository.existsByUsername(user.getUsername())) {
+            throw new UserAlreadyExistsException("El nombre de usuario ya está en uso");
+        }
+
         return userRepository.save(user);
     }
 
@@ -39,7 +49,7 @@ public class UserService{
     }
 
     public User updateUser(String username, User user){
-        if(user.getUsername() == null || !userRepository.existsById(username){
+        if(user.getUsername() == null || !userRepository.existsById(username)){
             throw new IllegalStateException("La cuenta con el nombre de usuario " + user.getUsername() + " no existe.");
         }
 

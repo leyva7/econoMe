@@ -53,14 +53,14 @@ public class RolesController {
     @GetMapping("/{userId}/{accountingId}")
     public ResponseEntity<Roles> findRoleById(@PathVariable String username, @PathVariable Long accountingId) {
         RolesId rolesId = new RolesId(username, accountingId);
-        return rolesService.getRoleById(rolesId)
+        return rolesService.findRoleById(rolesId)
                 .map(role -> new ResponseEntity<>(role, HttpStatus.OK))
                 .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
     @GetMapping("/all")
     public ResponseEntity<List<Roles>> findAllRoles() {
-        List<Roles> roles = rolesService.getAllRoles();
+        List<Roles> roles = rolesService.findAllRoles();
         return new ResponseEntity<>(roles, HttpStatus.OK);
     }
 }

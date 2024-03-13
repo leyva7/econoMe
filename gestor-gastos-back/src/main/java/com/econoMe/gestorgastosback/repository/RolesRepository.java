@@ -1,5 +1,6 @@
 package com.econoMe.gestorgastosback.repository;
 
+import com.econoMe.gestorgastosback.model.Accounting;
 import com.econoMe.gestorgastosback.model.Roles;
 import com.econoMe.gestorgastosback.model.RolesId;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -11,4 +12,7 @@ import java.util.Optional;
 public interface RolesRepository extends JpaRepository<Roles, RolesId> {
 
     Optional<Roles> findByUserUsernameAndAccountingId(String username, Long accountingId);
+
+    Boolean deleteByAccounting(Accounting accounting);
+
 }
