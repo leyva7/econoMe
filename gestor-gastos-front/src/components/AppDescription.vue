@@ -13,14 +13,6 @@
   <script>
   export default {
     name: 'ProductDescription',
-    methods: {
-      goToRegister() {
-        // Lógica para ir al registro
-      },
-      watchVideo() {
-        // Lógica para ver el video
-      },
-    },
   };
   </script>
   

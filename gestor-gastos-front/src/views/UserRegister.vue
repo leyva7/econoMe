@@ -3,6 +3,11 @@
     <div class="form-container">
       <form @submit.prevent="submitForm" class="register-form">
         <div class="form-group">
+          <label for="username">Nombre de usuario</label>
+          <input type="text" id="username" v-model.trim="user.username" required>
+        </div>
+
+        <div class="form-group">
           <label for="name">Nombre</label>
           <input type="text" id="name" v-model.trim="user.name" required>
         </div>
@@ -32,12 +37,14 @@
 
 <script>
 import { ref } from 'vue';
-import axios from 'axios'; // Importa Axios
+import axios from 'axios';
+import router from "@/router";
 
 export default {
   name: 'UserRegister',
   setup() {
     const user = ref({
+      username: '',
       name: '',
       surname: '',
       mail: '',
@@ -47,20 +54,24 @@ export default {
     
 
 const submitForm = async () => {
-  if (!user.value.name || !user.value.surname || !user.value.mail || !user.value.password) {
+  if (!user.value.username || !user.value.name || !user.value.surname || !user.value.mail || !user.value.password) {
     alert('Por favor, completa todos los campos.');
     return;
   }
 
   try {
-    await axios.post('http://localhost:8081/api/users', user.value);
+    await axios.post('http://localhost:8081/api/users/register', user.value);
     alert('Usuario registrado exitosamente.');
     user.value = {
+      username: '',
       name: '',
       surname: '',
       mail: '',
       password: ''
     };
+
+    router.push('/');
+
   } catch (error) {
     console.error('Error al registrar usuario:', error);
     alert('Ocurrió un error al registrar el usuario. Por favor, inténtalo de nuevo.');

@@ -3,7 +3,7 @@
         <div class="form-container">
             <h1>Iniciar sesión</h1>
                 <form @submit.prevent="login">
-                    <input type="email" placeholder="Correo electrónico" v-model="email"/>
+                    <input type="text" placeholder="Nombre de usuario" v-model="username"/>
                     <input type="password" placeholder="Contraseña" v-model="password"/>
                     <button type="submit">Iniciar sesión</button>
                 </form>
@@ -11,22 +11,43 @@
         </div>
     </div>
 </template>
-  
+
 <script>
+import axios from 'axios';
+import router from "@/router";
+
 export default {
-name: 'InicioSesion',
-data() {
+  name: 'UserLogin',
+  data() {
     return {
-    email: '',
-    password: '',
+      username: '',
+      password: '',
     };
-},
-methods: {
+  },
+  methods: {
     login() {
-    // Implementa la lógica de inicio de sesión
-    console.log("Iniciando sesión con:", this.email, this.password);
+      const userCredentials = {
+        username: this.username,
+        password: this.password,
+      };
+      axios.post('http://localhost:8081/api/users/login', userCredentials)
+          .then(response => {
+            console.log("Respuesta del inicio de sesión:", response.data);
+            alert("Inicio de sesión exitoso");
+            // Assuming 'home-user' is a valid route name in your router configuration
+            router.push({ name: 'home-user' });
+          })
+          .catch(error => {
+            // Checking if error.response and error.response.data exist before accessing them
+            if (error.response && error.response.data) {
+              console.error("Error en el inicio de sesión:", error.response.data);
+            } else {
+              console.error("Error en el inicio de sesión:", error);
+            }
+            alert("Error al iniciar sesión");
+          });
     },
-},
+  },
 };
 </script>
   

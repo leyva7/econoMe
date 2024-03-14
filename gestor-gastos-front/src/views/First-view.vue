@@ -5,7 +5,7 @@
           <AppDescription />
         </div>
         <div class="right-panel">
-          <Login />
+          <UserLogin />
         </div>
       </div>
     </div>
@@ -13,14 +13,14 @@
   
   <script>
   import AppDescription from '../components/AppDescription.vue';
-  import Login from '../components/Login.vue'; 
+  import UserLogin from '../components/UserLogin.vue';
 
   
   export default {
     name: 'App',
     components: {
       AppDescription,
-      Login,
+      UserLogin,
     },
   };
   </script>

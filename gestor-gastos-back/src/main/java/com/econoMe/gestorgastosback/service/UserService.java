@@ -73,10 +73,10 @@ public class UserService{
         userRepository.deleteById(username);
     }
 
-    public boolean validateCredentials(String mail, String password) {
-        User user = userRepository.findByMail(mail);
-        if (user != null) {
-            return passwordEncoder.matches(password, user.getPassword());
+    public boolean validateCredentials(String username, String password) {
+        User user = userRepository.findById(username).orElse(null);
+        if (user != null && passwordEncoder.matches(password, user.getPassword())) {
+            return true;
         }
         return false;
     }

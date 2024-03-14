@@ -3,7 +3,7 @@ package com.econoMe.gestorgastosback.controller;
 import com.econoMe.gestorgastosback.model.User;
 import com.econoMe.gestorgastosback.service.UserService;
 import com.econoMe.gestorgastosback.exception.InvalidPasswordException;
-import com.econoMe.gestorgastosback.security.SecurityConfig;
+import com.econoMe.gestorgastosback.dto.LoginDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -28,6 +28,16 @@ public class UserController {
         user.setPassword(passwordEncoder.encode(user.getPassword())); // Codificamos la contraseña antes de guardarla
         User savedUser = userService.createUser(user);
         return ResponseEntity.ok(savedUser);
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<?> loginUser(@RequestBody LoginDto loginDto) {
+        boolean isValidUser = userService.validateCredentials(loginDto.getUsername(), loginDto.getPassword());
+        if (isValidUser) {
+            return ResponseEntity.ok().body("Inicio de sesión exitoso");
+        } else {
+            return ResponseEntity.badRequest().body("Nombre de usuario o contraseña incorrectos");
+        }
     }
 
     // Actualización de datos del usuario
@@ -66,7 +76,6 @@ public class UserController {
         List<User> users = userService.getAllUser();
         return ResponseEntity.ok(users);
     }
-
 
     // Ejemplo: Eliminar usuario
     @DeleteMapping("/{username}")
