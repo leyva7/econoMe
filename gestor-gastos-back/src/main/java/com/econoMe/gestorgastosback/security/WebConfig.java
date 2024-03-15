@@ -1,4 +1,4 @@
-package com.econoMe.gestorgastosback;
+package com.econoMe.gestorgastosback.security;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
