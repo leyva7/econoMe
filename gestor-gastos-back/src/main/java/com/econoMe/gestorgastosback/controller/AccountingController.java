@@ -1,10 +1,16 @@
 package com.econoMe.gestorgastosback.controller;
 
+import com.econoMe.gestorgastosback.dto.AccountingDto;
 import com.econoMe.gestorgastosback.model.Accounting;
 import com.econoMe.gestorgastosback.model.User;
 import com.econoMe.gestorgastosback.service.AccountingService;
+import com.econoMe.gestorgastosback.service.MappingService;
+import com.econoMe.gestorgastosback.service.RolesService;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -15,6 +21,10 @@ public class AccountingController {
 
     @Autowired
     private AccountingService accountingService;
+    @Autowired
+    private RolesService rolesService;
+    @Autowired
+    private MappingService mappingService;
 
     // Registro de contabilidad
     @PostMapping("/register")
@@ -30,10 +40,17 @@ public class AccountingController {
         return ResponseEntity.ok(updatedAccounting);
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<Accounting> getUserById(@PathVariable Long id) {
-        Accounting accounting = accountingService.findAccountingById(id);
-        return ResponseEntity.ok(accounting);
+    @GetMapping("/accountingUserShared")
+    public ResponseEntity<?> getUserById(Authentication authentication) {
+        if (authentication == null || !(authentication.getPrincipal() instanceof UserDetails userDetails)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("No se ha proporcionado una autenticación válida.");
+        }
+
+        String username = userDetails.getUsername();
+
+        List<Accounting> accounting = accountingService.findAccountingsSharedByUser(username);
+        List<AccountingDto> accountingDtos = mappingService.accountingDtoList(accounting);
+        return ResponseEntity.ok(accountingDtos);
     }
 
     @GetMapping("/all")

@@ -1,14 +1,11 @@
 package com.econoMe.gestorgastosback.model;
 
 import jakarta.persistence.*;
+import com.econoMe.gestorgastosback.common.Type;
 
 @Entity
 @Table(name="accounting")
 public class Accounting {
-
-    public enum Type {
-        PERSONAL, SHARED;
-    }
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
