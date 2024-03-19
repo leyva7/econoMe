@@ -5,6 +5,8 @@ import UserRegister from '@/views/UserRegister.vue';
 import HomeUser from '@/views/HomeUser.vue';
 import {createApp} from "vue";
 import App from "@/App.vue";
+import ModifyDetails from "@/views/ModifyDetails.vue";
+import ModifyPassword from "@/views/ModifyPassword.vue";
 
 const routes = [
   {
@@ -21,6 +23,16 @@ const routes = [
     path: '/register',
     name: 'register',
     component: UserRegister, // Define la ruta para la vista de registro
+  },
+  {
+    path: '/modify-details',
+    name: 'modify-details',
+    component: ModifyDetails, // Define la ruta para la vista de registro
+  },
+  {
+    path: '/modify-password',
+    name: 'modify-password',
+    component: ModifyPassword, // Define la ruta para la vista de registro
   },
 ];
 

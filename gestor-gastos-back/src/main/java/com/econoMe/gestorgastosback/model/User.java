@@ -1,5 +1,6 @@
 package com.econoMe.gestorgastosback.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -54,6 +55,7 @@ public class User implements UserDetails {
         return mail;
     }
 
+    @JsonIgnore
     public String getPassword() {
         return password;
     }

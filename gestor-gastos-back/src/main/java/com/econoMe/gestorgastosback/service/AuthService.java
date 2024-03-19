@@ -26,6 +26,7 @@ public class AuthService {
 
         return AuthResponse.builder()
                 .token(token)
+                .username(request.getUsername())
                 .build();
     }
 

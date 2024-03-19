@@ -1,16 +1,18 @@
 package com.econoMe.gestorgastosback.controller;
 
-import com.econoMe.gestorgastosback.dto.AuthResponse;
+import com.econoMe.gestorgastosback.dto.UserDto;
 import com.econoMe.gestorgastosback.model.User;
-import com.econoMe.gestorgastosback.service.AuthService;
+import com.econoMe.gestorgastosback.service.JwtService;
+import com.econoMe.gestorgastosback.service.MappingService;
 import com.econoMe.gestorgastosback.service.UserService;
 import com.econoMe.gestorgastosback.exception.InvalidPasswordException;
-import com.econoMe.gestorgastosback.dto.LoginDto;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -22,22 +24,37 @@ public class UserController {
 
     @Autowired
     private UserService userService;
+
+    @Autowired
+    private JwtService jwtService;
+
+    @Autowired
+    private UserDetailsService userDetailsService;
+
+    @Autowired
+    private MappingService mappingService;
     
     // Actualización de datos del usuario
-    @PutMapping("/{username}")
-    public ResponseEntity<User> updateUser(@PathVariable String username, @RequestBody User userDetails) {
-        User updatedUser = userService.updateUser(username, userDetails);
+    @PutMapping("/modifyDetails")
+    public ResponseEntity<User> updateUserDetails(@RequestBody UserDto userDto) {
+        User updatedUser = userService.updateDetails(userDto);
         return ResponseEntity.ok(updatedUser);
     }
 
     // Actualización de contraseña
-    @PutMapping("/{username}/password")
-    public ResponseEntity<?> updatePassword(@PathVariable String username, @RequestBody Map<String, String> passwordDetails) {
+    @PutMapping("/modifyPassword")
+    public ResponseEntity<?> updatePassword(Authentication authentication, @RequestBody Map<String, String> passwordDetails) {
+        if (authentication == null || !(authentication.getPrincipal() instanceof UserDetails userDetails)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("No se ha proporcionado una autenticación válida.");
+        }
+
+        String username = userDetails.getUsername();
+
         String currentPassword = passwordDetails.get("currentPassword");
         String newPassword = passwordDetails.get("newPassword");
         try {
             userService.updatePassword(username, currentPassword, newPassword);
-            return ResponseEntity.ok().build(); // Puedes devolver un mensaje de éxito si lo prefieres
+            return ResponseEntity.ok().build();
         } catch (InvalidPasswordException e) {
             return ResponseEntity.badRequest().body("Contraseña actual incorrecta.");
         } catch (Exception e) {
@@ -45,13 +62,16 @@ public class UserController {
         }
     }
 
+    @GetMapping("/details")
+    public ResponseEntity<?> getUserProfile(Authentication authentication) {
+        if (authentication == null || !(authentication.getPrincipal() instanceof UserDetails userDetails)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("No se ha proporcionado una autenticación válida.");
+        }
 
-    // Aquí puedes agregar otros endpoints que necesites, siguiendo el mismo patrón
+        User user = userService.getUserByUsername(userDetails.getUsername());
 
-    @GetMapping("/{username}")
-    public ResponseEntity<User> getUserByUsername(@PathVariable String username) {
-        User user = userService.getUserByUsername(username);
-        return ResponseEntity.ok(user);
+        UserDto userDto = mappingService.userToDto(user);
+        return ResponseEntity.ok(userDto);
     }
 
     @GetMapping("/all")
@@ -61,7 +81,7 @@ public class UserController {
     }
 
     // Ejemplo: Eliminar usuario
-    @DeleteMapping("/{username}")
+    @DeleteMapping("/delete")
     public ResponseEntity<?> deleteUser(@PathVariable String username) {
         userService.deleteUser(username);
         return ResponseEntity.ok().build();

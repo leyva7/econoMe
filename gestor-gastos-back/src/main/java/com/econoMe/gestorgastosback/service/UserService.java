@@ -1,5 +1,6 @@
 package com.econoMe.gestorgastosback.service;
 
+import com.econoMe.gestorgastosback.dto.UserDto;
 import com.econoMe.gestorgastosback.exception.UserAlreadyExistsException;
 import com.econoMe.gestorgastosback.model.User;
 import com.econoMe.gestorgastosback.repository.UserRepository;
@@ -54,6 +55,22 @@ public class UserService{
         }
 
         return userRepository.save(user);
+    }
+
+    public User updateDetails(UserDto userDto){
+        if(userDto.getUsername() == null || !userRepository.existsById(userDto.getUsername())){
+            throw new IllegalStateException("La cuenta con el nombre de usuario " + userDto.getUsername() + " no existe.");
+        }
+
+        User user = userRepository.findByUsername(userDto.getUsername()).orElseThrow(() -> new NoSuchElementException("No se encontró el usuario de ID: " + userDto.getUsername()));
+
+        user.setUsername(userDto.getUsername());
+        user.setName(userDto.getName());
+        user.setSurname(userDto.getSurname());
+        user.setMail(userDto.getMail());
+
+        return userRepository.save(user);
+
     }
 
     public void updatePassword(String username, String passwordUser, String newPassword) {

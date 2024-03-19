@@ -3,32 +3,20 @@
     <div class="form-container">
       <form @submit.prevent="submitForm" class="register-form">
         <div class="form-group">
-          <label for="username">Nombre de usuario</label>
-          <input type="text" id="username" v-model.trim="user.username" required>
+          <label for="currentPassword">Contraseña actual</label>
+          <input type="password" id="currentPassword" v-model.trim="userPassword.currentPassword">
         </div>
 
         <div class="form-group">
-          <label for="name">Nombre</label>
-          <input type="text" id="name" v-model.trim="user.name" required>
+          <label for="newPassword">Contraseña nueva</label>
+          <input type="password" id="newPassword" v-model.trim="userPassword.newPassword">
         </div>
 
         <div class="form-group">
-          <label for="surname">Apellidos</label>
-          <input type="text" id="surname" v-model.trim="user.surname" required>
+          <button type="submit">Cambiar contraseña</button>
         </div>
-
         <div class="form-group">
-          <label for="mail">Correo Electrónico</label>
-          <input type="email" id="mail" v-model.trim="user.mail" required>
-        </div>
-
-        <div class="form-group">
-          <label for="password">Contraseña</label>
-          <input type="password" id="password" v-model.trim="user.password" required>
-        </div>
-
-        <div class="form-group">
-          <button type="submit">Registrar</button>
+          <button type="button" @click="home">Volver atrás</button>
         </div>
       </form>
     </div>
@@ -36,55 +24,47 @@
 </template>
 
 <script>
-import { ref } from 'vue';
+import { reactive } from 'vue';
 import axios from 'axios';
 import router from "@/router";
 
 export default {
-  name: 'UserRegister',
+  name: 'UserPassword',
   setup() {
-    const user = ref({
-      username: '',
-      name: '',
-      surname: '',
-      mail: '',
-      password: ''
+    const userPassword = reactive({
+      currentPassword: '',
+      newPassword: '',
     });
 
-    
-
-const submitForm = async () => {
-  if (!user.value.username || !user.value.name || !user.value.surname || !user.value.mail || !user.value.password) {
-    alert('Por favor, completa todos los campos.');
-    return;
-  }
-
-  try {
-    await axios.post('http://localhost:8081/api/auth/register', user.value);
-    alert('Usuario registrado exitosamente.');
-    user.value = {
-      username: '',
-      name: '',
-      surname: '',
-      mail: '',
-      password: ''
+    const home = () => {
+      router.push({ name: 'home-user' });
     };
 
-    router.push('/');
+    const submitForm = async () => {
+      try {
+        // Asegúrate de cambiar la URL al endpoint correcto para cambiar la contraseña
+        await axios.put('http://localhost:8081/api/users/modifyPassword', userPassword, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('userToken')}`,
+          },
+        });
+        alert('Contraseña modificada exitosamente.');
+        router.push({ name: 'login' });
+      } catch (error) {
+        console.error('Error al modificar la contraseña:', error);
+        alert('Ocurrió un error al modificar la contraseña. Por favor, inténtalo de nuevo.');
+      }
+    };
 
-  } catch (error) {
-    console.error('Error al registrar usuario:', error);
-    alert('Ocurrió un error al registrar el usuario. Por favor, inténtalo de nuevo.');
-  }
-
-
-};
-
-  return { user, submitForm };
-
-}
+    return {
+      userPassword,
+      submitForm,
+      home,
+    };
+  },
 };
 </script>
+
 
 
 <style scoped>

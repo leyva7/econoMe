@@ -30,15 +30,15 @@ export default {
         username: this.username,
         password: this.password,
       };
-      axios.post('http://localhost:8081/api/users/login', userCredentials)
+      axios.post('http://localhost:8081/api/auth/login', userCredentials)
           .then(response => {
             console.log("Respuesta del inicio de sesión:", response.data);
+            localStorage.setItem('userToken', response.data.token);
+            localStorage.setItem('username', response.data.username);
             alert("Inicio de sesión exitoso");
-            // Assuming 'home-user' is a valid route name in your router configuration
             router.push({ name: 'home-user' });
           })
           .catch(error => {
-            // Checking if error.response and error.response.data exist before accessing them
             if (error.response && error.response.data) {
               console.error("Error en el inicio de sesión:", error.response.data);
             } else {
