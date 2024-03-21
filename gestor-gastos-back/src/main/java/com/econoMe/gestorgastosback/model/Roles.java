@@ -1,14 +1,11 @@
 package com.econoMe.gestorgastosback.model;
 
+import com.econoMe.gestorgastosback.common.Role;
 import jakarta.persistence.*;
 
 @Entity
 @IdClass(RolesId.class)
 public class Roles {
-
-        public enum Role {
-            VISUALIZER, EDITOR;
-        }
 
         @Id
         @ManyToOne

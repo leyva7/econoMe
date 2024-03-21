@@ -1,9 +1,12 @@
 package com.econoMe.gestorgastosback.service;
 
 import com.econoMe.gestorgastosback.dto.AccountingDto;
+import com.econoMe.gestorgastosback.dto.RolesDto;
 import com.econoMe.gestorgastosback.dto.UserDto;
 import com.econoMe.gestorgastosback.model.Accounting;
+import com.econoMe.gestorgastosback.model.Roles;
 import com.econoMe.gestorgastosback.model.User;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -11,6 +14,8 @@ import java.util.List;
 
 @Service
 public class MappingService {
+
+    @Autowired UserService userService;
 
     public UserDto userToDto(User user) {
         UserDto dto = new UserDto();
@@ -26,9 +31,19 @@ public class MappingService {
         accountingDto.setName(accounting.getName());
         accountingDto.setDescription(accounting.getDescription());
         accountingDto.setType(accounting.getType());
-        accountingDto.setUserCreator(accounting.getName());
+        accountingDto.setUserCreator(accounting.getUserCreator().getName());
 
         return accountingDto;
+    }
+
+    public Accounting accountingDtoToAccounting(AccountingDto accountingDto){
+        Accounting accounting = new Accounting();
+        accounting.setName(accountingDto.getName());
+        accounting.setDescription(accountingDto.getDescription());
+        accounting.setType(accountingDto.getType());
+        accounting.setUserCreator(userService.getUserByUsername(accountingDto.getUserCreator()));
+
+        return accounting;
     }
 
     public List<AccountingDto> accountingDtoList(List<Accounting> accountingList){
@@ -39,5 +54,12 @@ public class MappingService {
         }
 
         return accountingDtoList;
+    }
+
+    public RolesDto rolesToDto(Roles roles){
+       RolesDto role = new RolesDto();
+       role.setRole(roles.getRole());
+
+       return role;
     }
 }

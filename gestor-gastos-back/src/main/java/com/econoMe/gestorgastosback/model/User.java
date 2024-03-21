@@ -55,7 +55,6 @@ public class User implements UserDetails {
         return mail;
     }
 
-    @JsonIgnore
     public String getPassword() {
         return password;
     }

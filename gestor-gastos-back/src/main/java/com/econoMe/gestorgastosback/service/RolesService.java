@@ -1,8 +1,10 @@
 package com.econoMe.gestorgastosback.service;
 
+import com.econoMe.gestorgastosback.common.Type;
 import com.econoMe.gestorgastosback.model.Accounting;
 import com.econoMe.gestorgastosback.model.Roles;
 import com.econoMe.gestorgastosback.model.RolesId;
+import com.econoMe.gestorgastosback.model.User;
 import com.econoMe.gestorgastosback.repository.AccountingRepository;
 import com.econoMe.gestorgastosback.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
@@ -31,8 +33,6 @@ public class RolesService {
         String userUsername = role.getUser().getUsername();
         Long accountingId = role.getAccounting().getId();
 
-
-        // Verificar si el usuario y la contabilidad existen
         if (!validateUserAndAccountingExistence(userUsername, accountingId)) {
             throw new EntityNotFoundException("Usuario o Contabilidad no existen.");
         }
@@ -43,6 +43,14 @@ public class RolesService {
         }
 
         // Si todo está correcto, guarda el nuevo rol
+        return rolesRepository.save(role);
+    }
+
+    public List<Roles> findAllByUser(User user) {
+        return rolesRepository.findAllByUser(user);
+    }
+
+    public Roles createFirstRole(Roles role) {
         return rolesRepository.save(role);
     }
 

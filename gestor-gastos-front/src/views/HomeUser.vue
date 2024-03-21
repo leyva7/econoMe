@@ -7,23 +7,25 @@
       </div>
       <div class="divider"></div>
       <nav class="nav">
-        <a href="#" @click="navigate('home')"><img src="../assets/icons/home.svg" class="nav-icon"> Home</a>
-        <a href="#" @click="navigate('gastos')"><img src="../assets/icons/spent.svg" class="nav-icon"> Gastos</a>
-        <a href="#" @click="navigate('ingresos')"><img src="../assets/icons/income.svg" class="nav-icon"> Ingresos</a>
-        <a href="#" @click="navigate('evolucion')"><img src="../assets/icons/evolution.svg" class="nav-icon"> Evolución</a>
+        <a href="#" @click="navigate('/home-user')"><img src="../assets/icons/home.svg" alt="Home" class="nav-icon"> Home</a>
+        <a href="#" @click="navigate('/home-user/spent')"><img src="../assets/icons/spent.svg" alt="Gastos" class="nav-icon"> Gastos</a>
+        <a href="#" @click="navigate('/home-user/income')"><img src="../assets/icons/income.svg" alt="Ingresos" class="nav-icon"> Ingresos</a>
+        <a href="#" @click="navigate('/home-user/evolution')"><img src="../assets/icons/evolution.svg" alt="Evolucion" class="nav-icon"> Evolución</a>
       </nav>
       <div class="divider"></div>
       <div class="shared-accountings">
       <span>Contabilidades Compartidas</span>
-      <img src="../assets/icons/add.svg" alt="Añadir" @click="toggleModal(true)" class="add-icon">
+        <button @click="openAddAccountingModal">Añadir Contabilidad</button>
       <ul>
-        <li v-for="(accounting, index) in accountings" :key="index">{{ accounting.name }}</li>
+        <a href="#" v-for="(accounting, index) in accountings" :key="index" @click="navigate('/home-user/shared' + accounting.name)"><li>{{ accounting.name }}</li></a>
       </ul>
     </div>
       <div v-if="isModalOpen" class="modal-overlay">
         <div class="modal">
-          <h2>Añadir Contabilidad Compartida</h2>
-          <form @submit.prevent="submitForm">
+          <h2 v-if="modalContentType === 'addAccounting'">Añadir Contabilidad Compartida</h2>
+          <h2 v-else-if="modalContentType === 'addOperations'">Nuevo Cuestionario</h2>
+          <!-- Formulario para añadir contabilidad -->
+          <form v-if="modalContentType === 'addAccounting'" @submit.prevent="submitForm">
             <div class="form-group">
               <label for="accountName">Nombre de contabilidad</label>
               <input type="text" id="accountName" v-model="accountName">
@@ -32,11 +34,21 @@
               <label for="description">Descripción</label>
               <textarea id="description" v-model="description"></textarea>
             </div>
-            <div class="modal-actions">
-              <button type="submit" class="btn-primary">Añadir</button>
-              <button type="button" @click="toggleModal(false)" class="btn-secondary">Cancelar</button>
+          </form>
+          <form v-else-if="modalContentType === 'addOperations'" @submit.prevent="submitOperations">
+            <div class="form-group">
+              <label for="accountName">Tipo de gasto</label>
+              <input type="text" id="accountName" v-model="accountName">
+            </div>
+            <div class="form-group">
+              <label for="description">Descripción</label>
+              <textarea id="description" v-model="description"></textarea>
             </div>
           </form>
+          <div class="modal-actions">
+            <button type="submit" class="btn-primary">Aceptar</button>
+            <button type="button" @click="toggleModal(false)" class="btn-secondary">Cancelar</button>
+          </div>
         </div>
       </div>
     </aside>
@@ -45,21 +57,27 @@
     <main class="content">
       <!-- Barra superior con acciones del usuario -->
       <div class="top-bar">
+        <div class="left-content">
+          <span class="accounting-name">{{ accountingName }}</span>
+        </div>
         <div class="user-actions-container">
           <div class="user-actions">
             <span class="username">{{username}}</span>
             <img src="../assets/icons/user.svg" alt="User Icon" class="user-icon">
           </div>
           <div class="tooltip">
-            <a href="#" @click="modifyUser">Modificar usuario</a>
-            <a href="#" @click="modifyPassword">Modificar contraseña</a>
-            <a href="#" @click="logout">Cerrar sesión</a>
+            <a href="#" @click="navigate('/modify-details')">Modificar usuario</a>
+            <a href="#" @click="navigate('/modify-password')">Modificar contraseña</a>
+            <a href="#" @click="navigate('/')">Cerrar sesión</a>
           </div>
         </div>
       </div>
       <!-- Contenido dinámico aquí -->
       <div class="dynamic-content">
-        Aquí va el contenido dinámico de las distintas secciones.
+        <router-view></router-view>
+        <button v-if="shouldShowAddButton" @click="openOperationsModal" class="add-floating-button">
+          <span class="plus-icon">+</span>
+        </button>
       </div>
     </main>
   </div>
@@ -67,8 +85,9 @@
 
 
 <script>
-import { ref, onMounted } from 'vue';
-import router from "@/router";
+import { ref, onMounted, watch } from 'vue';
+import { computed } from 'vue';
+import { useRouter } from 'vue-router';
 import axios from 'axios';
 
 export default {
@@ -80,6 +99,9 @@ export default {
     const accountName = ref('');
     const description = ref('');
     const accountings = ref([]);
+    const modalContentType = ref('');
+    const userRole = ref('EDITOR'); // 'EDITOR' o 'VISUALIZER'
+    const router = useRouter();
 
     onMounted(() => {
       username.value = localStorage.getItem('username');
@@ -89,8 +111,20 @@ export default {
       await fetchAccountings();
     });
 
-    const navigate = (routeName) => {
-      router.push({ name: routeName });
+    const navigate = (path) => {
+      router.push(path);
+    };
+
+    const openAddAccountingModal = () => {
+      modalContentType.value = 'addAccounting';
+      isModalOpen.value = true;
+      console.log("Modal Open:", isModalOpen.value, "Content Type:", modalContentType.value); // Debugging
+    };
+
+    const openOperationsModal = () => {
+      modalContentType.value = 'addOperations';
+      isModalOpen.value = true;
+      console.log("Modal Open:", isModalOpen.value, "Content Type:", modalContentType.value); // Debugging
     };
 
     const toggleModal = (open) => {
@@ -102,10 +136,49 @@ export default {
       navigate('login');
     };
 
-    const submitForm = () => {
-      // Lógica para manejar la adición de una nueva contabilidad compartida
-      console.log('Añadiendo contabilidad:', accountName.value, description.value);
-      toggleModal(false); // Cierra el modal después de enviar
+    const accountingName = computed(() => {
+      if (router.currentRoute.value.name == 'shared') {
+        return router.currentRoute.value.params.accountingName;
+      }
+      else{
+        return 'Contabilidad Personal';
+      }
+    });
+
+    const submitForm = async () => {
+      if (!accountName.value || !description.value) {
+        alert('Por favor, rellena todos los campos del formulario.');
+        return;
+      }
+
+      const accountingData = {
+        name: accountName.value,
+        description: description.value,
+        userCreator: username.value,
+        type: 'SHARED'
+      };
+
+      try {
+        await axios.post('http://localhost:8081/api/accounting/register', accountingData, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('userToken')}`,
+          },
+        });
+        console.log('Contabilidad añadida con éxito:', accountingData);
+        alert("Contabilidad añadida con éxito");
+        toggleModal(false); // Cierra el modal después de enviar
+
+        // Vuelve a cargar las contabilidades compartidas para mostrar la última añadida
+        await fetchAccountings();
+
+      } catch (error) {
+        console.error('Error al añadir contabilidad:', error);
+        alert('Ocurrió un error al añadir la contabilidad. Por favor, inténtalo de nuevo.');
+      }
+    };
+
+    const submitOperations = async () => {
+      // Lógica para manejar el envío del cuestionario
     };
 
     const fetchAccountings = async () => {
@@ -131,9 +204,61 @@ export default {
       navigate('modify-password');
     };
 
+    const updateUserRole = async () => {
+      try {
+        const response = await axios.get('url-para-obtener-detalle-contabilidad', {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('userToken')}`,
+          },
+        });
+        userRole.value = response.data.role;
+      } catch (error) {
+        console.error('Error al obtener el rol del usuario:', error);
+      }
+    };
+
+    const fetchUserRole = async (accountingName) => {
+      try {
+        const response = await axios.get(`http://localhost:8081/api/accounting/${accountingName}/rol`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('userToken')}`,
+          },
+        });
+        console.log(response);
+        userRole.value = response.data.role;
+        console.log(userRole);
+      } catch (error) {
+        console.error('Error al obtener el rol del usuario:', error);
+        userRole.value = null;
+      }
+    };
+
+    watch(() => router.currentRoute.value, async (newRoute) => {
+      if (newRoute.name === 'shared') {
+        // Extrae el nombre de la contabilidad compartida de los parámetros de la ruta
+        const accountingName = newRoute.params.accountingName;
+        // Realiza la llamada a la API para obtener el rol del usuario en esta contabilidad
+        await fetchUserRole(accountingName);
+      } else {
+        userRole.value = 'EDITOR';
+      }
+    }, { immediate: true });
+
+    const shouldShowAddButton = computed(() => {
+      const routeNamesToShowButton = ['home', 'income', 'spent', 'evolution'];
+      if (routeNamesToShowButton.includes(router.currentRoute.value.name)) {
+        return true;
+      }
+      if (router.currentRoute.value.name === 'shared' && userRole.value === 'EDITOR') {
+        return true;
+      }
+      return false;
+    });
+
     return {
       isModalOpen,
       accountName,
+      accountingName,
       description,
       toggleModal,
       submitForm,
@@ -142,7 +267,15 @@ export default {
       logout,
       modifyUser,
       modifyPassword,
-      accountings
+      accountings,
+      navigate,
+      updateUserRole,
+      shouldShowAddButton,
+      fetchUserRole,
+      submitOperations,
+      openAddAccountingModal,
+      openOperationsModal,
+      modalContentType
     };
   },
 };
@@ -242,12 +375,6 @@ export default {
   background-color: rgba(0, 0, 0, 0.6);
 }
 
-.modal-content {
-  background-color: #2C3E50;
-  padding: 20px;
-  border-radius: 10px;
-}
-
 .modal-actions {
   display: flex;
   justify-content: flex-end;
@@ -291,14 +418,20 @@ export default {
 
 .content {
   flex-grow: 1;
-  overflow-y: auto;
+  overflow-y: auto; /* Permite desplazamiento vertical dentro del content si es necesario */
   padding: 20px;
-  box-sizing: border-box;
-  height: calc(100vh - 80px);
+  display: flex;
+  flex-direction: column;
+  background-color: #2C3E50;
 }
 
 .dynamic-content {
-  overflow: hidden;
+  margin-top: 20px;
+  margin-bottom: 30px;
+  overflow-y: auto; /* Permite desplazamiento vertical dentro del dynamic-content si es necesario */
+  flex-grow: 1; /* Asegura que este contenedor llene el espacio disponible en .content */
+  background-color: #ECF0F1;
+  border-radius: 20px;
 }
 
 
@@ -311,9 +444,25 @@ export default {
 
 .top-bar {
   display: flex;
-  justify-content: flex-end;
+  justify-content: space-between; /* Ajusta los elementos a los extremos */
   padding: 40px;
-  background-color: #ECF0F1;
+  background-color: rgb(236, 240, 241);
+  border-radius: 25px;
+  color: #2C3E50;
+  font-size: 16px;
+  font-weight: bold;
+}
+
+.left-content {
+  /* Estilos para el contenido izquierdo (nombre de la contabilidad) */
+  display: flex;
+  align-items: center;
+}
+
+.user-actions-container {
+  /* Ajustes para alinear los elementos de usuario a la derecha */
+  display: flex;
+  align-items: center;
 }
 
 .user-actions-container, .user-actions {
@@ -371,78 +520,43 @@ export default {
   display: block;
 }
 
-
-/*@media (max-width: 768px) {
-
-  #window {
-    flex-direction: column;
-  }
-
-  .sidebar, .content {
-    width: 100%;
-    height: auto;
-  }
-
-  .sidebar {
-    flex-direction: row;
-    flex-wrap: wrap;
-    justify-content: space-around;
-    padding: 10px 0;
-  }
-
-  .logo-section {
-    flex: 1;
-    justify-content: flex-start;
-    margin-bottom: 0;
-    padding-left: 20px;
-  }
-
-  .nav {
-    flex: 2;
-    justify-content: center;
-  }
-
-  .shared-accountings {
-    flex: 1;
-    padding-right: 20px;
-    text-align: right;
-  }
-
-  .content {
-    order: -1;
-  }
-
-  .top-bar {
-    justify-content: space-between;
-    flex-direction: row-reverse;
-    padding: 10px 20px;
-  }
-
-  .user-actions .tooltip {
-    top: 100%;
-    right: auto;
-    left: 50%;
-    transform: translateX(-50%);
-  }
-
-
-  .nav a, .shared-accountings details summary {
-    padding: 5px 10px;
-  }
-
-  .dynamic-content {
-    padding: 20px;
-  }
-
-  .tooltip a {
-    display: block;
-  }
-
-  .nav-icon {
-    width: 24px;
-  }
+.add-floating-button {
+  position: fixed;
+  right: 25px;
+  bottom: 20px;
+  z-index: 100;
+  padding: 0.8em; /* Ajustado para ser un poco más pequeño y proporcional */
+  font-size: 16px; /* Tamaño de fuente general del botón reducido */
+  color: #ffffff;
+  background-color: #2C3E50;
+  border: none;
+  border-radius: 50%; /* Círculo perfecto */
+  width: 60px; /* Ancho fijo para mantener el círculo perfecto */
+  height: 60px; /* Altura fija para mantener el círculo perfecto */
+  box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease 0s;
+  cursor: pointer;
+  outline: none;
+  display: flex; /* Para centrar el ícono "+" */
+  justify-content: center; /* Centrado horizontal */
+  align-items: center; /* Centrado vertical */
 }
-*/
+
+.plus-icon {
+  font-size: 60px; /* Tamaño específico para el símbolo "+" */
+  line-height: 1; /* Asegura que el símbolo "+" se centre verticalmente */
+}
+
+.add-floating-button:hover {
+  background-color: #2C3E50;
+  box-shadow: 0px 15px 20px #2C3E50;
+  color: #fff;
+  transform: translateY(-7px);
+}
+
+.add-floating-button:active {
+  transform: translateY(-1px);
+}
 
 </style>
 

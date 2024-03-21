@@ -37,7 +37,7 @@ export default {
     });
 
     const home = () => {
-      router.push({ name: 'home-user' });
+      router.push({ name: 'home' });
     };
 
     const submitForm = async () => {

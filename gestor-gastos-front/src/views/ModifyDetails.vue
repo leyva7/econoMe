@@ -36,11 +36,12 @@
 <script>
 import { reactive, onMounted } from 'vue';
 import axios from 'axios';
-import router from "@/router";
+import { useRouter } from 'vue-router';
 
 export default {
   name: 'UserForm',
   setup() {
+    const router = useRouter();
     const user = reactive({
       username: '',
       name: '',
@@ -49,7 +50,7 @@ export default {
     });
 
     const home = () => {
-      router.push({ name: 'home-user' });
+      router.push({ name: 'home' });
     };
 
     const loadUserData = () => {
@@ -84,7 +85,7 @@ export default {
           },
         });
         alert('Usuario modificado exitosamente.');
-        router.push({ name: 'home-user' });
+        router.push({ name: 'home' });
       } catch (error) {
         console.error('Error al modificar datos del usuario:', error);
         alert('Ocurrió un error al modificar los datos del usuario. Por favor, inténtalo de nuevo.');

@@ -36,7 +36,7 @@ export default {
             localStorage.setItem('userToken', response.data.token);
             localStorage.setItem('username', response.data.username);
             alert("Inicio de sesión exitoso");
-            router.push({ name: 'home-user' });
+            router.push({ name: 'home' });
           })
           .catch(error => {
             if (error.response && error.response.data) {

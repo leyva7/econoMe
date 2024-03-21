@@ -4,27 +4,27 @@
       <form @submit.prevent="submitForm" class="register-form">
         <div class="form-group">
           <label for="username">Nombre de usuario</label>
-          <input type="text" id="username" v-model.trim="user.username" required>
+          <input type="text" id="username" v-model.trim="user.username" required autocomplete="off">
         </div>
 
         <div class="form-group">
           <label for="name">Nombre</label>
-          <input type="text" id="name" v-model.trim="user.name" required>
+          <input type="text" id="name" v-model.trim="user.name" required autocomplete="off">
         </div>
 
         <div class="form-group">
           <label for="surname">Apellidos</label>
-          <input type="text" id="surname" v-model.trim="user.surname" required>
+          <input type="text" id="surname" v-model.trim="user.surname" required autocomplete="off">
         </div>
 
         <div class="form-group">
           <label for="mail">Correo Electrónico</label>
-          <input type="email" id="mail" v-model.trim="user.mail" required>
+          <input type="email" id="mail" v-model.trim="user.mail" required autocomplete="off">
         </div>
 
         <div class="form-group">
           <label for="password">Contraseña</label>
-          <input type="password" id="password" v-model.trim="user.password" required>
+          <input type="password" id="password" v-model.trim="user.password" required autocomplete="off">
         </div>
 
         <div class="form-group">
@@ -59,22 +59,24 @@ const submitForm = async () => {
     return;
   }
 
+  const payload = {
+    user: user.value,
+    accounting: {
+      name: 'Contabilidad personal',
+      description: 'Contabilidad de uso personal del usuario ' + user.value.username,
+      userCreator: user.value.username,
+      type: 'PERSONAL'
+    }
+  };
+
   try {
-    await axios.post('http://localhost:8081/api/auth/register', user.value);
-    alert('Usuario registrado exitosamente.');
-    user.value = {
-      username: '',
-      name: '',
-      surname: '',
-      mail: '',
-      password: ''
-    };
-
+    console.log(payload);
+    await axios.post('http://localhost:8081/api/auth/register', payload);
+    alert('Usuario y contabilidad registrados exitosamente.');
     router.push('/');
-
   } catch (error) {
-    console.error('Error al registrar usuario:', error);
-    alert('Ocurrió un error al registrar el usuario. Por favor, inténtalo de nuevo.');
+    console.error('Error al registrar usuario y contabilidad:', error);
+    alert('Ocurrió un error al registrar el usuario y la contabilidad. Por favor, inténtalo de nuevo.');
   }
 
 

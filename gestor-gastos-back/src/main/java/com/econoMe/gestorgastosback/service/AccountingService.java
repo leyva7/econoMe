@@ -1,5 +1,6 @@
 package com.econoMe.gestorgastosback.service;
 
+import com.econoMe.gestorgastosback.common.Role;
 import com.econoMe.gestorgastosback.common.Type;
 import com.econoMe.gestorgastosback.model.Accounting;
 
@@ -10,6 +11,7 @@ import com.econoMe.gestorgastosback.repository.OperationsRepository;
 import com.econoMe.gestorgastosback.repository.RolesRepository;
 import com.econoMe.gestorgastosback.repository.UserRepository;
 import jakarta.persistence.Id;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -39,8 +41,20 @@ public class AccountingService {
         this.rolesService = rolesService;
         this.userService = userService;
     }
+    @Transactional
     public Accounting createAccounting(Accounting accounting){
-        return accountingRepository.save(accounting);
+
+        Accounting savedAccounting = accountingRepository.save(accounting);
+        rolesService.createRole(new Roles(accounting.getUserCreator(), accounting, Role.EDITOR));
+        return savedAccounting;
+    }
+
+    @Transactional
+    public Accounting createFirstAccounting(Accounting accounting){
+
+        Accounting savedAccounting = accountingRepository.save(accounting);
+        rolesService.createFirstRole(new Roles(accounting.getUserCreator(), accounting, Role.EDITOR));
+        return savedAccounting;
     }
 
     public List<Accounting> findAllAccounting(){
@@ -51,15 +65,43 @@ public class AccountingService {
         return accountingRepository.findById(id).orElseThrow(() -> new NoSuchElementException("No se encontró la contabilidad de ID: " + id));
     }
 
-    public List<Accounting> findAccountingsSharedByUser(String username){
-        List<Accounting> accountings = new ArrayList<>();
-
-        List<Roles> roles = rolesRepository.findAllByUser(userService.getUserByUsername(username));
-        List<Accounting> accountingUser = findAccountingByUserCreatorAndTypeShared(userService.getUserByUsername(username));
-
-        for(int i = 0; i < roles.size(); i++){
-            accountings.add(roles.get(i).getAccounting());
+    public List<Accounting> findAllUserAccounting(String username){
+        List<Accounting> accountings = findAccountingsSharedByUser(username);
+        Optional<Accounting> personalAccountingOptional = findPersonalAccounting(username);
+        if (personalAccountingOptional.isPresent()) {
+            Accounting personalAccounting = personalAccountingOptional.get();
+            accountings.add(personalAccounting);
+        } else {
+            throw new NoSuchElementException("No existe ese elemento");
         }
+
+        return accountings;
+
+    }
+
+    public Accounting findAccountingByName(String username, String name) {
+        // Obtener todas las contabilidades del usuario
+        List<Accounting> userAccountings = findAllUserAccounting(username);
+
+        // Buscar la contabilidad por nombre en la lista de contabilidades del usuario
+        Optional<Accounting> accountingOptional = userAccountings.stream()
+                .filter(accounting -> accounting.getName().equals(name))
+                .findFirst();
+
+        // Si se encuentra la contabilidad en la lista del usuario, devolverla
+        if (accountingOptional.isPresent()) {
+            return accountingOptional.get();
+        } else {
+            // Si no se encuentra en la lista del usuario, realizar la búsqueda por nombre en el repositorio
+            return accountingRepository.findByName(name)
+                    .orElseThrow(() -> new NoSuchElementException("No se encontró la contabilidad de nombre: " + name));
+        }
+    }
+
+    public List<Accounting> findAccountingsSharedByUser(String username){
+        List<Accounting> accountings = new ArrayList<Accounting>();
+
+        List<Accounting> accountingUser = findAccountingByTypeShared(userService.getUserByUsername(username));
 
         for(int i = 0; i < accountingUser.size(); i++){
             accountings.add(accountingUser.get(i));
@@ -68,11 +110,24 @@ public class AccountingService {
         return accountings;
     }
 
-    public List<Accounting> findAccountingByUserCreatorAndTypeShared(User user){
-        return accountingRepository.findByUserCreator(user)
-                .stream()
+    public List<Accounting> findAccountingByTypeShared(User user) {
+        List<Roles> roles = rolesService.findAllByUser(user);
+        List<Accounting> accountings = new ArrayList<>();
+
+        for (int i = 0; i < roles.size(); i++) {
+            accountings.add(roles.get(i).getAccounting());
+        }
+
+        return accountings.stream()
                 .filter(accounting -> accounting.getType() == Type.SHARED)
                 .collect(Collectors.toList());
+    }
+
+    public Optional<Accounting> findPersonalAccounting(String username) {
+        return accountingRepository.findByUserCreator(userService.getUserByUsername(username))
+                .stream()
+                .filter(accounting -> accounting.getType() == Type.PERSONAL)
+                .findFirst();
     }
 
     public Accounting updateAccounting(String username, Accounting accounting){
