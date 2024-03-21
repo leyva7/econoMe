@@ -17,13 +17,13 @@
       <span>Contabilidades Compartidas</span>
         <button @click="openAddAccountingModal">Añadir Contabilidad</button>
       <ul>
-        <a href="#" v-for="(accounting, index) in accountings" :key="index" @click="navigate('/home-user/shared' + accounting.name)"><li>{{ accounting.name }}</li></a>
+        <a href="#" v-for="(accounting, index) in accountings" :key="index" @click="navigate('/home-user/shared' + accounting.name)"><li class="shared-accountings-list">{{ accounting.name }}</li></a>
       </ul>
     </div>
       <div v-if="isModalOpen" class="modal-overlay">
         <div class="modal">
           <h2 v-if="modalContentType === 'addAccounting'">Añadir Contabilidad Compartida</h2>
-          <h2 v-else-if="modalContentType === 'addOperations'">Nuevo Cuestionario</h2>
+          <h2 v-else-if="modalContentType === 'addOperations'">Nueva operación</h2>
           <!-- Formulario para añadir contabilidad -->
           <form v-if="modalContentType === 'addAccounting'" @submit.prevent="submitForm">
             <div class="form-group">
@@ -37,12 +37,40 @@
           </form>
           <form v-else-if="modalContentType === 'addOperations'" @submit.prevent="submitOperations">
             <div class="form-group">
-              <label for="accountName">Tipo de gasto</label>
-              <input type="text" id="accountName" v-model="accountName">
+              <label for="optionSelect">Tipo de gasto</label>
+              <select id="optionSelect" v-model="selectedOption" @change="onSelectChange">
+                <option v-for="option in options" :key="option" :value="option">
+                  {{ option }}
+                </option>
+                <option value="custom">Otra (Especificar)</option>
+              </select>
+            </div>
+            <div class="form-group" v-if="isCustomOptionSelected">
+              <input
+                  type="text"
+                  placeholder="Escriba su opción"
+                  v-model="customOption"
+                  @input="onCustomOptionInput"
+              />
             </div>
             <div class="form-group">
               <label for="description">Descripción</label>
               <textarea id="description" v-model="description"></textarea>
+            </div>
+            <div class="form-group">
+              <label for="type">Tipo</label>
+              <select id="type" v-model="type">
+                <option value="ingreso">Ingreso</option>
+                <option value="gasto">Gasto</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="date">Fecha</label>
+              <input type="date" id="date" v-model="date">
+            </div>
+            <div class="form-group">
+              <label for="amount">Cantidad</label>
+              <input type="number" id="amount" v-model="amount">
             </div>
           </form>
           <div class="modal-actions">
@@ -89,6 +117,7 @@ import { ref, onMounted, watch } from 'vue';
 import { computed } from 'vue';
 import { useRouter } from 'vue-router';
 import axios from 'axios';
+import router from "@/router";
 
 export default {
   name: 'UserHome',
@@ -101,7 +130,17 @@ export default {
     const accountings = ref([]);
     const modalContentType = ref('');
     const userRole = ref('EDITOR'); // 'EDITOR' o 'VISUALIZER'
+    const selectedOption = ref('');
+    const customOption = ref('');
+    const options = ref(['']); // Tus opciones predeterminadas
     const router = useRouter();
+    const operation = ref({
+      type: '',
+      descrition: '',
+      category: '',
+      date: '',
+      quantity: ''
+    });
 
     onMounted(() => {
       username.value = localStorage.getItem('username');
@@ -109,6 +148,7 @@ export default {
 
     onMounted(async () => {
       await fetchAccountings();
+      await fetchCategories(accountingName.value);
     });
 
     const navigate = (path) => {
@@ -141,7 +181,7 @@ export default {
         return router.currentRoute.value.params.accountingName;
       }
       else{
-        return 'Contabilidad Personal';
+        return 'Contabilidad personal';
       }
     });
 
@@ -177,8 +217,23 @@ export default {
       }
     };
 
-    const submitOperations = async () => {
-      // Lógica para manejar el envío del cuestionario
+    // Determina si la opción personalizada está seleccionada
+    const isCustomOptionSelected = computed(() => selectedOption.value === 'custom');
+
+    // Maneja el cambio en el desplegable
+    const onSelectChange = () => {
+      console.log(selectedOption);
+      if (!isCustomOptionSelected.value) {
+        customOption.value = ''; // Limpia la opción personalizada si no está seleccionada
+      }
+    };
+
+    // Maneja el input de la opción personalizada
+    const onCustomOptionInput = () => {
+      console.log(selectedOption);
+      if (customOption.value.trim() !== '') {
+        selectedOption.value = 'custom';
+      }
     };
 
     const fetchAccountings = async () => {
@@ -255,6 +310,40 @@ export default {
       return false;
     });
 
+    const fetchCategories = async (accountingName) => {
+      try {
+        console.log(accountingName);
+        const response = await axios.get(`http://localhost:8081/api/accounting/${accountingName}/categories`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('userToken')}`,
+          },
+        });
+        console.log(response);
+        options.value = response.data; // Asigna la lista de opciones al ref 'options'
+      } catch (error) {
+        console.error('Hubo un error al obtener las categorías:', error);
+      }
+    };
+
+    const submitOperations = async () => {
+      if (!operation.value.category || !operation.value.type || !operation.value.date || !operation.value.description || !user.value.quantity) {
+        alert('Por favor, completa todos los campos.');
+        return;
+      }
+      //AQUI ME HE QUEDADO CON EL FORMULARIO DE OPERACIONES
+      try {
+        console.log(payload);
+        await axios.post('http://localhost:8081/api/auth/register', payload);
+        alert('Usuario y contabilidad registrados exitosamente.');
+        router.push('/');
+      } catch (error) {
+        console.error('Error al registrar usuario y contabilidad:', error);
+        alert('Ocurrió un error al registrar el usuario y la contabilidad. Por favor, inténtalo de nuevo.');
+      }
+
+
+    };
+
     return {
       isModalOpen,
       accountName,
@@ -275,7 +364,14 @@ export default {
       submitOperations,
       openAddAccountingModal,
       openOperationsModal,
-      modalContentType
+      modalContentType,
+      isCustomOptionSelected,
+      onSelectChange,
+      onCustomOptionInput,
+      options,
+      selectedOption,
+      fetchCategories,
+      operation
     };
   },
 };
@@ -333,6 +429,7 @@ export default {
   color: #FFFFFF;
   padding: 5px 0;
   text-decoration: none;
+  font-size: 20px;
 }
 
 .shared-accountings details {
@@ -344,11 +441,22 @@ export default {
 .shared-accountings ul {
   list-style-type: none; /* Quita los puntos */
   padding: 0;
+  margin: 20px 0; /* Agrega un poco de margen arriba y abajo de la lista */
+}
+
+.shared-accountings a {
+  color: #FFFFFF; /* Establece el color del texto de los enlaces a blanco */
+  text-decoration: none; /* Remueve el subrayado de los enlaces */
 }
 
 .shared-accountings li {
   margin-bottom: 10px; /* Aumenta la separación */
+  border: 2px solid #FFFFFF; /* Borde blanco alrededor de la lista */
 }
+.shared-accountings a:visited {
+  color: #FFFFFF; /* Mantiene el color blanco incluso después de ser visitados */
+}
+
 
 .add-icon {
   cursor: pointer;
@@ -459,6 +567,10 @@ export default {
   align-items: center;
 }
 
+.accounting-name{
+  font-size: x-large;
+}
+
 .user-actions-container {
   /* Ajustes para alinear los elementos de usuario a la derecha */
   display: flex;
@@ -478,7 +590,7 @@ export default {
 .username {
   margin-right: 10px;
   color: #2C3E50;
-  font-size: 16px;
+  font-size: larger;
   font-weight: bold;
 }
 

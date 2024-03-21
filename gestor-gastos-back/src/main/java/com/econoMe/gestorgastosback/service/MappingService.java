@@ -1,9 +1,11 @@
 package com.econoMe.gestorgastosback.service;
 
 import com.econoMe.gestorgastosback.dto.AccountingDto;
+import com.econoMe.gestorgastosback.dto.OperationsDto;
 import com.econoMe.gestorgastosback.dto.RolesDto;
 import com.econoMe.gestorgastosback.dto.UserDto;
 import com.econoMe.gestorgastosback.model.Accounting;
+import com.econoMe.gestorgastosback.model.Operations;
 import com.econoMe.gestorgastosback.model.Roles;
 import com.econoMe.gestorgastosback.model.User;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -61,5 +63,18 @@ public class MappingService {
        role.setRole(roles.getRole());
 
        return role;
+    }
+
+    public OperationsDto operationsToDto(Operations operations){
+        OperationsDto operationsDto = new OperationsDto();
+        operationsDto.setDate(operations.getDate());
+        operationsDto.setQuantity(operations.getQuantity());
+        operationsDto.setCategory(operations.getCategory());
+        operationsDto.setAccountingName(operations.getAccounting().getName());
+        operationsDto.setDescription(operations.getDescription());
+        operationsDto.setType(operations.getType());
+        operationsDto.setUsername(operations.getUser().getUsername());
+
+        return operationsDto;
     }
 }

@@ -10,6 +10,7 @@ import com.econoMe.gestorgastosback.repository.RolesRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -38,7 +39,7 @@ public class OperationsService {
         List<Operations> operations = operationsRepository.findByAccounting(accounting);
 
         if (operations.isEmpty()) {
-            throw new RuntimeException("La lista de operaciones de la contabilidad " + accounting.getName() + " está vacía");
+            return new ArrayList<>();
         } else {
             return operations;
         }
@@ -75,6 +76,17 @@ public class OperationsService {
             throw new RuntimeException("No se encontró la tupla para el usuario " + operation.getUser().getUsername() + " y la contabilidad " + operation.getAccounting().getId());
         }
 
+    }
+
+    public List<String> findAllAccountingCategories(Accounting accounting) {
+        List<String> categories = new ArrayList<>();
+        List<Operations> operationsAccounting = findByAccounting(accounting);
+
+        for(int i = 0; i < operationsAccounting.size(); i++){
+            categories.add(operationsAccounting.get(i).getCategory());
+        }
+
+        return categories;
     }
 
     public Operations updateOperation(Long id, Operations operation) {

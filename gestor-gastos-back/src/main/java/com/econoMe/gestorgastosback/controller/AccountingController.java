@@ -7,6 +7,7 @@ import com.econoMe.gestorgastosback.model.RolesId;
 import com.econoMe.gestorgastosback.model.User;
 import com.econoMe.gestorgastosback.service.AccountingService;
 import com.econoMe.gestorgastosback.service.MappingService;
+import com.econoMe.gestorgastosback.service.OperationsService;
 import com.econoMe.gestorgastosback.service.RolesService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -26,6 +27,8 @@ public class AccountingController {
     private AccountingService accountingService;
     @Autowired
     private RolesService rolesService;
+    @Autowired
+    private OperationsService operationsService;
     @Autowired
     private MappingService mappingService;
 
@@ -74,7 +77,15 @@ public class AccountingController {
         Roles roles = rolesService.findRoleById(new RolesId(userDetails.getUsername(), accountingService.findAccountingByName(userDetails.getUsername(), accountingName).getId()))
                 .orElseThrow(() -> new NoSuchElementException("No se encontró el rol para la contabilidad."));
         return ResponseEntity.ok(mappingService.rolesToDto(roles));
+    }
 
+    @GetMapping("/{accountingName}/categories")
+    public ResponseEntity<?> getAccountingOperationCategories(Authentication authentication, @PathVariable String accountingName) {
+        if (authentication == null || !(authentication.getPrincipal() instanceof UserDetails userDetails)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("No se ha proporcionado una autenticación válida.");
+        }
+
+        return ResponseEntity.ok(operationsService.findAllAccountingCategories(accountingService.findAccountingByName(userDetails.getUsername(), accountingName)));
     }
 
     @GetMapping("/all")
