@@ -9,6 +9,7 @@ import com.econoMe.gestorgastosback.repository.AccountingRepository;
 import com.econoMe.gestorgastosback.repository.UserRepository;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 import com.econoMe.gestorgastosback.repository.RolesRepository;
 import java.util.List;
@@ -75,6 +76,15 @@ public class RolesService {
 
     public List<Roles> findAllRoles() {
         return rolesRepository.findAll();
+    }
+
+    public Optional<Roles> findByUserUsernameAndAccountingId(String username, Long accountingId){
+        try {
+            return rolesRepository.findByUserUsernameAndAccountingId(username, accountingId);
+        } catch (DataAccessException e) {
+            // Manejar la excepción de acceso a datos de Spring
+            throw new RuntimeException("Se produjo un error al buscar roles por nombre de usuario y ID de contabilidad", e);
+        }
     }
 
     public boolean validateUserAndAccountingExistence(String userUsername, Long accountingId) {

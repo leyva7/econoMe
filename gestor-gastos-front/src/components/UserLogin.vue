@@ -35,6 +35,7 @@ export default {
             console.log("Respuesta del inicio de sesión:", response.data);
             localStorage.setItem('userToken', response.data.token);
             localStorage.setItem('username', response.data.username);
+            this.fetchPersonalAccountingId();
             alert("Inicio de sesión exitoso");
             router.push({ name: 'home' });
           })
@@ -47,6 +48,26 @@ export default {
             alert("Error al iniciar sesión");
           });
     },
+    fetchPersonalAccountingId() {
+      axios.get('http://localhost:8081/api/accounting/accountingPersonal', {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem('userToken')}`
+        }
+      })
+          .then(response => {
+            console.log("ID de contabilidad personal:", response.data.id);
+            localStorage.setItem('personalAccountingId', response.data.id);
+
+            this.$router.push({
+              name: 'home',
+              query: { id: response.data.id }
+            });
+          })
+          .catch(error => {
+            console.error("Error al obtener el ID de contabilidad personal:", error);
+            alert("Error al obtener detalles de contabilidad personal");
+          });
+    }
   },
 };
 </script>

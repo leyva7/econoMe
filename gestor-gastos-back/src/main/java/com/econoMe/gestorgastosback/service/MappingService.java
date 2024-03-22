@@ -1,9 +1,6 @@
 package com.econoMe.gestorgastosback.service;
 
-import com.econoMe.gestorgastosback.dto.AccountingDto;
-import com.econoMe.gestorgastosback.dto.OperationsDto;
-import com.econoMe.gestorgastosback.dto.RolesDto;
-import com.econoMe.gestorgastosback.dto.UserDto;
+import com.econoMe.gestorgastosback.dto.*;
 import com.econoMe.gestorgastosback.model.Accounting;
 import com.econoMe.gestorgastosback.model.Operations;
 import com.econoMe.gestorgastosback.model.Roles;
@@ -18,6 +15,7 @@ import java.util.List;
 public class MappingService {
 
     @Autowired UserService userService;
+    @Autowired AccountingService accountingService;
 
     public UserDto userToDto(User user) {
         UserDto dto = new UserDto();
@@ -30,6 +28,7 @@ public class MappingService {
 
     public AccountingDto accountingToDto(Accounting accounting){
         AccountingDto accountingDto = new AccountingDto();
+        accountingDto.setId(accounting.getId());
         accountingDto.setName(accounting.getName());
         accountingDto.setDescription(accounting.getDescription());
         accountingDto.setType(accounting.getType());
@@ -40,10 +39,21 @@ public class MappingService {
 
     public Accounting accountingDtoToAccounting(AccountingDto accountingDto){
         Accounting accounting = new Accounting();
+        accounting.setId(accountingDto.getId());
         accounting.setName(accountingDto.getName());
         accounting.setDescription(accountingDto.getDescription());
         accounting.setType(accountingDto.getType());
         accounting.setUserCreator(userService.getUserByUsername(accountingDto.getUserCreator()));
+
+        return accounting;
+    }
+
+    public Accounting accountingRegisterToAccounting(AccountingRegistration accountingRegistration){
+        Accounting accounting = new Accounting();
+        accounting.setName(accountingRegistration.getName());
+        accounting.setDescription(accountingRegistration.getDescription());
+        accounting.setType(accountingRegistration.getType());
+        accounting.setUserCreator(userService.getUserByUsername(accountingRegistration.getUserCreator()));
 
         return accounting;
     }
@@ -70,11 +80,34 @@ public class MappingService {
         operationsDto.setDate(operations.getDate());
         operationsDto.setQuantity(operations.getQuantity());
         operationsDto.setCategory(operations.getCategory());
-        operationsDto.setAccountingName(operations.getAccounting().getName());
+        operationsDto.setAccountingId(operations.getAccounting().getId());
         operationsDto.setDescription(operations.getDescription());
         operationsDto.setType(operations.getType());
         operationsDto.setUsername(operations.getUser().getUsername());
 
         return operationsDto;
     }
+    public List<OperationsDto> operationListToDto(List<Operations> operations){
+        List<OperationsDto> operationsDto = new ArrayList<>();
+        for(int i = 0; i < operations.size();i++){
+            operationsDto.add(operationsToDto(operations.get(i)));
+        }
+
+        return operationsDto;
+    }
+
+    public Operations dtoToOperation(OperationsDto operationsDto){
+        Operations operations = new Operations();
+        operations.setDate(operationsDto.getDate());
+        operations.setQuantity(operationsDto.getQuantity());
+        operations.setCategory(operationsDto.getCategory());
+        operations.setAccounting(accountingService.findAccountingById(operationsDto.getAccountingId()));
+        operations.setDescription(operationsDto.getDescription());
+        operations.setType(operationsDto.getType());
+        operations.setUser(userService.getUserByUsername(operationsDto.getUsername()));
+
+        return operations;
+    }
+
+
 }

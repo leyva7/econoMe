@@ -43,7 +43,6 @@ public class AccountingService {
     }
     @Transactional
     public Accounting createAccounting(Accounting accounting){
-
         Accounting savedAccounting = accountingRepository.save(accounting);
         rolesService.createRole(new Roles(accounting.getUserCreator(), accounting, Role.EDITOR));
         return savedAccounting;
@@ -124,11 +123,18 @@ public class AccountingService {
     }
 
     public Optional<Accounting> findPersonalAccounting(String username) {
-        return accountingRepository.findByUserCreator(userService.getUserByUsername(username))
+        Optional<Accounting> personalAccountingOptional = accountingRepository.findByUserCreator(userService.getUserByUsername(username))
                 .stream()
                 .filter(accounting -> accounting.getType() == Type.PERSONAL)
                 .findFirst();
+
+        if (personalAccountingOptional.isPresent()) {
+            return personalAccountingOptional;
+        } else {
+            throw new NoSuchElementException("No se encontró la contabilidad personal para el usuario: " + username);
+        }
     }
+
 
     public Accounting updateAccounting(String username, Accounting accounting){
         if(accounting.getId() == null || !accountingRepository.existsById(accounting.getId())){

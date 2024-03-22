@@ -50,7 +50,11 @@ export default {
     });
 
     const home = () => {
-      router.push({ name: 'home' });
+      const personalAccountingId = localStorage.getItem('personalAccountingId');
+      router.push({
+        name: 'home',
+        query: { id: personalAccountingId }
+      });
     };
 
     const loadUserData = () => {

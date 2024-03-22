@@ -49,7 +49,7 @@ const routes = [
         component: EvolutionDetails,
       },
       {
-        path: 'shared:accountingName',
+        path: 'shared/:accountingName',
         name: 'shared',
         component: SharedAccountings,
       },

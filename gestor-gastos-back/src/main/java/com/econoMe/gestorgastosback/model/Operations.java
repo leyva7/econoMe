@@ -25,7 +25,7 @@ public class Operations {
     private String description;
 
     @Column(nullable = false)
-    private BigDecimal quantity;
+    private Double quantity;
 
     @Column(nullable = false)
     private String category;
@@ -41,7 +41,7 @@ public class Operations {
 
     }
 
-    public Operations(Accounting accounting, OperationType type, String description, BigDecimal quantity, LocalDate date, String category) {
+    public Operations(Accounting accounting, OperationType type, String description, Double quantity, LocalDate date, String category) {
         this.accounting = accounting;
         this.type = type;
         this.description = description;
@@ -98,11 +98,11 @@ public class Operations {
     public void setCategory(String category) {
         this.category = category;
     }
-    public BigDecimal getQuantity() {
+    public Double getQuantity() {
         return quantity;
     }
 
-    public void setQuantity(BigDecimal quantity) {
+    public void setQuantity(Double quantity) {
         this.quantity = quantity;
     }
 

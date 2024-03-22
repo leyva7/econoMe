@@ -1,30 +1,31 @@
 package com.econoMe.gestorgastosback.service;
 
+import com.econoMe.gestorgastosback.common.Role;
 import com.econoMe.gestorgastosback.model.Accounting;
 import com.econoMe.gestorgastosback.model.Operations;
 import com.econoMe.gestorgastosback.model.Roles;
 import com.econoMe.gestorgastosback.model.User;
-import com.econoMe.gestorgastosback.repository.AccountingRepository;
 import com.econoMe.gestorgastosback.repository.OperationsRepository;
-import com.econoMe.gestorgastosback.repository.RolesRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.NoSuchElementException;
-import java.util.Optional;
+import java.util.*;
 
 @Service
 public class OperationsService {
 
+    @Autowired
     private final OperationsRepository operationsRepository;
-    private final RolesRepository rolesRepository;
+    @Autowired
+    private final RolesService rolesService;
+    @Autowired
+    private final UserService userService;
 
     @Autowired
-    public OperationsService(OperationsRepository operationsRepository, RolesRepository rolesRepository, RolesService rolesService) {
+    public OperationsService(OperationsRepository operationsRepository, RolesService rolesService, UserService userService) {
         this.operationsRepository = operationsRepository;
-        this.rolesRepository = rolesRepository;
+        this.rolesService = rolesService;
+        this.userService = userService;
     }
 
     public List<Operations> findAllOperations() {
@@ -58,14 +59,14 @@ public class OperationsService {
 
     public Operations createOperation(Operations operation) {
 
-        if(rolesRepository.findByUserUsernameAndAccountingId(operation.getUser().getUsername(), operation.getAccounting().getId()).isEmpty()){
+        if(rolesService.findByUserUsernameAndAccountingId(operation.getUser().getUsername(), operation.getAccounting().getId()).isEmpty()){
             throw new IllegalStateException("No existe ningún rol para el usuario " + operation.getUser().getUsername() + " y la contabilidad " + operation.getAccounting().getName()+ " no existe.");
         }
 
-        Optional<Roles> rolesOptional = rolesRepository.findByUserUsernameAndAccountingId(operation.getUser().getUsername(), operation.getAccounting().getId());
+        Optional<Roles> rolesOptional = rolesService.findByUserUsernameAndAccountingId(operation.getUser().getUsername(), operation.getAccounting().getId());
 
         if (rolesOptional.isPresent()) {
-            if(rolesOptional.get().getRole().equals("EDITOR")){
+            if(rolesOptional.get().getRole().equals(Role.EDITOR)){
                 return operationsRepository.save(operation);
             }
             else{
@@ -79,14 +80,19 @@ public class OperationsService {
     }
 
     public List<String> findAllAccountingCategories(Accounting accounting) {
-        List<String> categories = new ArrayList<>();
         List<Operations> operationsAccounting = findByAccounting(accounting);
+        Set<String> uniqueCategories = new HashSet<>();
 
-        for(int i = 0; i < operationsAccounting.size(); i++){
-            categories.add(operationsAccounting.get(i).getCategory());
+        for (Operations operation : operationsAccounting) {
+            uniqueCategories.add(operation.getCategory());
         }
 
-        return categories;
+        return new ArrayList<>(uniqueCategories);
+    }
+
+    public List<Operations> findAllUserOperation(String username) {
+        return operationsRepository.findByUser(userService.getUserByUsername(username));
+
     }
 
     public Operations updateOperation(Long id, Operations operation) {

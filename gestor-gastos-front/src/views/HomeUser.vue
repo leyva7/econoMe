@@ -1,31 +1,13 @@
 <template>
   <div id="window">
     <!-- Sidebar con navegación y contabilidades compartidas -->
-    <aside class="sidebar">
-      <div class="logo-section">
-        <img src="../assets/img/econome.png" alt="Logo" class="logo">
-      </div>
-      <div class="divider"></div>
-      <nav class="nav">
-        <a href="#" @click="navigate('/home-user')"><img src="../assets/icons/home.svg" alt="Home" class="nav-icon"> Home</a>
-        <a href="#" @click="navigate('/home-user/spent')"><img src="../assets/icons/spent.svg" alt="Gastos" class="nav-icon"> Gastos</a>
-        <a href="#" @click="navigate('/home-user/income')"><img src="../assets/icons/income.svg" alt="Ingresos" class="nav-icon"> Ingresos</a>
-        <a href="#" @click="navigate('/home-user/evolution')"><img src="../assets/icons/evolution.svg" alt="Evolucion" class="nav-icon"> Evolución</a>
-      </nav>
-      <div class="divider"></div>
-      <div class="shared-accountings">
-      <span>Contabilidades Compartidas</span>
-        <button @click="openAddAccountingModal">Añadir Contabilidad</button>
-      <ul>
-        <a href="#" v-for="(accounting, index) in accountings" :key="index" @click="navigate('/home-user/shared' + accounting.name)"><li class="shared-accountings-list">{{ accounting.name }}</li></a>
-      </ul>
-    </div>
-      <div v-if="isModalOpen" class="modal-overlay">
+    <SidebarPage :sharedAccountings="sharedAccountings" @openModal="handleOpenModal"/>
+
+      <!-- <div v-if="isModalOpen" class="modal-overlay">
         <div class="modal">
           <h2 v-if="modalContentType === 'addAccounting'">Añadir Contabilidad Compartida</h2>
           <h2 v-else-if="modalContentType === 'addOperations'">Nueva operación</h2>
-          <!-- Formulario para añadir contabilidad -->
-          <form v-if="modalContentType === 'addAccounting'" @submit.prevent="submitForm">
+          <form v-if="modalContentType === 'addAccounting'" @submit.prevent="submitSharedAccounting">
             <div class="form-group">
               <label for="accountName">Nombre de contabilidad</label>
               <input type="text" id="accountName" v-model="accountName">
@@ -33,6 +15,10 @@
             <div class="form-group">
               <label for="description">Descripción</label>
               <textarea id="description" v-model="description"></textarea>
+            </div>
+            <div class="modal-actions">
+              <button type="submit" class="btn-primary">Aceptar</button>
+              <button type="button" @click="toggleModal(false)" class="btn-secondary">Cancelar</button>
             </div>
           </form>
           <form v-else-if="modalContentType === 'addOperations'" @submit.prevent="submitOperations">
@@ -49,37 +35,38 @@
               <input
                   type="text"
                   placeholder="Escriba su opción"
+                  id="customOption"
                   v-model="customOption"
-                  @input="onCustomOptionInput"
               />
             </div>
             <div class="form-group">
               <label for="description">Descripción</label>
-              <textarea id="description" v-model="description"></textarea>
+              <textarea id="description" v-model="operation.description"></textarea>
             </div>
             <div class="form-group">
               <label for="type">Tipo</label>
-              <select id="type" v-model="type">
+              <select id="type" v-model="operation.type">
                 <option value="ingreso">Ingreso</option>
                 <option value="gasto">Gasto</option>
               </select>
             </div>
             <div class="form-group">
               <label for="date">Fecha</label>
-              <input type="date" id="date" v-model="date">
+              <input type="date" id="date" v-model="operation.date">
             </div>
             <div class="form-group">
               <label for="amount">Cantidad</label>
-              <input type="number" id="amount" v-model="amount">
+              <input type="number" id="amount" v-model="operation.quantity" step="0.01">
+            </div>
+            <div class="modal-actions">
+              <button type="submit" class="btn-primary">Aceptar</button>
+              <button type="button" @click="toggleModal(false)" class="btn-secondary">Cancelar</button>
             </div>
           </form>
-          <div class="modal-actions">
-            <button type="submit" class="btn-primary">Aceptar</button>
-            <button type="button" @click="toggleModal(false)" class="btn-secondary">Cancelar</button>
-          </div>
         </div>
-      </div>
-    </aside>
+      </div>-->
+    <AddAccountingModal :isVisible="isModalOpen && modalContentType === 'addAccounting'" @update:isVisible="toggleModal" />
+    <AddOperationModal :isVisible="isModalOpen && modalContentType === 'addOperations'" @update:isVisible="toggleModal" />
 
     <!-- Área de contenido principal -->
     <main class="content">
@@ -117,10 +104,17 @@ import { ref, onMounted, watch } from 'vue';
 import { computed } from 'vue';
 import { useRouter } from 'vue-router';
 import axios from 'axios';
-import router from "@/router";
+import SidebarPage from "@/components/AppSidebar.vue";
+import AddAccountingModal from "@/components/AddAccountingModal.vue";
+import AddOperationModal from "@/components/AddOperationModal.vue";
 
 export default {
   name: 'UserHome',
+  components:{
+    SidebarPage,
+    AddAccountingModal,
+    AddOperationModal
+  },
   setup() {
     const username = ref('');
     const showTooltip = ref(false);
@@ -130,36 +124,89 @@ export default {
     const accountings = ref([]);
     const modalContentType = ref('');
     const userRole = ref('EDITOR'); // 'EDITOR' o 'VISUALIZER'
-    const selectedOption = ref('');
-    const customOption = ref('');
+    //const selectedOption = ref('');
+    //const customOption = ref('');
     const options = ref(['']); // Tus opciones predeterminadas
     const router = useRouter();
-    const operation = ref({
+    /*const operation = ref({
       type: '',
-      descrition: '',
+      description: '',
       category: '',
       date: '',
       quantity: ''
-    });
+    });*/
+
+    /*const clearForm = () => {
+      operation.value.type = '';
+      operation.value.description = '';
+      operation.value.category = '';
+      operation.value.date = '';
+      operation.value.quantity = '';
+      customOption.value = ''; // Limpia también la opción personalizada si está seleccionada
+      selectedOption.value = ''; // Limpia la opción seleccionada en el select
+    };*/
 
     onMounted(() => {
       username.value = localStorage.getItem('username');
+      //clearForm();
     });
+
+    const fetchAccountings = async () => {
+      try {
+        const response = await axios.get('http://localhost:8081/api/accounting/accountingUser', {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('userToken')}`,
+          },
+        });
+        console.log("Datos recibidos:", response.data); // Verifica los datos recibidos
+        accountings.value = response.data;
+        console.log("Datos asignados a accountings:", accountings.value); // Verifica la asignación
+      } catch (error) {
+        console.error('Hubo un error al obtener las contabilidades:', error);
+      }
+    };
 
     onMounted(async () => {
       await fetchAccountings();
-      await fetchCategories(accountingName.value);
     });
 
-    const navigate = (path) => {
-      router.push(path);
+    const fetchCategories = async (accountingId) => {
+      try {
+        console.log("aaaaaa" + accountingId);
+        const response = await axios.get(`http://localhost:8081/api/accounting/${accountingId}/categories`, {
+          headers: {
+            Authorization: `Bearer ${localStorage.getItem('userToken')}`,
+          },
+        });
+        console.log(response);
+        options.value = response.data; // Asigna la lista de opciones al ref 'options'
+      } catch (error) {
+        console.error('Hubo un error al obtener las categorías:', error);
+      }
     };
 
-    const openAddAccountingModal = () => {
+    const navigate = (path) => {
+      const personalAccounting = accountings.value.find(accounting => accounting.type === 'PERSONAL');
+
+      if (personalAccounting && path.startsWith('/home-user')) {
+        router.push({ path, query: { id: personalAccounting.id } });
+      } else {
+        // Para cualquier otra navegación, no modificamos el comportamiento original
+        router.push(path);
+      }
+    };
+
+    // Dentro de la función setup() en UserHome
+    const handleOpenModal = (type) => {
+      modalContentType.value = type; // Asume que 'modalContentType' es una ref reactive
+      isModalOpen.value = true; // Asume que 'isModalOpen' es una ref reactive
+    };
+
+    /*const openAddAccountingModal = () => {
       modalContentType.value = 'addAccounting';
       isModalOpen.value = true;
       console.log("Modal Open:", isModalOpen.value, "Content Type:", modalContentType.value); // Debugging
-    };
+    };*/
 
     const openOperationsModal = () => {
       modalContentType.value = 'addOperations';
@@ -167,8 +214,12 @@ export default {
       console.log("Modal Open:", isModalOpen.value, "Content Type:", modalContentType.value); // Debugging
     };
 
-    const toggleModal = (open) => {
-      isModalOpen.value = open;
+    const toggleModal = (value) => {
+      if (typeof value === 'boolean') {
+        isModalOpen.value = value;
+      } else {
+        isModalOpen.value = !isModalOpen.value;
+      }
     };
 
     const logout = () => {
@@ -185,9 +236,29 @@ export default {
       }
     });
 
-    const submitForm = async () => {
+    const sharedAccountings = computed(() => {
+      return accountings.value.filter(accounting => accounting.type === 'SHARED');
+    });
+
+
+    /*const navigateToAccounting = (accounting) => {
+      // Ejemplo de cómo podrías incluir el ID en la navegación sin mostrarlo en la URL directamente
+      router.push({
+        name: 'shared',
+        params: { accountingName: accounting.name },
+        query: { id: accounting.id } // Opcional, si quieres mantener el ID en la query de la URL
+      });
+    };*/
+
+    /*const submitSharedAccounting = async () => {
+      console.log("Submit form es llamado");
       if (!accountName.value || !description.value) {
         alert('Por favor, rellena todos los campos del formulario.');
+        return;
+      }
+
+      if (accountName.value.trim().toLowerCase() === 'contabilidad personal') {
+        alert('No se puede añadir una contabilidad compartida con el nombre "Contabilidad personal". Por favor, elige otro nombre.');
         return;
       }
 
@@ -199,6 +270,7 @@ export default {
       };
 
       try {
+        console.log(accountingData);
         await axios.post('http://localhost:8081/api/accounting/register', accountingData, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('userToken')}`,
@@ -215,41 +287,17 @@ export default {
         console.error('Error al añadir contabilidad:', error);
         alert('Ocurrió un error al añadir la contabilidad. Por favor, inténtalo de nuevo.');
       }
-    };
+    };*/
 
     // Determina si la opción personalizada está seleccionada
-    const isCustomOptionSelected = computed(() => selectedOption.value === 'custom');
+    // const isCustomOptionSelected = computed(() => selectedOption.value === 'custom');
 
     // Maneja el cambio en el desplegable
-    const onSelectChange = () => {
-      console.log(selectedOption);
+    /*const onSelectChange = () => {
       if (!isCustomOptionSelected.value) {
         customOption.value = ''; // Limpia la opción personalizada si no está seleccionada
       }
-    };
-
-    // Maneja el input de la opción personalizada
-    const onCustomOptionInput = () => {
-      console.log(selectedOption);
-      if (customOption.value.trim() !== '') {
-        selectedOption.value = 'custom';
-      }
-    };
-
-    const fetchAccountings = async () => {
-      try {
-        const response = await axios.get('http://localhost:8081/api/accounting/accountingUserShared', {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('userToken')}`,
-          },
-        });
-        console.log("Datos recibidos:", response.data); // Verifica los datos recibidos
-        accountings.value = response.data;
-        console.log("Datos asignados a accountings:", accountings.value); // Verifica la asignación
-      } catch (error) {
-        console.error('Hubo un error al obtener las contabilidades compartidas:', error);
-      }
-    };
+    };*/
 
     const modifyUser = () => {
       navigate('modify-details');
@@ -259,7 +307,7 @@ export default {
       navigate('modify-password');
     };
 
-    const updateUserRole = async () => {
+    /*const updateUserRole = async () => {
       try {
         const response = await axios.get('url-para-obtener-detalle-contabilidad', {
           headers: {
@@ -270,11 +318,11 @@ export default {
       } catch (error) {
         console.error('Error al obtener el rol del usuario:', error);
       }
-    };
+    };*/
 
-    const fetchUserRole = async (accountingName) => {
+    const fetchUserRole = async (accountingId) => {
       try {
-        const response = await axios.get(`http://localhost:8081/api/accounting/${accountingName}/rol`, {
+        const response = await axios.get(`http://localhost:8081/api/accounting/${accountingId}/rol`, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('userToken')}`,
           },
@@ -288,16 +336,18 @@ export default {
       }
     };
 
-    watch(() => router.currentRoute.value, async (newRoute) => {
-      if (newRoute.name === 'shared') {
-        // Extrae el nombre de la contabilidad compartida de los parámetros de la ruta
-        const accountingName = newRoute.params.accountingName;
-        // Realiza la llamada a la API para obtener el rol del usuario en esta contabilidad
-        await fetchUserRole(accountingName);
+    watch(() => [router.currentRoute.value.query.id], async ([id]) => {
+      console.log(router.currentRoute.value.query.id);
+      if (router.currentRoute.value.name === 'shared') {
+        // Utiliza el ID directamente desde la consulta de la URL para buscar el rol del usuario
+        await fetchUserRole(id);
       } else {
+        // Lógica predeterminada si no estás en una contabilidad compartida o si falta el ID
         userRole.value = 'EDITOR';
       }
-    }, { immediate: true });
+      await fetchCategories(id);
+    }, { immediate: true, deep: true });
+
 
     const shouldShowAddButton = computed(() => {
       const routeNamesToShowButton = ['home', 'income', 'spent', 'evolution'];
@@ -310,39 +360,45 @@ export default {
       return false;
     });
 
-    const fetchCategories = async (accountingName) => {
+    /*const submitOperations = async () => {
+      console.log(operation.value);
+      console.log(customOption.value);
+      // Verifica si todos los campos necesarios están presentes
+      // Nota: Se agrega una verificación más explícita para 'category' dependiendo de si 'isCustomOptionSelected' es true
+      let categoryValid = isCustomOptionSelected.value ? customOption.value.trim() !== '' : selectedOption.value !== '';
+      if (!categoryValid || !operation.value.type || !operation.value.date || !operation.value.description || operation.value.quantity <= 0) {
+        alert('Por favor, completa todos los campos.');
+        return;
+      }
+
       try {
-        console.log(accountingName);
-        const response = await axios.get(`http://localhost:8081/api/accounting/${accountingName}/categories`, {
+        const accountingId = router.currentRoute.value.query.id;
+        operation.value.accountingId = accountingId;
+        operation.value.username = username.value;
+        if (operation.value.type.toLowerCase() === 'ingreso') { // Corregido para usar '()'
+          operation.value.type = 'INCOME';
+        } else {
+          operation.value.type = 'SPENT';
+        }
+
+        // Asigna la categoría basada en si la opción personalizada está seleccionada o no
+        operation.value.category = isCustomOptionSelected.value ? customOption.value : selectedOption.value;
+
+        console.log(operation.value);
+        const response = await axios.post('http://localhost:8081/api/accounting/operation/register', operation.value, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('userToken')}`,
           },
         });
         console.log(response);
-        options.value = response.data; // Asigna la lista de opciones al ref 'options'
+        alert('Operación registrada exitosamente.');
+        await fetchCategories(accountingId);
+        toggleModal(false);
       } catch (error) {
-        console.error('Hubo un error al obtener las categorías:', error);
+        console.error('Error al registrar operación:', error);
+        alert('Ocurrió un error al registrar la operación. Por favor, inténtalo de nuevo.');
       }
-    };
-
-    const submitOperations = async () => {
-      if (!operation.value.category || !operation.value.type || !operation.value.date || !operation.value.description || !user.value.quantity) {
-        alert('Por favor, completa todos los campos.');
-        return;
-      }
-      //AQUI ME HE QUEDADO CON EL FORMULARIO DE OPERACIONES
-      try {
-        console.log(payload);
-        await axios.post('http://localhost:8081/api/auth/register', payload);
-        alert('Usuario y contabilidad registrados exitosamente.');
-        router.push('/');
-      } catch (error) {
-        console.error('Error al registrar usuario y contabilidad:', error);
-        alert('Ocurrió un error al registrar el usuario y la contabilidad. Por favor, inténtalo de nuevo.');
-      }
-
-
-    };
+    };*/
 
     return {
       isModalOpen,
@@ -350,7 +406,7 @@ export default {
       accountingName,
       description,
       toggleModal,
-      submitForm,
+      //submitSharedAccounting,
       username,
       showTooltip,
       logout,
@@ -358,20 +414,23 @@ export default {
       modifyPassword,
       accountings,
       navigate,
-      updateUserRole,
+      //updateUserRole,
       shouldShowAddButton,
       fetchUserRole,
-      submitOperations,
-      openAddAccountingModal,
+      //submitOperations,
+      //openAddAccountingModal,
       openOperationsModal,
       modalContentType,
-      isCustomOptionSelected,
-      onSelectChange,
-      onCustomOptionInput,
+      //isCustomOptionSelected,
+      //onSelectChange,
       options,
-      selectedOption,
+      //selectedOption,
+      //customOption,
       fetchCategories,
-      operation
+      //operation,
+      //navigateToAccounting,
+      sharedAccountings,
+      handleOpenModal
     };
   },
 };
@@ -383,84 +442,6 @@ export default {
   display: flex;
   max-height: 100vh;
   overflow: hidden;
-}
-
-.sidebar, .content {
-  overflow-y: auto; /* Permite desplazamiento interno si es necesario */
-}
-
-.sidebar {
-  width: 15%;
-  background-color: #2C3E50;
-  color: #FFFFFF;
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-  text-align: center;
-  box-sizing: border-box;
-  overflow-y: auto;
-}
-
-.divider{
-  border-bottom: 1px solid #FFFFFF;
-}
-
-.divider, .logo-section, .nav, .shared-accountings {
-  margin-bottom: 30px;
-}
-
-.logo-section, .nav a, .shared-accountings details summary, .shared-accountings details {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-}
-
-.logo {
-  max-width: 150px;
-  margin-right: 10px;
-}
-
-.nav-icon, .tooltip a {
-  margin-right: 8px;
-}
-
-.nav a, .shared-accountings details summary {
-  color: #FFFFFF;
-  padding: 5px 0;
-  text-decoration: none;
-  font-size: 20px;
-}
-
-.shared-accountings details {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.shared-accountings ul {
-  list-style-type: none; /* Quita los puntos */
-  padding: 0;
-  margin: 20px 0; /* Agrega un poco de margen arriba y abajo de la lista */
-}
-
-.shared-accountings a {
-  color: #FFFFFF; /* Establece el color del texto de los enlaces a blanco */
-  text-decoration: none; /* Remueve el subrayado de los enlaces */
-}
-
-.shared-accountings li {
-  margin-bottom: 10px; /* Aumenta la separación */
-  border: 2px solid #FFFFFF; /* Borde blanco alrededor de la lista */
-}
-.shared-accountings a:visited {
-  color: #FFFFFF; /* Mantiene el color blanco incluso después de ser visitados */
-}
-
-
-.add-icon {
-  cursor: pointer;
-  margin-left: 10px;
 }
 
 .modal {
@@ -540,14 +521,6 @@ export default {
   flex-grow: 1; /* Asegura que este contenedor llene el espacio disponible en .content */
   background-color: #ECF0F1;
   border-radius: 20px;
-}
-
-
-.content, .dynamic-content {
-  flex-grow: 1;
-  overflow: auto;
-  height: 100vh;
-  padding: 20px;
 }
 
 .top-bar {

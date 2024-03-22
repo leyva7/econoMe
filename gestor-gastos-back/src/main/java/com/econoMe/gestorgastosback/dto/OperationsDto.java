@@ -18,19 +18,18 @@ import java.time.LocalDate;
 @AllArgsConstructor
 public class OperationsDto {
 
-    private String accountingName;
+    private Long accountingId;
 
     private String username;
 
     private String description;
 
-    private BigDecimal quantity;
+    private Double quantity;
 
     private String category;
 
     private LocalDate date;
 
     private OperationType type;
-
 
 }

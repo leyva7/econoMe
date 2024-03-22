@@ -15,14 +15,12 @@ public class OperationsController {
     @Autowired
     private OperationsService operationsService;
 
-    // Registro de contabilidad
     @PostMapping("/register")
     public ResponseEntity<Operations> registerAccounting(@RequestBody Operations accounting) {// Codificamos la contraseña antes de guardarla
         Operations savedOperation = operationsService.createOperation(accounting);
         return ResponseEntity.ok(savedOperation);
     }
 
-    // Actualización de datos de la contabilidad
     @PutMapping("/{id}")
     public ResponseEntity<Operations> updateAccounting(@PathVariable Long id, @RequestBody Operations accounting) {
         Operations updatedOperation = operationsService.updateOperation(id, accounting);
