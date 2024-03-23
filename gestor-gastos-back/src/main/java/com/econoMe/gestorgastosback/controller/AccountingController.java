@@ -138,13 +138,21 @@ public class AccountingController {
         }
     }
 
-    @PostMapping("/operation/all")
-    public ResponseEntity<?> getAllUserOperation(Authentication authentication) {
-        if (authentication == null || !(authentication.getPrincipal() instanceof UserDetails userDetails)) {
+    @GetMapping("/{id}/operation/all")
+    public ResponseEntity<?> getAllUserOperationByAccounting(Authentication authentication, @PathVariable Long id) {
+        if (authentication == null || !(authentication.getPrincipal() instanceof User user)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("No se ha proporcionado una autenticación válida.");
         }
 
-        return ResponseEntity.ok(mappingService.operationListToDto(operationsService.findAllUserOperation(userService.getUserByUsername(userDetails.getUsername()))));
+        return ResponseEntity.ok(mappingService.operationListToDto(operationsService.findAllUserOperationByAccounting(user, accountingService.findAccountingById(id))));
+    }
+
+    @GetMapping("/operation/all")
+    public ResponseEntity<?> getAllUserOperation(Authentication authentication) {
+        if (authentication == null || !(authentication.getPrincipal() instanceof User user)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("No se ha proporcionado una autenticación válida.");
+        }
+        return ResponseEntity.ok(mappingService.operationListToDto(operationsService.findAllUserOperation(user)));
     }
 
 

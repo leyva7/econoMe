@@ -75,7 +75,6 @@ export default {
   };
 
   try {
-    console.log(user.value.username);
     await axios.post('http://localhost:8081/api/auth/register', payload);
     alert('Usuario y contabilidad registrados exitosamente.');
     router.push('/');

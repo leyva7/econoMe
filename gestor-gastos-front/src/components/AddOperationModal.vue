@@ -109,7 +109,6 @@ export default defineComponent({
     };
 
     const fetchCategories = async (accountingId) => {
-      console.log(accountingId)
       try {
         const response = await axios.get(`http://localhost:8081/api/accounting/${accountingId}/categories`, {
           headers: {
@@ -126,8 +125,6 @@ export default defineComponent({
 
 
     const submitOperations = async () => {
-      console.log(operation.value);
-      console.log(customOption.value);
 
       let categoryValid = isCustomOptionSelected.value ? customOption.value.trim() !== '' : selectedOption.value !== '';
       if (!categoryValid || !operation.value.type || !operation.value.date || !operation.value.description || operation.value.quantity <= 0) {
@@ -147,7 +144,6 @@ export default defineComponent({
         // Asigna la categoría basada en si la opción personalizada está seleccionada o no
         operation.value.category = isCustomOptionSelected.value ? customOption.value : selectedOption.value;
 
-        console.log(operation.value);
         const response = await axios.post('http://localhost:8081/api/accounting/operation/register', operation.value, {
           headers: {
             Authorization: `Bearer ${localStorage.getItem('userToken')}`,

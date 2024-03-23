@@ -87,9 +87,12 @@ public class OperationsService {
         return new ArrayList<>(uniqueCategories);
     }
 
+    public List<Operations> findAllUserOperationByAccounting(User user, Accounting accounting) {
+        return operationsRepository.findByUserAndAccounting(user, accounting);
+    }
+
     public List<Operations> findAllUserOperation(User user) {
         return operationsRepository.findByUser(user);
-
     }
 
     public Operations updateOperation(Long id, Operations operation) {

@@ -57,7 +57,6 @@ export default {
     const openOperationsModal = () => {
       modalContentType.value = 'addOperations';
       isModalOpen.value = true;
-      console.log("Modal Open:", isModalOpen.value, "Content Type:", modalContentType.value); // Debugging
     };
 
     const toggleModal = (value) => {

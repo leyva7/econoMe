@@ -33,7 +33,6 @@ export default {
 
       axios.post('http://localhost:8081/api/auth/login', userCredentials)
           .then(response => {
-            console.log("Respuesta del inicio de sesión:", response.data);
             localStorage.setItem('userToken', response.data.token);
             localStorage.setItem('username', response.data.username);
             fetchPersonalAccountingId();
@@ -51,7 +50,6 @@ export default {
     };
 
     const navigate = () => {
-      console.log("entrando");
       router.push({ name: 'register' });
     };
 
@@ -62,7 +60,6 @@ export default {
         }
       })
           .then(response => {
-            console.log("ID de contabilidad personal:", response.data.id);
             localStorage.setItem('personalAccountingId', response.data.id);
             router.push({ name: 'home', query: { id: response.data.id } });
           })
