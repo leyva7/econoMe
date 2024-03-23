@@ -4,10 +4,7 @@ import com.econoMe.gestorgastosback.dto.AccountingDto;
 import com.econoMe.gestorgastosback.dto.AccountingRegistration;
 import com.econoMe.gestorgastosback.dto.OperationsDto;
 import com.econoMe.gestorgastosback.model.*;
-import com.econoMe.gestorgastosback.service.AccountingService;
-import com.econoMe.gestorgastosback.service.MappingService;
-import com.econoMe.gestorgastosback.service.OperationsService;
-import com.econoMe.gestorgastosback.service.RolesService;
+import com.econoMe.gestorgastosback.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -27,6 +24,8 @@ public class AccountingController {
     private AccountingService accountingService;
     @Autowired
     private RolesService rolesService;
+    @Autowired
+    private UserService userService;
     @Autowired
     private OperationsService operationsService;
     @Autowired
@@ -63,7 +62,7 @@ public class AccountingController {
 
         String username = userDetails.getUsername();
 
-        List<Accounting> accounting = accountingService.findAccountingsSharedByUser(username);
+        List<Accounting> accounting = accountingService.findAccountingsSharedByUser(userService.getUserByUsername(username));
         return ResponseEntity.ok(mappingService.accountingDtoList(accounting));
     }
 
@@ -73,7 +72,7 @@ public class AccountingController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("No se ha proporcionado una autenticación válida.");
         }
 
-        Optional<Accounting> personalAccountingOptional = accountingService.findPersonalAccounting(userDetails.getUsername());
+        Optional<Accounting> personalAccountingOptional = accountingService.findPersonalAccounting(userService.getUserByUsername(userDetails.getUsername()));
         if (personalAccountingOptional.isPresent()) {
             Accounting personalAccounting = personalAccountingOptional.get();
             return ResponseEntity.ok(mappingService.accountingToDto(personalAccounting));
@@ -90,10 +89,10 @@ public class AccountingController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("No se ha proporcionado una autenticación válida.");
         }
 
-        Optional<Accounting> personalAccountingOptional = accountingService.findPersonalAccounting(userDetails.getUsername());
+        Optional<Accounting> personalAccountingOptional = accountingService.findPersonalAccounting(userService.getUserByUsername(userDetails.getUsername()));
         if (personalAccountingOptional.isPresent()) {
             Accounting personalAccounting = personalAccountingOptional.get();
-            List<Accounting> accountings = accountingService.findAccountingsSharedByUser(userDetails.getUsername());
+            List<Accounting> accountings = accountingService.findAccountingsSharedByUser(userService.getUserByUsername(userDetails.getUsername()));
             accountings.add(personalAccounting);
 
             return ResponseEntity.ok(mappingService.accountingDtoList(accountings));
@@ -105,11 +104,11 @@ public class AccountingController {
 
     @GetMapping("/{id}/rol")
     public ResponseEntity<?> getAccountingRole(Authentication authentication, @PathVariable Long id) {
-        if (authentication == null || !(authentication.getPrincipal() instanceof UserDetails userDetails)) {
+        if (authentication == null || !(authentication.getPrincipal() instanceof User user)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("No se ha proporcionado una autenticación válida.");
         }
 
-        Roles roles = rolesService.findRoleById(new RolesId(userDetails.getUsername(), accountingService.findAccountingById(id).getId()))
+        Roles roles = rolesService.findRoleById(new RolesId(user.getId(), accountingService.findAccountingById(id).getId()))
                 .orElseThrow(() -> new NoSuchElementException("No se encontró el rol para la contabilidad."));
         return ResponseEntity.ok(mappingService.rolesToDto(roles));
     }
@@ -145,7 +144,7 @@ public class AccountingController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("No se ha proporcionado una autenticación válida.");
         }
 
-        return ResponseEntity.ok(mappingService.operationListToDto(operationsService.findAllUserOperation(userDetails.getUsername())));
+        return ResponseEntity.ok(mappingService.operationListToDto(operationsService.findAllUserOperation(userService.getUserByUsername(userDetails.getUsername()))));
     }
 
 

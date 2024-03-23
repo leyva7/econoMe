@@ -12,6 +12,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.dao.DataAccessException;
 import org.springframework.stereotype.Service;
 import com.econoMe.gestorgastosback.repository.RolesRepository;
+
+import java.util.ArrayList;
 import java.util.List;
 import java.util.NoSuchElementException;
 import java.util.Optional;
@@ -20,23 +22,15 @@ import java.util.Optional;
 public class RolesService {
 
     private final RolesRepository rolesRepository;
-    private final UserRepository userRepository;
-    private final AccountingRepository accountingRepository;
 
     @Autowired
-    public RolesService(RolesRepository rolesRepository, UserRepository userRepository, AccountingRepository accountingRepository) {
+    public RolesService(RolesRepository rolesRepository) {
         this.rolesRepository = rolesRepository;
-        this.userRepository = userRepository;
-        this.accountingRepository = accountingRepository;
     }
 
     public Roles createRole(Roles role) {
         String userUsername = role.getUser().getUsername();
         Long accountingId = role.getAccounting().getId();
-
-        if (!validateUserAndAccountingExistence(userUsername, accountingId)) {
-            throw new EntityNotFoundException("Usuario o Contabilidad no existen.");
-        }
 
         Optional<Roles> existingRole = rolesRepository.findByUserUsernameAndAccountingId(userUsername, accountingId);
         if (existingRole.isPresent()) {
@@ -63,6 +57,18 @@ public class RolesService {
         });
     }
 
+    public void updateUserRoles(User oldUser, User newUser) {
+        List<Roles> roles = findAllByUser(oldUser);
+        List<Roles> newRoles = new ArrayList<>();
+        for(int i = 0; i < roles.size(); i++){
+            if(!roles.get(i).getAccounting().getUserCreator().equals(oldUser)){
+                newRoles.add(roles.get(i));
+                newRoles.get(i).setUser(newUser);
+                createRole(newRoles.get(i));
+            }
+        }
+    }
+
     public boolean deleteRole(RolesId rolesId) {
         return rolesRepository.findById(rolesId).map(role -> {
             rolesRepository.delete(role);
@@ -87,15 +93,12 @@ public class RolesService {
         }
     }
 
-    public boolean validateUserAndAccountingExistence(String userUsername, Long accountingId) {
-        boolean userExists = userRepository.existsById(userUsername);
-        boolean accountingExists = accountingRepository.existsById(accountingId);
-        return userExists && accountingExists;
+    public void deleteByAccounting(Accounting accounting) {
+        rolesRepository.deleteByAccounting(accounting);
     }
 
-    public void deleteByAccounting(Accounting accounting) {
-
-        rolesRepository.deleteByAccounting(accounting);
+    public void deleteByUser(User user) {
+        rolesRepository.deleteByUser(user);
     }
 
 

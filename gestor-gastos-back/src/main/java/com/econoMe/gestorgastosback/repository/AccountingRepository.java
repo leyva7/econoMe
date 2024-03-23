@@ -13,4 +13,6 @@ public interface AccountingRepository extends JpaRepository<Accounting, Long> {
 
     Optional<Accounting> findByName(String name);
 
+    void deleteByUserCreator(User userCreator);
+
 }

@@ -4,7 +4,7 @@
       <form @submit.prevent="submitForm" class="register-form">
         <div class="form-group">
           <label for="username">Nombre de usuario</label>
-          <input type="text" id="username" v-model.trim="user.username" readonly>
+          <input type="text" id="username" v-model.trim="user.username" required placeholder="Tu username">
         </div>
 
         <div class="form-group">
@@ -89,7 +89,10 @@ export default {
           },
         });
         alert('Usuario modificado exitosamente.');
-        router.push({ name: 'home' });
+        localStorage.setItem('username', user.username);
+        router.push({ name: 'login' }).then(() => {
+          window.location.reload();
+        });
       } catch (error) {
         console.error('Error al modificar datos del usuario:', error);
         alert('Ocurrió un error al modificar los datos del usuario. Por favor, inténtalo de nuevo.');

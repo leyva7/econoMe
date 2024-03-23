@@ -30,6 +30,10 @@
         <div class="form-group">
           <button type="submit">Registrar</button>
         </div>
+        <div class="form-group">
+          <button type="button" @click="home">Volver atrás</button>
+        </div>
+
       </form>
     </div>
   </div>
@@ -51,26 +55,27 @@ export default {
       password: ''
     });
 
-    
+    const home = () => {
+      router.push({ name: 'login' });
+    };
 
-const submitForm = async () => {
-  if (!user.value.username || !user.value.name || !user.value.surname || !user.value.mail || !user.value.password) {
-    alert('Por favor, completa todos los campos.');
-    return;
-  }
+    const submitForm = async () => {
+      if (!user.value.username || !user.value.name || !user.value.surname || !user.value.mail || !user.value.password) {
+        alert('Por favor, completa todos los campos.');
+        return;
+      }
 
   const payload = {
     user: user.value,
     accounting: {
       name: 'Contabilidad personal',
       description: 'Contabilidad de uso personal del usuario ' + user.value.username,
-      userCreator: user.value.username,
       type: 'PERSONAL'
     }
   };
 
   try {
-    console.log(payload);
+    console.log(user.value.username);
     await axios.post('http://localhost:8081/api/auth/register', payload);
     alert('Usuario y contabilidad registrados exitosamente.');
     router.push('/');
@@ -82,7 +87,7 @@ const submitForm = async () => {
 
 };
 
-  return { user, submitForm };
+  return { user, submitForm, home };
 
 }
 };

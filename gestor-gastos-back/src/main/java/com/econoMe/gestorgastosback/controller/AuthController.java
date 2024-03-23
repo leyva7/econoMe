@@ -22,8 +22,6 @@ import org.springframework.web.bind.annotation.RestController;
 public class AuthController {
     private final PasswordEncoder passwordEncoder;
     private final AuthService authService;
-    private final UserService userService;
-    private final MappingService mappingService;
     private final RegistrationService registrationService;
 
     // Registro de usuario

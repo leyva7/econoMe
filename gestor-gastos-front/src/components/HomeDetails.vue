@@ -45,17 +45,16 @@ export default {
 
 <style scoped>
 .home-details {
-  padding: 8px; /* Ajusta el tamaño del padding según necesites */
+  padding: 8px;
   background-color: #f0f0f0;
 }
 
 .recuadro {
-  margin: 10px 0; /* Ajusta el margen superior e inferior */
-  padding: 15px; /* Ajusta el padding interno del recuadro */
-  width: calc(100% - 30px); /* Ajusta el ancho para tener en cuenta el padding y el ancho del borde */
-  box-sizing: border-box; /* Asegura que el padding y el borde no aumenten el ancho del recuadro */
-  background-color: #ffffff; /* Cambia el color de fondo a blanco para que se note sobre el fondo gris */
-  border-radius: 20px; /* Bordes redondeados del recuadro */
-  border: 2px solid #2C3E50; /* Color y ancho del borde */
+  margin: 10px 0;
+  padding: 15px;
+  box-sizing: border-box;
+  background-color: #ffffff;
+  border-radius: 20px;
+  border: 2px solid #2C3E50;
 }
 </style>

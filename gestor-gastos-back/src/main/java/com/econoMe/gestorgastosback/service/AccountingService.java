@@ -4,6 +4,7 @@ import com.econoMe.gestorgastosback.common.Role;
 import com.econoMe.gestorgastosback.common.Type;
 import com.econoMe.gestorgastosback.model.Accounting;
 
+import com.econoMe.gestorgastosback.model.Operations;
 import com.econoMe.gestorgastosback.model.Roles;
 import com.econoMe.gestorgastosback.model.User;
 import com.econoMe.gestorgastosback.repository.AccountingRepository;
@@ -28,18 +29,14 @@ public class AccountingService {
     private final OperationsRepository operationsRepository;
 
     private final RolesRepository rolesRepository;
-    private final UserService userService;
-
-
     private final RolesService rolesService;
 
     @Autowired
-    public AccountingService(AccountingRepository accountingRepository, OperationsRepository operationsRepository, RolesRepository rolesRepository, RolesService rolesService, UserService userService){
+    public AccountingService(AccountingRepository accountingRepository, OperationsRepository operationsRepository, RolesRepository rolesRepository, RolesService rolesService){
         this.accountingRepository = accountingRepository;
         this.operationsRepository = operationsRepository;
         this.rolesRepository = rolesRepository;
         this.rolesService = rolesService;
-        this.userService = userService;
     }
     @Transactional
     public Accounting createAccounting(Accounting accounting){
@@ -64,9 +61,9 @@ public class AccountingService {
         return accountingRepository.findById(id).orElseThrow(() -> new NoSuchElementException("No se encontró la contabilidad de ID: " + id));
     }
 
-    public List<Accounting> findAllUserAccounting(String username){
-        List<Accounting> accountings = findAccountingsSharedByUser(username);
-        Optional<Accounting> personalAccountingOptional = findPersonalAccounting(username);
+    public List<Accounting> findAllUserAccounting(User user){
+        List<Accounting> accountings = findAccountingsSharedByUser(user);
+        Optional<Accounting> personalAccountingOptional = findPersonalAccounting(user);
         if (personalAccountingOptional.isPresent()) {
             Accounting personalAccounting = personalAccountingOptional.get();
             accountings.add(personalAccounting);
@@ -78,9 +75,9 @@ public class AccountingService {
 
     }
 
-    public Accounting findAccountingByName(String username, String name) {
+    public Accounting findAccountingByName(User user, String name) {
         // Obtener todas las contabilidades del usuario
-        List<Accounting> userAccountings = findAllUserAccounting(username);
+        List<Accounting> userAccountings = findAllUserAccounting(user);
 
         // Buscar la contabilidad por nombre en la lista de contabilidades del usuario
         Optional<Accounting> accountingOptional = userAccountings.stream()
@@ -97,10 +94,10 @@ public class AccountingService {
         }
     }
 
-    public List<Accounting> findAccountingsSharedByUser(String username){
+    public List<Accounting> findAccountingsSharedByUser(User user){
         List<Accounting> accountings = new ArrayList<Accounting>();
 
-        List<Accounting> accountingUser = findAccountingByTypeShared(userService.getUserByUsername(username));
+        List<Accounting> accountingUser = findAccountingByTypeShared(user);
 
         for(int i = 0; i < accountingUser.size(); i++){
             accountings.add(accountingUser.get(i));
@@ -122,8 +119,8 @@ public class AccountingService {
                 .collect(Collectors.toList());
     }
 
-    public Optional<Accounting> findPersonalAccounting(String username) {
-        Optional<Accounting> personalAccountingOptional = accountingRepository.findByUserCreator(userService.getUserByUsername(username))
+    public Optional<Accounting> findPersonalAccounting(User user) {
+        Optional<Accounting> personalAccountingOptional = accountingRepository.findByUserCreator(user)
                 .stream()
                 .filter(accounting -> accounting.getType() == Type.PERSONAL)
                 .findFirst();
@@ -131,7 +128,7 @@ public class AccountingService {
         if (personalAccountingOptional.isPresent()) {
             return personalAccountingOptional;
         } else {
-            throw new NoSuchElementException("No se encontró la contabilidad personal para el usuario: " + username);
+            throw new NoSuchElementException("No se encontró la contabilidad personal para el usuario: " + user.getUsername());
         }
     }
 
@@ -174,6 +171,8 @@ public class AccountingService {
         accountingRepository.deleteById(id);
     }
 
-
+    public void deleteByUserCreator(User user){
+        accountingRepository.deleteByUserCreator(user);
+    }
 
 }

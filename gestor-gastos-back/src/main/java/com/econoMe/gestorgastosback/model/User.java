@@ -14,6 +14,10 @@ import java.util.List;
 public class User implements UserDetails {
 
     @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    Long id;
+
+    @Column(nullable = false, unique = true)
     private String username;
 
     @Column(nullable = false)
@@ -30,12 +34,21 @@ public class User implements UserDetails {
     }
 
     // Constructor con todos los argumentos
-    public User(String username, String name, String surname, String mail, String password) {
+    public User(Long id, String username, String name, String surname, String mail, String password) {
+        this.id = id;
         this.username = username;
         this.name = name;
         this.surname = surname;
         this.mail = mail;
         this.password = password;
+    }
+
+    public Long getId() {
+        return id;
+    }
+
+    public void setId(Long id) {
+        this.id = id;
     }
 
     // Getters

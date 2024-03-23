@@ -17,7 +17,7 @@ public class Accounting {
     private String description;
 
     @ManyToOne
-    @JoinColumn(name = "creator_username", nullable = false)
+    @JoinColumn(name = "user_creator", nullable = false)
     private User userCreator;
 
     @Enumerated(EnumType.STRING)

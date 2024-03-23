@@ -13,6 +13,7 @@ import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 import java.util.List;
 import java.util.NoSuchElementException;
+import java.util.Optional;
 
 
 @Service
@@ -20,6 +21,9 @@ public class UserService{
 
     @Autowired
     UserRepository userRepository;
+
+    @Autowired
+    AccountingService accountingService;
 
     @Autowired
     private PasswordEncoder passwordEncoder;
@@ -41,40 +45,36 @@ public class UserService{
         return userRepository.save(user);
     }
 
+    public boolean existByUsername(String username){
+        return userRepository.existsByUsername(username);
+    }
+
     public List<User> getAllUser(){
         return userRepository.findAll();
     }
 
     public User getUserByUsername(String username){
-        return userRepository.findByUsername(username).orElseThrow(() -> new NoSuchElementException("No se encontró el usuario de ID: " + username));
+        return userRepository.findByUsername(username).orElseThrow(() -> new NoSuchElementException("No se encontró el usuario de nombre: " + username));
     }
 
-    public User updateUser(String username, User user){
-        if(user.getUsername() == null || !userRepository.existsById(username)){
-            throw new IllegalStateException("La cuenta con el nombre de usuario " + user.getUsername() + " no existe.");
-        }
-
-        return userRepository.save(user);
+    public Optional<User> findById(Long id){
+        return userRepository.findById(id);
     }
 
-    public User updateDetails(UserDto userDto){
-        if(userDto.getUsername() == null || !userRepository.existsById(userDto.getUsername())){
-            throw new IllegalStateException("La cuenta con el nombre de usuario " + userDto.getUsername() + " no existe.");
-        }
-
-        User user = userRepository.findByUsername(userDto.getUsername()).orElseThrow(() -> new NoSuchElementException("No se encontró el usuario de ID: " + userDto.getUsername()));
+    public User updateDetails(Long id, UserDto userDto) throws Exception {
+        User user = userRepository.findById(id).orElseThrow(() -> new Exception("Usuario no encontrado con el id: " + id));
 
         user.setUsername(userDto.getUsername());
         user.setName(userDto.getName());
         user.setSurname(userDto.getSurname());
         user.setMail(userDto.getMail());
+        accountingService.findPersonalAccounting(user).get().setDescription("Contabilidad personal del usuario " + user.getUsername());
 
         return userRepository.save(user);
-
     }
 
-    public void updatePassword(String username, String passwordUser, String newPassword) {
-        User user = userRepository.findById(username)
+    public void updatePassword(Long id, String passwordUser, String newPassword) {
+        User user = userRepository.findById(id)
                 .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
 
         if (passwordEncoder.matches(passwordUser, user.getPassword())) {
@@ -86,12 +86,12 @@ public class UserService{
         }
     }
 
-    public void deleteUser(String username) {
-        userRepository.deleteById(username);
+    public void deleteUser(Long id) {
+        userRepository.deleteById(id);
     }
 
-    public boolean validateCredentials(String username, String password) {
-        User user = userRepository.findById(username).orElse(null);
+    public boolean validateCredentials(Long id, String password) {
+        User user = userRepository.findById(id).orElse(null);
         if (user != null && passwordEncoder.matches(password, user.getPassword())) {
             return true;
         }

@@ -18,14 +18,11 @@ public class OperationsService {
     private final OperationsRepository operationsRepository;
     @Autowired
     private final RolesService rolesService;
-    @Autowired
-    private final UserService userService;
 
     @Autowired
-    public OperationsService(OperationsRepository operationsRepository, RolesService rolesService, UserService userService) {
+    public OperationsService(OperationsRepository operationsRepository, RolesService rolesService) {
         this.operationsRepository = operationsRepository;
         this.rolesService = rolesService;
-        this.userService = userService;
     }
 
     public List<Operations> findAllOperations() {
@@ -90,8 +87,8 @@ public class OperationsService {
         return new ArrayList<>(uniqueCategories);
     }
 
-    public List<Operations> findAllUserOperation(String username) {
-        return operationsRepository.findByUser(userService.getUserByUsername(username));
+    public List<Operations> findAllUserOperation(User user) {
+        return operationsRepository.findByUser(user);
 
     }
 
@@ -100,6 +97,16 @@ public class OperationsService {
             throw new IllegalStateException("La operación con el ID " + operation.getId() + " no existe.");
         }
         return operationsRepository.save(operation);
+    }
+
+    public void updateUserOperation(User oldUser, User newUser) {
+        List<Operations> operation = findAllUserOperation(oldUser);
+        List<Operations> newOperation = new ArrayList<>();
+        for(int i = 0; i < operation.size(); i++){
+            newOperation.add(operation.get(i));
+            newOperation.get(i).setUser(newUser);
+            createOperation(newOperation.get(i));
+        }
     }
 
     public void deleteOperation(Long id) {

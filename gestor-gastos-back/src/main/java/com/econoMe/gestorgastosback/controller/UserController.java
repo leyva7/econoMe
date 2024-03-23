@@ -36,24 +36,25 @@ public class UserController {
     
     // Actualización de datos del usuario
     @PutMapping("/modifyDetails")
-    public ResponseEntity<User> updateUserDetails(@RequestBody UserDto userDto) {
-        User updatedUser = userService.updateDetails(userDto);
+    public ResponseEntity<?> updateUserDetails(Authentication authentication, @RequestBody UserDto userDto) throws Exception {
+        if (authentication == null || !(authentication.getPrincipal() instanceof User user)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("No se ha proporcionado una autenticación válida.");
+        }
+        User updatedUser = userService.updateDetails(user.getId(), userDto);
         return ResponseEntity.ok(updatedUser);
     }
 
     // Actualización de contraseña
     @PutMapping("/modifyPassword")
     public ResponseEntity<?> updatePassword(Authentication authentication, @RequestBody Map<String, String> passwordDetails) {
-        if (authentication == null || !(authentication.getPrincipal() instanceof UserDetails userDetails)) {
+        if (authentication == null || !(authentication.getPrincipal() instanceof User user)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("No se ha proporcionado una autenticación válida.");
         }
-
-        String username = userDetails.getUsername();
 
         String currentPassword = passwordDetails.get("currentPassword");
         String newPassword = passwordDetails.get("newPassword");
         try {
-            userService.updatePassword(username, currentPassword, newPassword);
+            userService.updatePassword(user.getId(), currentPassword, newPassword);
             return ResponseEntity.ok().build();
         } catch (InvalidPasswordException e) {
             return ResponseEntity.badRequest().body("Contraseña actual incorrecta.");
@@ -82,8 +83,11 @@ public class UserController {
 
     // Ejemplo: Eliminar usuario
     @DeleteMapping("/delete")
-    public ResponseEntity<?> deleteUser(@PathVariable String username) {
-        userService.deleteUser(username);
+    public ResponseEntity<?> deleteUser(Authentication authentication) {
+        if (authentication == null || !(authentication.getPrincipal() instanceof User user)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("No se ha proporcionado una autenticación válida.");
+        }
+        userService.deleteUser(user.getId());
         return ResponseEntity.ok().build();
     }
 }

@@ -13,8 +13,6 @@ import java.util.List;
 @RestController
 @RequestMapping("/api/roles")
 public class RolesController {
-
-
     private final RolesService rolesService;
 
     @Autowired
@@ -24,24 +22,21 @@ public class RolesController {
 
     @PostMapping("/register")
     public ResponseEntity<Roles> addRole(@RequestBody Roles role) {
-        if (!rolesService.validateUserAndAccountingExistence(role.getUser().getUsername(), role.getAccounting().getId())) {
-            return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-        }
         Roles newRole = rolesService.createRole(role);
         return new ResponseEntity<>(newRole, HttpStatus.CREATED);
     }
 
     @PutMapping("/{userId}/{accountingId}")
-    public ResponseEntity<Roles> updateRole(@PathVariable String username, @PathVariable Long accountingId, @RequestBody Roles updatedRole) {
-        RolesId rolesId = new RolesId(username, accountingId);
+    public ResponseEntity<Roles> updateRole(@PathVariable Long id, @PathVariable Long accountingId, @RequestBody Roles updatedRole) {
+        RolesId rolesId = new RolesId(id, accountingId);
         return rolesService.updateRole(rolesId, updatedRole)
                 .map(role -> new ResponseEntity<>(role, HttpStatus.OK))
                 .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));
     }
 
     @DeleteMapping("/{userId}/{accountingId}")
-    public ResponseEntity<Void> deleteRole(@PathVariable String username, @PathVariable Long accountingId) {
-        RolesId rolesId = new RolesId(username, accountingId);
+    public ResponseEntity<Void> deleteRole(@PathVariable Long id, @PathVariable Long accountingId) {
+        RolesId rolesId = new RolesId(id, accountingId);
         boolean deleted = rolesService.deleteRole(rolesId);
         if (deleted) {
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
@@ -51,8 +46,8 @@ public class RolesController {
     }
 
     @GetMapping("/{userId}/{accountingId}")
-    public ResponseEntity<Roles> findRoleById(@PathVariable String username, @PathVariable Long accountingId) {
-        RolesId rolesId = new RolesId(username, accountingId);
+    public ResponseEntity<Roles> findRoleById(@PathVariable Long id, @PathVariable Long accountingId) {
+        RolesId rolesId = new RolesId(id, accountingId);
         return rolesService.findRoleById(rolesId)
                 .map(role -> new ResponseEntity<>(role, HttpStatus.OK))
                 .orElse(new ResponseEntity<>(HttpStatus.NOT_FOUND));

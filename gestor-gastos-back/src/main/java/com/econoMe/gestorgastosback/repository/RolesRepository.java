@@ -17,6 +17,8 @@ public interface RolesRepository extends JpaRepository<Roles, RolesId> {
 
     List<Roles> findAllByUser(User user);
 
-    Boolean deleteByAccounting(Accounting accounting);
+    void deleteByAccounting(Accounting accounting);
+
+    void deleteByUser(User user);
 
 }

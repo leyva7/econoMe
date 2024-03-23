@@ -3,39 +3,40 @@
         <div class="form-container">
             <h1>Iniciar sesión</h1>
                 <form @submit.prevent="login">
-                    <input type="text" placeholder="Nombre de usuario" v-model="username"/>
-                    <input type="password" placeholder="Contraseña" v-model="password"/>
+                    <input type="text" id="username" name="username" placeholder="Nombre de usuario" v-model="username"/>
+                    <input type="password" id="password" name="password" placeholder="Contraseña" v-model="password"/>
                     <button type="submit">Iniciar sesión</button>
                 </form>
-            <p class="register-invite">¿Aún no te has registrado? <router-link to="/register">Regístrate ahora</router-link></p>
+          <p class="register-invite">¿Aún no te has registrado?</p>
+          <router-link to="/register">Registrate ahora</router-link>
         </div>
     </div>
 </template>
 
 <script>
+import { ref } from 'vue';
 import axios from 'axios';
-import router from "@/router";
+import { useRouter } from 'vue-router';
 
 export default {
   name: 'UserLogin',
-  data() {
-    return {
-      username: '',
-      password: '',
-    };
-  },
-  methods: {
-    login() {
+  setup() {
+    const username = ref('');
+    const password = ref('');
+    const router = useRouter();
+
+    const login = () => {
       const userCredentials = {
-        username: this.username,
-        password: this.password,
+        username: username.value,
+        password: password.value,
       };
+
       axios.post('http://localhost:8081/api/auth/login', userCredentials)
           .then(response => {
             console.log("Respuesta del inicio de sesión:", response.data);
             localStorage.setItem('userToken', response.data.token);
             localStorage.setItem('username', response.data.username);
-            this.fetchPersonalAccountingId();
+            fetchPersonalAccountingId();
             alert("Inicio de sesión exitoso");
             router.push({ name: 'home' });
           })
@@ -47,8 +48,14 @@ export default {
             }
             alert("Error al iniciar sesión");
           });
-    },
-    fetchPersonalAccountingId() {
+    };
+
+    const navigate = () => {
+      console.log("entrando");
+      router.push({ name: 'register' });
+    };
+
+    const fetchPersonalAccountingId = () => {
       axios.get('http://localhost:8081/api/accounting/accountingPersonal', {
         headers: {
           Authorization: `Bearer ${localStorage.getItem('userToken')}`
@@ -57,18 +64,21 @@ export default {
           .then(response => {
             console.log("ID de contabilidad personal:", response.data.id);
             localStorage.setItem('personalAccountingId', response.data.id);
-
-            this.$router.push({
-              name: 'home',
-              query: { id: response.data.id }
-            });
+            router.push({ name: 'home', query: { id: response.data.id } });
           })
           .catch(error => {
             console.error("Error al obtener el ID de contabilidad personal:", error);
             alert("Error al obtener detalles de contabilidad personal");
           });
-    }
-  },
+    };
+
+    return {
+      username,
+      password,
+      login,
+      navigate
+    };
+  }
 };
 </script>
   

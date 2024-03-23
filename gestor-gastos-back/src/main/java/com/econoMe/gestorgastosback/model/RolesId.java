@@ -4,23 +4,23 @@ import java.io.Serializable;
 import java.util.Objects;
 
 public class RolesId implements Serializable {
-    private String user;
+    private Long user;
     private Long accounting;
 
     public RolesId() {
     }
 
-    public RolesId(String username, Long accountingId) {
-        this.user = username;
+    public RolesId(Long user, Long accountingId) {
+        this.user = user;
         this.accounting = accountingId;
     }
 
-    public String getUsername() {
+    public Long getUsername() {
         return user;
     }
 
-    public void setUsername(String username) {
-        this.user = username;
+    public void setUsername(Long user) {
+        this.user = user;
     }
 
     public Long getAccountingId() {

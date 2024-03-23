@@ -25,9 +25,6 @@ public class RegistrationService {
     private AccountingService accountingService;
 
     @Autowired
-    private RolesService rolesService;
-
-    @Autowired
     private MappingService mappingService;
 
     @Transactional
@@ -37,6 +34,7 @@ public class RegistrationService {
         User savedUser = userService.createUser(newUser);
 
         Accounting newAccounting = mappingService.accountingDtoToAccounting(registrationDto.getAccounting());
+        newAccounting.setUserCreator(savedUser);
 
         accountingService.createFirstAccounting(newAccounting);
 

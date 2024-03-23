@@ -156,6 +156,7 @@ export default defineComponent({
         console.log(response);
         alert('Operación registrada exitosamente.');
         await fetchCategories(accountingId);
+        await clearForm();
         updateVisibility(false);
       } catch (error) {
         console.error('Error al registrar operación:', error);
@@ -181,39 +182,5 @@ export default defineComponent({
 
 <style>
 
-.form-group {
-  margin-bottom: 1rem;
-}
-
-.form-group label {
-  display: block;
-}
-
-.form-group input,
-.form-group textarea {
-  width: calc(100% - 20px); /* Ajustar para padding */
-  padding: 10px;
-  margin-top: 0.5rem;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-}
-
-.btn-primary {
-  background-color: #007bff;
-  color: white;
-  border: none;
-  padding: 10px 15px;
-  border-radius: 4px;
-  cursor: pointer;
-}
-
-.btn-secondary {
-  background-color: #6c757d;
-  color: white;
-  border: none;
-  padding: 10px 15px;
-  border-radius: 4px;
-  cursor: pointer;
-}
 </style>
 
