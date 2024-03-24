@@ -5,7 +5,7 @@
       <div class="form-group">
         <label for="optionSelect">Tipo de gasto</label>
         <select id="optionSelect" v-model="selectedOption" @change="onSelectChange">
-          <option v-for="option in options" :key="option" :value="option">
+          <option v-for="option in categories" :key="option" :value="option">
             {{ option }}
           </option>
           <option value="custom">Otra (Especificar)</option>
@@ -49,9 +49,10 @@
 
 <script>
 import ModalWindow from './ModalWindow.vue';
-import axios from "axios";
-import {ref, defineComponent, computed, watchEffect, onMounted} from 'vue';
-import { useRoute } from 'vue-router';
+import {ref, defineComponent, computed, watch, onMounted} from 'vue';
+import { useAccountingStore } from '../stores/accountingStore';
+import { globalStore} from "@/stores/globalStore";
+import { createOperation } from "@/service/operationService";
 
 export default defineComponent({
   components: {
@@ -61,12 +62,11 @@ export default defineComponent({
     isVisible: Boolean
   },
   setup(props, { emit }) {
-    const route = useRoute(); // Utiliza useRoute para acceder al route
+    const { fetchCategoriesAsync, categories} = useAccountingStore();
+    const { accountingId } = globalStore();
 
     const selectedOption = ref('');
     const customOption = ref('');
-    const options = ref(['']);
-    const accountingId = ref(null);
     const operation = ref({
       type: '',
       description: '',
@@ -87,6 +87,10 @@ export default defineComponent({
 
     onMounted(() => {
       clearForm();
+
+      if (props.isVisible) {
+        fetchCategoriesAsync(accountingId.value);
+      }
     });
 
     const isCustomOptionSelected = computed(() => selectedOption.value === 'custom');
@@ -97,33 +101,15 @@ export default defineComponent({
       }
     };
 
-    watchEffect(() => {
-      if (props.isVisible && route.query.id) {
-        fetchCategories(route.query.id);
+    watch(() => props.isVisible, (isVisible) => {
+      if (isVisible) {
+        fetchCategoriesAsync(accountingId.value);
       }
-      accountingId.value = route.query.id;
     });
 
     const updateVisibility = (value) => {
       emit('update:isVisible', value);
     };
-
-    const fetchCategories = async (accountingId) => {
-      try {
-        const response = await axios.get(`http://localhost:8081/api/accounting/${accountingId}/categories`, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('userToken')}`,
-          },
-        });
-        options.value = response.data;
-        console.log(options.value);
-      } catch (error) {
-        console.error('Error al cargar las categorías:', error);
-        options.value = [];
-      }
-    };
-
-
     const submitOperations = async () => {
 
       let categoryValid = isCustomOptionSelected.value ? customOption.value.trim() !== '' : selectedOption.value !== '';
@@ -131,29 +117,23 @@ export default defineComponent({
         alert('Por favor, completa todos los campos.');
         return;
       }
-
       try {
         operation.value.accountingId = accountingId;
         operation.value.username = localStorage.getItem('username');
-        if (operation.value.type.toLowerCase() === 'ingreso') { // Corregido para usar '()'
+        if (operation.value.type.toLowerCase() === 'ingreso') {
           operation.value.type = 'INCOME';
         } else {
           operation.value.type = 'SPENT';
         }
-
         // Asigna la categoría basada en si la opción personalizada está seleccionada o no
         operation.value.category = isCustomOptionSelected.value ? customOption.value : selectedOption.value;
 
-        const response = await axios.post('http://localhost:8081/api/accounting/operation/register', operation.value, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('userToken')}`,
-          },
-        });
-        console.log(response);
+        await createOperation(operation.value);
         alert('Operación registrada exitosamente.');
-        await fetchCategories(accountingId);
+        await fetchCategoriesAsync(accountingId);
         await clearForm();
         updateVisibility(false);
+        location.reload();
       } catch (error) {
         console.error('Error al registrar operación:', error);
         alert('Ocurrió un error al registrar la operación. Por favor, inténtalo de nuevo.');
@@ -164,12 +144,11 @@ export default defineComponent({
       selectedOption,
       customOption,
       operation,
-      options,
       updateVisibility,
       isCustomOptionSelected,
       onSelectChange,
       submitOperations,
-      fetchCategories
+      categories
     };
   }
 });

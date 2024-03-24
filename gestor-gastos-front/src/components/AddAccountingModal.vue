@@ -20,8 +20,8 @@
 
 <script>
 import ModalWindow from './ModalWindow.vue';
-import axios from "axios";
 import { ref, defineComponent } from 'vue';
+import {createAccounting} from "@/service/accountingService";
 
 export default defineComponent({
   components: {
@@ -57,11 +57,7 @@ export default defineComponent({
       };
 
       try {
-        await axios.post('http://localhost:8081/api/accounting/register', accountingData, {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem('userToken')}`,
-          },
-        });
+        await createAccounting(accountingData);
         alert("Contabilidad añadida con éxito");
         updateVisibility(false);
         location.reload();

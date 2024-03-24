@@ -2,25 +2,35 @@
   <div class="home-details">
     <div class="recuadro">
       <!-- Suponiendo que quieras mostrar algún dato específico de la contabilidad personal -->
-      {{ accountingPersonal.description }}
+      <p>{{ accountingPersonal.description }}</p>
+      <div class="operation" v-for="(operation, index) in operations" :key="index">
+        <p>Descripción: {{ operation.category }}</p>
+        <p>Monto: {{ operation.quantity }}</p>
+        <p>Tipo: {{ operation.type }}</p>
+      </div>
+
     </div>
   </div>
 </template>
 
 <script>
 import { onMounted } from 'vue';
-import { useAccountingStore } from '@/stores/accountingStore'; // Asegúrate de ajustar la ruta al archivo accountingStore
+import { useAccountingStore } from '@/stores/accountingStore';
 
 
 export default {
   name: "HomeDetails",
   setup() {
-    const { accountingPersonal, fetchAccountingPersonal } = useAccountingStore();
+    const { accountingPersonal, fetchAccountingPersonalAsync, fetchOperationsAsync, operations, accountingId } = useAccountingStore();
 
-    onMounted(fetchAccountingPersonal);
+    onMounted(fetchAccountingPersonalAsync);
+
+    onMounted(async () => {
+      await fetchOperationsAsync(accountingId.value);
+    });
 
     return {
-      accountingPersonal,
+      accountingPersonal, operations, accountingId
     };
   },
 };
@@ -39,5 +49,16 @@ export default {
   background-color: #ffffff;
   border-radius: 20px;
   border: 2px solid #2C3E50;
+}
+
+.operation {
+  margin-bottom: 10px;
+  padding: 10px;
+  background-color: #eaeaea;
+  border-radius: 10px;
+}
+
+.operation p {
+  margin: 5px 0;
 }
 </style>

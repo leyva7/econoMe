@@ -1,6 +1,8 @@
 package com.econoMe.gestorgastosback.service;
 
+import com.econoMe.gestorgastosback.common.OperationType;
 import com.econoMe.gestorgastosback.common.Role;
+import com.econoMe.gestorgastosback.common.Type;
 import com.econoMe.gestorgastosback.model.Accounting;
 import com.econoMe.gestorgastosback.model.Operations;
 import com.econoMe.gestorgastosback.model.Roles;
@@ -93,6 +95,10 @@ public class OperationsService {
 
     public List<Operations> findAllUserOperation(User user) {
         return operationsRepository.findByUser(user);
+    }
+
+    public List<Operations> findByAccountingAndType(Accounting accounting, OperationType type) {
+        return operationsRepository.findByAccountingAndType(accounting, type);
     }
 
     public Operations updateOperation(Long id, Operations operation) {

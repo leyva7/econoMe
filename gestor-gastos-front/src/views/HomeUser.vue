@@ -18,7 +18,7 @@
 </template>
 
 <script>
-import { ref, onMounted} from 'vue';
+import { ref, onMounted, watch} from 'vue';
 import { computed } from 'vue';
 import { useRouter } from 'vue-router';
 import SidebarPage from "@/components/AppSidebar.vue";
@@ -26,6 +26,7 @@ import AddAccountingModal from "@/components/AddAccountingModal.vue";
 import AddOperationModal from "@/components/AddOperationModal.vue";
 import TopBar from "@/components/TopBar.vue";
 import { useAccountingStore } from '@/stores/accountingStore.js';
+import { globalStore } from '@/stores/globalStore';
 
 export default {
   name: 'UserHome',
@@ -37,16 +38,24 @@ export default {
   },
   setup() {
     const isModalOpen = ref(false);
-    const { accountings, fetchAccountings, userRole, fetchUserRole, categories, fetchCategories} = useAccountingStore();
+    const { accountings, fetchAccountingsAsync, userRole, fetchUserRoleAsync, categories, fetchCategories} = useAccountingStore();
+    const {accountingId} = globalStore();
     const modalContentType = ref('');
     const router = useRouter();
 
     onMounted(async () => {
-      await fetchAccountings();
+      await fetchAccountingsAsync();
+      await fetchUserRoleAsync(accountingId.value);
     });
 
     const sharedAccountings = computed(() => {
       return accountings.value.filter(accounting => accounting.type === 'SHARED');
+    });
+
+    watch(accountingId, async (newId, oldId) => {
+      if (newId !== oldId) {
+        await fetchUserRoleAsync(newId);
+      }
     });
 
     const handleOpenModal = (type) => {
@@ -84,7 +93,7 @@ export default {
       accountings,
       userRole,
       shouldShowAddButton,
-      fetchUserRole,
+      fetchUserRoleAsync,
       openOperationsModal,
       modalContentType,
       categories,

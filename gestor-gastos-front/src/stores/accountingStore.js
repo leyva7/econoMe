@@ -1,10 +1,12 @@
 import {computed, ref} from 'vue';
-import axios from 'axios';
 import { useRouter } from 'vue-router';
+import { fetchAccountings, fetchAccountingPersonal, fetchCategories} from '../service/accountingService';
+import { fetchUserRole } from '../service/userRoleService';
+import { fetchOperations, fetchSpents } from '../service/operationService';
 
 export const useAccountingStore = () => {
     const accountings = ref([]);
-    const userRole = ref('EDITOR');
+    const userRole = ref([]);
     const categories = ref([]);
     const username = ref(localStorage.getItem('username') || '');
     const accountingPersonal = ref({});
@@ -16,72 +18,66 @@ export const useAccountingStore = () => {
             return 'Contabilidad personal';
         }
     });
+    const accountingId = computed(() => {
+        return router.currentRoute.value.query.id;
+    });
     const operations = ref([]);
+    const spents = ref([]);
     const router = useRouter();
 
-    const fetchAccountings = async () => {
+    const fetchAccountingsAsync = async () => {
         try {
-            const response = await axios.get('http://localhost:8081/api/accounting/accountingUser', {
-                headers: {
-                    Authorization: `Bearer ${localStorage.getItem('userToken')}`,
-                },
-            });
+            const response = await fetchAccountings();
             accountings.value = response.data;
         } catch (error) {
             console.error('Hubo un error al obtener las contabilidades:', error);
         }
     };
 
-    const fetchAccountingPersonal = async () => {
+    const fetchAccountingPersonalAsync = async () => {
         try {
-            const response = await axios.get('http://localhost:8081/api/accounting/accountingPersonal', {
-                headers: {
-                    Authorization: `Bearer ${localStorage.getItem('userToken')}`,
-                },
-            });
+            const response = await fetchAccountingPersonal();
             accountingPersonal.value = response.data;
         } catch (error) {
             console.error('Hubo un error al obtener la contabilidad personal:', error);
         }
     };
 
-    const fetchUserRole = async (accountingId) => {
+    const fetchUserRoleAsync = async (accountingId) => {
         try {
-            const response = await axios.get(`http://localhost:8081/api/accounting/${accountingId}/rol`, {
-                headers: {
-                    Authorization: `Bearer ${localStorage.getItem('userToken')}`,
-                },
-            });
+            const response = await fetchUserRole(accountingId);
             userRole.value = response.data.role;
         } catch (error) {
             console.error('Error al obtener el rol del usuario:', error);
-            userRole.value = null; // Asegúrate de manejar errores apropiadamente
+            userRole.value = null;
         }
     };
 
-    const fetchCategories = async (accountingId) => {
+    const fetchCategoriesAsync = async (accountingId) => {
         try {
-            const response = await axios.get(`http://localhost:8081/api/accounting/${accountingId}/categories`, {
-                headers: {
-                    Authorization: `Bearer ${localStorage.getItem('userToken')}`,
-                },
-            });
+            const response = await fetchCategories(accountingId);
             categories.value = response.data;
         } catch (error) {
             console.error('Hubo un error al obtener las categorías:', error);
         }
     };
 
-    const fetchOperations = async (accountingId) => {
+    const fetchOperationsAsync = async (accountingId) => {
         try {
-            const response = await axios.get(`http://localhost:8081/api/accounting/${accountingId}/categories`, {
-                headers: {
-                    Authorization: `Bearer ${localStorage.getItem('userToken')}`,
-                },
-            });
-            categories.value = response.data;
+            const response = await fetchOperations(accountingId)
+            operations.value = response.data;
         } catch (error) {
-            console.error('Hubo un error al obtener las categorías:', error);
+            console.error('Hubo un error al obtener las operaciones:', error);
+        }
+    };
+
+    const fetchSpentsAsync = async (accountingId) => {
+        try {
+            const response = await fetchSpents(accountingId);
+            spents.value = response.data;
+            console.log(response);
+        } catch (error) {
+            console.error('Hubo un error al obtener los gastos:', error);
         }
     };
 
@@ -101,6 +97,7 @@ export const useAccountingStore = () => {
 
 
     return {
-        accountings, fetchAccountings, userRole, fetchUserRole, fetchCategories, fetchAccountingPersonal, accountingPersonal, username, accountingName, logout, navigate:router.push, modifyUser, modifyPassword
+        accountings, fetchAccountingsAsync, userRole, fetchUserRoleAsync, fetchCategoriesAsync, categories, fetchAccountingPersonalAsync, accountingPersonal, username, accountingName, logout, navigate:router.push, modifyUser, modifyPassword,
+        fetchOperationsAsync, operations, fetchSpentsAsync, spents, accountingId
     };
 };

@@ -1,5 +1,6 @@
 package com.econoMe.gestorgastosback.controller;
 
+import com.econoMe.gestorgastosback.common.OperationType;
 import com.econoMe.gestorgastosback.dto.AccountingDto;
 import com.econoMe.gestorgastosback.dto.AccountingRegistration;
 import com.econoMe.gestorgastosback.dto.OperationsDto;
@@ -153,6 +154,15 @@ public class AccountingController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("No se ha proporcionado una autenticación válida.");
         }
         return ResponseEntity.ok(mappingService.operationListToDto(operationsService.findAllUserOperation(user)));
+    }
+
+    @GetMapping("/{id}/operation/spent")
+    public ResponseEntity<?> getAccountingSpent(Authentication authentication, @PathVariable Long id) {
+        if (authentication == null || !(authentication.getPrincipal() instanceof User user)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("No se ha proporcionado una autenticación válida.");
+        }
+
+        return ResponseEntity.ok(mappingService.operationListToDto(operationsService.findByAccountingAndType(accountingService.findAccountingById(id), OperationType.SPENT)));
     }
 
 
