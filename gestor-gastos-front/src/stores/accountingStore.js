@@ -2,7 +2,7 @@ import {computed, ref} from 'vue';
 import { useRouter } from 'vue-router';
 import { fetchAccountings, fetchAccountingPersonal, fetchCategories} from '../service/accountingService';
 import { fetchUserRole } from '../service/userRoleService';
-import { fetchOperations, fetchSpents } from '../service/operationService';
+import { fetchOperations, fetchSpents, fetchSpentsMonths } from '../service/operationService';
 
 export const useAccountingStore = () => {
     const accountings = ref([]);
@@ -23,6 +23,8 @@ export const useAccountingStore = () => {
     });
     const operations = ref([]);
     const spents = ref([]);
+    const spentsMonths = ref([]);
+    const weeklySpentData = ref([]);
     const router = useRouter();
 
     const fetchAccountingsAsync = async () => {
@@ -75,11 +77,85 @@ export const useAccountingStore = () => {
         try {
             const response = await fetchSpents(accountingId);
             spents.value = response.data;
-            console.log(response);
         } catch (error) {
             console.error('Hubo un error al obtener los gastos:', error);
         }
     };
+
+    const fetchSpentsMonthsAsync = async (accountingId) => {
+        try {
+            const response = await fetchSpentsMonths(accountingId);
+            spentsMonths.value = response.data;
+            processWeeklySpentData();
+        } catch (error) {
+            console.error('Hubo un error al obtener los gastos:', error);
+        }
+    };
+
+    const processedSpents = computed(() => {
+        const sumsByCategory = spentsMonths.value.reduce((acc, { category, quantity }) => {
+            acc[category] = (acc[category] || 0) + parseFloat(quantity);
+            return acc;
+        }, {});
+        const sortedCategories = Object.entries(sumsByCategory)
+            .sort((a, b) => b[1] - a[1])
+            .map(([category, total]) => ({ category, total }));
+        const topCategories = sortedCategories.slice(0, 5);
+        const otherTotal = sortedCategories.slice(5).reduce((acc, { total }) => acc + total, 0);
+        if (otherTotal > 0) {
+            topCategories.push({ category: 'Otros', total: otherTotal });
+        }
+        return topCategories;
+    });
+
+    const totalSpentMonth = computed(() => {
+        return spentsMonths.value.reduce((total, { quantity }) => total + quantity, 0);
+    });
+
+    const processWeeklySpentData = () => {
+        const weeks = {};
+        spentsMonths.value.forEach(spent => {
+            const spentDate = new Date(spent.date);
+            const dayOfMonth = spentDate.getDate();
+
+            // Determina la semana del mes basada en el día
+            let weekOfMonth;
+            if (dayOfMonth <= 6) {
+                weekOfMonth = 1;
+            } else if (dayOfMonth <= 13) {
+                weekOfMonth = 2;
+            } else if (dayOfMonth <= 20) {
+                weekOfMonth = 3;
+            } else if (dayOfMonth <= 27) {
+                weekOfMonth = 4;
+            } else {
+                weekOfMonth = 5;
+            }
+
+            if (!weeks[weekOfMonth]) {
+                weeks[weekOfMonth] = 0;
+            }
+            weeks[weekOfMonth] += spent.quantity;
+        });
+
+        // Prepara los datos para el gráfico
+        weeklySpentData.value = Object.entries(weeks).map(([week, total]) => {
+            return { week: `Semana ${week}`, total };
+        });
+    };
+
+
+
+
+    const latestSpents = computed(() => {
+        // Clona el arreglo de spents para no modificar el original
+        const spentsClone = [...spentsMonths.value];
+        // Ordena los gastos por fecha de forma descendente
+        spentsClone.sort((a, b) => new Date(b.date) - new Date(a.date));
+        // Retorna los primeros 5 elementos del arreglo ordenado
+        console.log(spentsClone.slice(0, 5));
+        return spentsClone.slice(0, 5);
+    });
 
     const logout = () => {
         localStorage.clear();
@@ -98,6 +174,6 @@ export const useAccountingStore = () => {
 
     return {
         accountings, fetchAccountingsAsync, userRole, fetchUserRoleAsync, fetchCategoriesAsync, categories, fetchAccountingPersonalAsync, accountingPersonal, username, accountingName, logout, navigate:router.push, modifyUser, modifyPassword,
-        fetchOperationsAsync, operations, fetchSpentsAsync, spents, accountingId
+        fetchOperationsAsync, operations, fetchSpentsAsync, spents, accountingId, processedSpents, fetchSpentsMonthsAsync, spentsMonths, totalSpentMonth, latestSpents, weeklySpentData
     };
 };

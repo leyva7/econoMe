@@ -41,7 +41,7 @@
 
 <script>
 import { ref } from 'vue';
-import axios from 'axios';
+import { registerUser } from '@/service/userService';
 import router from "@/router";
 
 export default {
@@ -65,26 +65,20 @@ export default {
         return;
       }
 
-  const payload = {
-    user: user.value,
-    accounting: {
-      name: 'Contabilidad personal',
-      description: 'Contabilidad de uso personal del usuario ' + user.value.username,
-      type: 'PERSONAL'
-    }
-  };
+      try {
+        await registerUser({ user: user.value, accounting: {
+            name: 'Contabilidad personal',
+            description: `Contabilidad de uso personal del usuario ${user.value.username}`,
+            type: 'PERSONAL'
+          }});
 
-  try {
-    await axios.post('http://localhost:8081/api/auth/register', payload);
-    alert('Usuario y contabilidad registrados exitosamente.');
-    router.push('/');
-  } catch (error) {
-    console.error('Error al registrar usuario y contabilidad:', error);
-    alert('Ocurrió un error al registrar el usuario y la contabilidad. Por favor, inténtalo de nuevo.');
-  }
-
-
-};
+        alert('Usuario y contabilidad registrados exitosamente.');
+        router.push('/');
+      } catch (error) {
+        console.error('Error al registrar usuario y contabilidad:', error);
+        alert('Ocurrió un error al registrar el usuario y la contabilidad. Por favor, inténtalo de nuevo.');
+      }
+    };
 
   return { user, submitForm, home };
 

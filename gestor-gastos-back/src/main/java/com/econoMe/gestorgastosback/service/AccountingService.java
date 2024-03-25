@@ -75,25 +75,6 @@ public class AccountingService {
 
     }
 
-    public Accounting findAccountingByName(User user, String name) {
-        // Obtener todas las contabilidades del usuario
-        List<Accounting> userAccountings = findAllUserAccounting(user);
-
-        // Buscar la contabilidad por nombre en la lista de contabilidades del usuario
-        Optional<Accounting> accountingOptional = userAccountings.stream()
-                .filter(accounting -> accounting.getName().equals(name))
-                .findFirst();
-
-        // Si se encuentra la contabilidad en la lista del usuario, devolverla
-        if (accountingOptional.isPresent()) {
-            return accountingOptional.get();
-        } else {
-            // Si no se encuentra en la lista del usuario, realizar la búsqueda por nombre en el repositorio
-            return accountingRepository.findByName(name)
-                    .orElseThrow(() -> new NoSuchElementException("No se encontró la contabilidad de nombre: " + name));
-        }
-    }
-
     public List<Accounting> findAccountingsSharedByUser(User user){
         List<Accounting> accountings = new ArrayList<Accounting>();
 

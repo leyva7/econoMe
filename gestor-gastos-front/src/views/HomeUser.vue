@@ -109,7 +109,7 @@ export default {
 <style scoped>
 #window {
   display: flex;
-  max-height: 100vh;
+  height: 100vh;
   overflow: hidden;
 }
 
@@ -128,16 +128,17 @@ export default {
 
 .content {
   flex-grow: 1;
-  overflow-y: auto; /* Permite desplazamiento vertical dentro del content si es necesario */
-  padding: 20px;
   display: flex;
   flex-direction: column;
+  overflow-y: auto; /* Permite desplazamiento vertical dentro del content si es necesario */
+  padding: 20px;
   background-color: #2C3E50;
 }
 
 .dynamic-content {
+  height: calc(95% - 40px);
   margin-top: 20px;
-  overflow-y: auto; /* Permite desplazamiento vertical dentro del dynamic-content si es necesario */
+  overflow-y: hidden; /* Permite desplazamiento vertical dentro del dynamic-content si es necesario */
   flex-grow: 1; /* Asegura que este contenedor llene el espacio disponible en .content */
   background-color: #ECF0F1;
   border-radius: 20px;

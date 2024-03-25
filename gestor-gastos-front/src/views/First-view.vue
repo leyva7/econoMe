@@ -52,11 +52,11 @@
   
   /* Ejemplo de cómo aplicar los colores de fondo usando tu paleta */
   .left-panel {
-    background-color: var(--blue-chill-500);
+    background-color: var(--pickled-bluewood-500);
   }
   
   .right-panel {
-    background-color: var(--blue-chill-300);
+    background-color: var(--pickled-bluewood-300);
   }
   
   </style>

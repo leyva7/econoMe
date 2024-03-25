@@ -11,22 +11,32 @@
       <div class="tooltip">
         <a href="#" @click="navigate('/modify-details')">Modificar usuario</a>
         <a href="#" @click="navigate('/modify-password')">Modificar contraseña</a>
-        <a href="#" @click="navigate('/')">Cerrar sesión</a>
+        <a href="#" @click="logout">Cerrar sesión</a>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
+
+import { useRouter } from 'vue-router';
 import { useAccountingStore } from '@/stores/accountingStore';
 
+const router = useRouter();
+
 const { username, accountingName, navigate} = useAccountingStore();
+
+const logout = () => {
+  localStorage.clear();
+  router.push('/');
+};
 
 
 </script>
 
 <style scoped>
   .top-bar {
+    height: 4%;
     display: flex;
     justify-content: space-between; /* Ajusta los elementos a los extremos */
     padding: 40px;

@@ -165,6 +165,15 @@ public class AccountingController {
         return ResponseEntity.ok(mappingService.operationListToDto(operationsService.findByAccountingAndType(accountingService.findAccountingById(id), OperationType.SPENT)));
     }
 
+    @GetMapping("/{id}/operation/spentMonth")
+    public ResponseEntity<?> getAccountingSpentMonth(Authentication authentication, @PathVariable Long id) {
+        if (authentication == null || !(authentication.getPrincipal() instanceof User user)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("No se ha proporcionado una autenticación válida.");
+        }
+
+        return ResponseEntity.ok(mappingService.operationListToDto(operationsService.findOperationsForCurrentMonth(accountingService.findAccountingById(id), OperationType.SPENT)));
+    }
+
 
     @GetMapping("/all")
     public ResponseEntity<List<Accounting>> getAllAccounting() {

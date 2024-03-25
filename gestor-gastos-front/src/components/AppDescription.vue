@@ -24,7 +24,7 @@
   
   .product-description h2 {
     font-size: 1.5rem;
-    color: var(--blue-chill-900);
+    color: var(--pickled-bluewood-900);
     margin-bottom: 1rem;
   }
   

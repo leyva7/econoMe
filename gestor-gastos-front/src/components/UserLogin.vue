@@ -2,7 +2,7 @@
     <div class="login">
         <div class="form-container">
             <h1>Iniciar sesión</h1>
-                <form @submit.prevent="login">
+                <form @submit.prevent="loginAction">
                     <input type="text" id="username" name="username" placeholder="Nombre de usuario" v-model="username"/>
                     <input type="password" id="password" name="password" placeholder="Contraseña" v-model="password"/>
                     <button type="submit">Iniciar sesión</button>
@@ -15,8 +15,9 @@
 
 <script>
 import { ref } from 'vue';
-import axios from 'axios';
 import { useRouter } from 'vue-router';
+import { login } from '@/service/userService';
+import { fetchAccountingPersonal} from "@/service/accountingService";
 
 export default {
   name: 'UserLogin',
@@ -25,54 +26,34 @@ export default {
     const password = ref('');
     const router = useRouter();
 
-    const login = () => {
-      const userCredentials = {
-        username: username.value,
-        password: password.value,
-      };
+    const loginAction = async () => {
+      try {
+        const userCredentials = {
+          username: username.value,
+          password: password.value,
+        };
 
-      axios.post('http://localhost:8081/api/auth/login', userCredentials)
-          .then(response => {
-            localStorage.setItem('userToken', response.data.token);
-            localStorage.setItem('username', response.data.username);
-            fetchPersonalAccountingId();
-            alert("Inicio de sesión exitoso");
-            router.push({ name: 'home' });
-          })
-          .catch(error => {
-            if (error.response && error.response.data) {
-              console.error("Error en el inicio de sesión:", error.response.data);
-            } else {
-              console.error("Error en el inicio de sesión:", error);
-            }
-            alert("Error al iniciar sesión");
-          });
+        const data = await login(userCredentials);
+        localStorage.setItem('userToken', data.token);
+        localStorage.setItem('username', data.username);
+        const accountingData = await fetchAccountingPersonal();
+        localStorage.setItem('personalAccountingId', accountingData.data.id);
+        alert("Inicio de sesión exitoso");
+        router.push({ name: 'home', query: { id: accountingData.data.id } });
+      } catch (error) {
+        console.error("Error en el inicio de sesión:", error);
+        alert("Error al iniciar sesión");
+      }
     };
 
     const navigate = () => {
       router.push({ name: 'register' });
     };
 
-    const fetchPersonalAccountingId = () => {
-      axios.get('http://localhost:8081/api/accounting/accountingPersonal', {
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem('userToken')}`
-        }
-      })
-          .then(response => {
-            localStorage.setItem('personalAccountingId', response.data.id);
-            router.push({ name: 'home', query: { id: response.data.id } });
-          })
-          .catch(error => {
-            console.error("Error al obtener el ID de contabilidad personal:", error);
-            alert("Error al obtener detalles de contabilidad personal");
-          });
-    };
-
     return {
       username,
       password,
-      login,
+      loginAction,
       navigate
     };
   }
@@ -99,14 +80,14 @@ export default {
     margin-bottom: 15px; /* Espacio entre campos */
     padding: 15px 10px; /* Aumenta el padding para más espacio alrededor del texto */
     border: none; /* Elimina todos los bordes */
-    border-bottom: 2px solid var(--blue-chill-500); /* Solo añade borde en la parte inferior */
+    border-bottom: 2px solid var(--pickled-bluewood-500); /* Solo añade borde en la parte inferior */
     background-color: transparent; /* Fondo transparente */
     width: calc(100% - 20px); /* Ajusta el ancho para tener en cuenta el padding */
   }
 
   form input:focus{
     outline: none; /* Elimina el contorno al enfocar */
-    border-bottom: 2px solid var(--blue-chill-700); /* Cambia el color del borde inferior al enfocar */
+    border-bottom: 2px solid var(--pickled-bluewood-700); /* Cambia el color del borde inferior al enfocar */
   }
   
   /* Asegura que el botón se alinee correctamente y mantenga su estilo */
@@ -114,7 +95,7 @@ export default {
     padding: 10px;
     margin-top: 20px; /* Espacio antes del botón */
     width: 100%; /* Ocupa todo el ancho disponible */
-    background-color: var(--blue-chill-700);
+    background-color: var(--pickled-bluewood-700);
     color: white;
     border: none;
     border-radius: 5px;
@@ -122,7 +103,7 @@ export default {
   }
   
   form button:hover {
-    background-color: var(--blue-chill-400);
+    background-color: var(--pickled-bluewood-400);
   }
   
   .register-invite {

@@ -11,7 +11,11 @@ import com.econoMe.gestorgastosback.repository.OperationsRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDate;
+import java.time.YearMonth;
 import java.util.*;
+import java.util.stream.Collectors;
+import java.time.ZoneId;
 
 @Service
 public class OperationsService {
@@ -99,6 +103,20 @@ public class OperationsService {
 
     public List<Operations> findByAccountingAndType(Accounting accounting, OperationType type) {
         return operationsRepository.findByAccountingAndType(accounting, type);
+    }
+
+    public List<Operations> findOperationsForCurrentMonth(Accounting accounting, OperationType type) {
+        LocalDate startOfMonth = YearMonth.now().atDay(1); // El primer día del mes actual
+        LocalDate endOfMonth = YearMonth.now().atEndOfMonth(); // El último día del mes actual
+
+        List<Operations> allOperations = findByAccountingAndType(accounting, type); // Obtiene todas las operaciones para la contabilidad
+
+        return allOperations.stream()
+                .filter(operation -> {
+                    LocalDate operationDate = operation.getDate(); // Ya es LocalDate, no se necesita conversión
+                    return (!operationDate.isBefore(startOfMonth) && !operationDate.isAfter(endOfMonth));
+                })
+                .collect(Collectors.toList());
     }
 
     public Operations updateOperation(Long id, Operations operation) {
