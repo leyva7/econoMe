@@ -15,7 +15,10 @@ export const fetchAccountings = async () => {
 export const fetchAccountingPersonal = async () => {
     return await axios.get(`${API_URL}/accountingPersonal`, { headers: getAuthHeaders() });
 };
-export const fetchCategories = async (accountingId) => {
-    return await axios.get(`${API_URL}/${accountingId}/categories`, { headers: getAuthHeaders() });
+export const fetchCategoriesSpent = async (accountingId) => {
+    return await axios.get(`${API_URL}/${accountingId}/categoriesSpent`, { headers: getAuthHeaders() });
 };
 
+export const fetchCategoriesIncome = async (accountingId) => {
+    return await axios.get(`${API_URL}/${accountingId}/categoriesIncome`, { headers: getAuthHeaders() });
+};

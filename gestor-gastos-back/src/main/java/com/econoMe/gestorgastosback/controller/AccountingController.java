@@ -114,13 +114,22 @@ public class AccountingController {
         return ResponseEntity.ok(mappingService.rolesToDto(roles));
     }
 
-    @GetMapping("/{id}/categories")
-    public ResponseEntity<?> getAccountingOperationCategories(Authentication authentication, @PathVariable Long id) {
+    @GetMapping("/{id}/categoriesSpent")
+    public ResponseEntity<?> getAccountingOperationCategoriesSpent(Authentication authentication, @PathVariable Long id) {
         if (authentication == null || !(authentication.getPrincipal() instanceof UserDetails userDetails)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("No se ha proporcionado una autenticación válida.");
         }
 
-        return ResponseEntity.ok(operationsService.findAllAccountingCategories(accountingService.findAccountingById(id)));
+        return ResponseEntity.ok(operationsService.findAllAccountingCategoriesByType(accountingService.findAccountingById(id), OperationType.SPENT));
+    }
+
+    @GetMapping("/{id}/categoriesIncome")
+    public ResponseEntity<?> getAccountingOperationCategoriesIncome(Authentication authentication, @PathVariable Long id) {
+        if (authentication == null || !(authentication.getPrincipal() instanceof UserDetails userDetails)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("No se ha proporcionado una autenticación válida.");
+        }
+
+        return ResponseEntity.ok(operationsService.findAllAccountingCategoriesByType(accountingService.findAccountingById(id), OperationType.INCOME));
     }
 
     @PostMapping("/operation/register")
@@ -172,6 +181,24 @@ public class AccountingController {
         }
 
         return ResponseEntity.ok(mappingService.operationListToDto(operationsService.findOperationsForCurrentMonth(accountingService.findAccountingById(id), OperationType.SPENT)));
+    }
+
+    @GetMapping("/{id}/operation/income")
+    public ResponseEntity<?> fetAccountingIncome(Authentication authentication, @PathVariable Long id) {
+        if (authentication == null || !(authentication.getPrincipal() instanceof User user)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("No se ha proporcionado una autenticación válida.");
+        }
+
+        return ResponseEntity.ok(mappingService.operationListToDto(operationsService.findByAccountingAndType(accountingService.findAccountingById(id), OperationType.INCOME)));
+    }
+
+    @GetMapping("/{id}/operation/incomeMonth")
+    public ResponseEntity<?> getAccountingIncomeMonth(Authentication authentication, @PathVariable Long id) {
+        if (authentication == null || !(authentication.getPrincipal() instanceof User user)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("No se ha proporcionado una autenticación válida.");
+        }
+
+        return ResponseEntity.ok(mappingService.operationListToDto(operationsService.findOperationsForCurrentMonth(accountingService.findAccountingById(id), OperationType.INCOME)));
     }
 
 

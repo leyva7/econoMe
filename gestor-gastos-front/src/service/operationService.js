@@ -17,3 +17,11 @@ export const fetchSpents = async (accountingId) => {
 export const fetchSpentsMonths = async (accountingId) => {
     return await axios.get(`${API_URL}${accountingId}/operation/spentMonth`, { headers: getAuthHeaders() });
 };
+
+export const fetchIncomes = async (accountingId) => {
+    return await axios.get(`${API_URL}${accountingId}/operation/income`, { headers: getAuthHeaders() });
+};
+
+export const fetchIncomesMonths = async (accountingId) => {
+    return await axios.get(`${API_URL}${accountingId}/operation/incomeMonth`, { headers: getAuthHeaders() });
+};

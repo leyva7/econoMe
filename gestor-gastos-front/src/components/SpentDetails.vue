@@ -93,14 +93,27 @@ export default {
             labels: processedSpents.value.map(({ category }) => category),
             datasets: [{
               data: processedSpents.value.map(({ total }) => total),
-              backgroundColor: ['#FF6384', '#36A2EB', '#FFCE56', '#cc65fe', '#ff7f7f', '#a4b0be'],
+              backgroundColor: ['#480707', '#a01414', '#e61c1c', '#ff6a6a', '#ffc7c7', '#a4b0be'],
             }]
           },
           options: {
+            scales: {
+              y: {
+                display: false,
+              },
+              x: {
+                display: false,
+              }
+            },
             responsive: true,
             plugins: {
               legend: {
                 position: 'top',
+                labels: {
+                  font: {
+                    size: 16 // Tamaño de la letra en la leyenda
+                  }
+                }
               },
             }
           },
@@ -121,14 +134,26 @@ export default {
               label: 'Gastos por semana',
               data: weeklySpentData.value.map(data => data.total),
               fill: false,
-              borderColor: 'rgb(100,18,18)',
+              borderColor: '#a01414',
               tension: 0.1
             }]
           },
           options: {
             scales: {
               y: {
-                beginAtZero: true
+                beginAtZero: true,
+                ticks: {
+                  font: {
+                    size: 16 // Tamaño de la letra en el eje Y
+                  }
+                }
+              },
+              x: {
+                ticks: {
+                  font: {
+                    size: 16 // Tamaño de la letra en el eje X
+                  }
+                }
               }
             },
             plugins: {

@@ -1,8 +1,18 @@
 import {computed, ref} from 'vue';
 import { useRouter } from 'vue-router';
-import { fetchAccountings, fetchAccountingPersonal, fetchCategories} from '../service/accountingService';
+import {
+    fetchAccountings,
+    fetchAccountingPersonal,
+    fetchCategoriesSpent, fetchCategoriesIncome
+} from '../service/accountingService';
 import { fetchUserRole } from '../service/userRoleService';
-import { fetchOperations, fetchSpents, fetchSpentsMonths } from '../service/operationService';
+import {
+    fetchIncomes,
+    fetchIncomesMonths,
+    fetchOperations,
+    fetchSpents,
+    fetchSpentsMonths
+} from '../service/operationService';
 
 export const useAccountingStore = () => {
     const accountings = ref([]);
@@ -25,6 +35,9 @@ export const useAccountingStore = () => {
     const spents = ref([]);
     const spentsMonths = ref([]);
     const weeklySpentData = ref([]);
+    const incomes = ref([]);
+    const incomesMonths = ref([]);
+    const monthlyIncomeData = ref([]);
     const router = useRouter();
 
     const fetchAccountingsAsync = async () => {
@@ -55,9 +68,18 @@ export const useAccountingStore = () => {
         }
     };
 
-    const fetchCategoriesAsync = async (accountingId) => {
+    const fetchCategoriesSpentAsync = async (accountingId) => {
         try {
-            const response = await fetchCategories(accountingId);
+            const response = await fetchCategoriesSpent(accountingId);
+            categories.value = response.data;
+        } catch (error) {
+            console.error('Hubo un error al obtener las categorías:', error);
+        }
+    };
+
+    const fetchCategoriesIncomeAsync = async (accountingId) => {
+        try {
+            const response = await fetchCategoriesIncome(accountingId);
             categories.value = response.data;
         } catch (error) {
             console.error('Hubo un error al obtener las categorías:', error);
@@ -100,12 +122,12 @@ export const useAccountingStore = () => {
         const sortedCategories = Object.entries(sumsByCategory)
             .sort((a, b) => b[1] - a[1])
             .map(([category, total]) => ({ category, total }));
-        const topCategories = sortedCategories.slice(0, 5);
+        const topCategoriesSpents = sortedCategories.slice(0, 5);
         const otherTotal = sortedCategories.slice(5).reduce((acc, { total }) => acc + total, 0);
         if (otherTotal > 0) {
-            topCategories.push({ category: 'Otros', total: otherTotal });
+            topCategoriesSpents.push({ category: 'Otros', total: otherTotal });
         }
-        return topCategories;
+        return topCategoriesSpents;
     });
 
     const totalSpentMonth = computed(() => {
@@ -144,17 +166,98 @@ export const useAccountingStore = () => {
         });
     };
 
-
-
-
     const latestSpents = computed(() => {
         // Clona el arreglo de spents para no modificar el original
         const spentsClone = [...spentsMonths.value];
         // Ordena los gastos por fecha de forma descendente
         spentsClone.sort((a, b) => new Date(b.date) - new Date(a.date));
         // Retorna los primeros 5 elementos del arreglo ordenado
-        console.log(spentsClone.slice(0, 5));
         return spentsClone.slice(0, 5);
+    });
+
+    const fetchIncomeAsync = async (accountingId) => {
+        try {
+            const response = await fetchIncomes(accountingId);
+            incomes.value = response.data;
+            processMonthlyIncomeData();
+        } catch (error) {
+            console.error('Hubo un error al obtener los gastos:', error);
+        }
+    };
+
+    const fetchIncomeMonthsAsync = async (accountingId) => {
+        try {
+            const response = await fetchIncomesMonths(accountingId);
+            incomesMonths.value = response.data;
+            processWeeklySpentData();
+        } catch (error) {
+            console.error('Hubo un error al obtener los gastos:', error);
+        }
+    };
+
+    const processedIncomes = computed(() => {
+        const sumsByCategory = incomesMonths.value.reduce((acc, { category, quantity }) => {
+            acc[category] = (acc[category] || 0) + parseFloat(quantity);
+            return acc;
+        }, {});
+        const sortedCategories = Object.entries(sumsByCategory)
+            .sort((a, b) => b[1] - a[1])
+            .map(([category, total]) => ({ category, total }));
+        const topCategoriesIncomes = sortedCategories.slice(0, 5);
+        const otherTotal = sortedCategories.slice(5).reduce((acc, { total }) => acc + total, 0);
+        if (otherTotal > 0) {
+            topCategoriesIncomes.push({ category: 'Otros', total: otherTotal });
+        }
+        return topCategoriesIncomes;
+    });
+
+    const totalIncomeMonth = computed(() => {
+        return incomesMonths.value.reduce((total, { quantity }) => total + quantity, 0);
+    });
+
+    const processMonthlyIncomeData = () => {
+        const now = new Date();
+        let monthCounts = Array.from({ length: 6 }, (_, i) => {
+            let date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+            let month = date.toLocaleString('default', { month: 'short' }).substring(0, 3); // Abreviación del mes
+            let year = date.getFullYear().toString().substring(2); // Últimos dos dígitos del año
+            return `${month} ${year}`;
+        }).reverse();
+
+        let incomeSums = monthCounts.map(month => {
+            return {
+                month: month,
+                total: 0
+            };
+        });
+
+        incomes.value.forEach(income => {
+            let incomeDate = new Date(income.date);
+            let incomeMonth = incomeDate.toLocaleString('default', { month: 'short' }).substring(0, 3); // Abreviación del mes
+            let incomeYear = incomeDate.getFullYear().toString().substring(2); // Últimos dos dígitos del año
+            let incomeMonthYear = `${incomeMonth} ${incomeYear}`;
+            let index = incomeSums.findIndex(sum => sum.month === incomeMonthYear);
+            if (index !== -1) {
+                incomeSums[index].total += income.quantity;
+            }
+        });
+
+        monthlyIncomeData.value = incomeSums;
+
+        console.log(monthlyIncomeData.value);
+    };
+
+
+
+
+
+    const latestIncomes = computed(() => {
+        // Clona el arreglo de spents para no modificar el original
+        const incomesClone = [...incomesMonths.value];
+        // Ordena los gastos por fecha de forma descendente
+        incomesClone.sort((a, b) => new Date(b.date) - new Date(a.date));
+        // Retorna los primeros 5 elementos del arreglo ordenado
+        return incomesClone.slice(0, 5);
     });
 
     const logout = () => {
@@ -173,7 +276,8 @@ export const useAccountingStore = () => {
 
 
     return {
-        accountings, fetchAccountingsAsync, userRole, fetchUserRoleAsync, fetchCategoriesAsync, categories, fetchAccountingPersonalAsync, accountingPersonal, username, accountingName, logout, navigate:router.push, modifyUser, modifyPassword,
-        fetchOperationsAsync, operations, fetchSpentsAsync, spents, accountingId, processedSpents, fetchSpentsMonthsAsync, spentsMonths, totalSpentMonth, latestSpents, weeklySpentData
+        accountings, fetchAccountingsAsync, userRole, fetchUserRoleAsync, fetchCategoriesSpentAsync, fetchCategoriesIncomeAsync, categories, fetchAccountingPersonalAsync, accountingPersonal, username, accountingName, logout, navigate:router.push, modifyUser, modifyPassword,
+        fetchOperationsAsync, operations, fetchSpentsAsync, spents, accountingId, processedSpents, fetchSpentsMonthsAsync, spentsMonths, totalSpentMonth, latestSpents, weeklySpentData, fetchIncomeMonthsAsync,
+        fetchIncomeAsync, incomesMonths, totalIncomeMonth, latestIncomes, monthlyIncomeData, processedIncomes, processMonthlyIncomeData
     };
 };

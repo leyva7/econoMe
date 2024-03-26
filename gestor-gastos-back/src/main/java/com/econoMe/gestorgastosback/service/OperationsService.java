@@ -82,16 +82,19 @@ public class OperationsService {
 
     }
 
-    public List<String> findAllAccountingCategories(Accounting accounting) {
+    public List<String> findAllAccountingCategoriesByType(Accounting accounting, OperationType type) {
         List<Operations> operationsAccounting = findByAccounting(accounting);
         Set<String> uniqueCategories = new HashSet<>();
 
         for (Operations operation : operationsAccounting) {
-            uniqueCategories.add(operation.getCategory());
+            if (operation.getType().equals(type)) {
+                uniqueCategories.add(operation.getCategory());
+            }
         }
 
         return new ArrayList<>(uniqueCategories);
     }
+
 
     public List<Operations> findAllUserOperationByAccounting(User user, Accounting accounting) {
         return operationsRepository.findByUserAndAccounting(user, accounting);

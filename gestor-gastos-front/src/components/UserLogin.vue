@@ -8,7 +8,7 @@
                     <button type="submit">Iniciar sesión</button>
                 </form>
           <p class="register-invite">¿Aún no te has registrado?</p>
-          <router-link to="/register">Registrate ahora</router-link>
+          <router-link to="/register" class="register-link">Registrate ahora</router-link>
         </div>
     </div>
 </template>
@@ -111,7 +111,15 @@ export default {
     font-size: 1rem;
     text-align: center;
   }
-  
+
+  .register-link {
+    color: var(--pickled-bluewood-700); /* Cambia el color del texto del enlace */
+    text-decoration: none; /* Elimina el subrayado del enlace */
+  }
+
+  .register-link:hover {
+    color: var(--pickled-bluewood-500); /* Cambia el color del texto del enlace al pasar el mouse sobre él */
+  }
 </style>
   
   

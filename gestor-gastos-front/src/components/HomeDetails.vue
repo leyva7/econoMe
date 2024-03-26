@@ -3,11 +3,6 @@
     <div class="recuadro">
       <!-- Suponiendo que quieras mostrar algún dato específico de la contabilidad personal -->
       <p>{{ accountingPersonal.description }}</p>
-      <div class="operation" v-for="(operation, index) in operations" :key="index">
-        <p>Descripción: {{ operation.category }}</p>
-        <p>Monto: {{ operation.quantity }}</p>
-        <p>Tipo: {{ operation.type }}</p>
-      </div>
 
     </div>
   </div>
@@ -21,7 +16,7 @@ import { useAccountingStore } from '@/stores/accountingStore';
 export default {
   name: "HomeDetails",
   setup() {
-    const { accountingPersonal, fetchAccountingPersonalAsync, fetchOperationsAsync, operations, accountingId } = useAccountingStore();
+    const { accountingPersonal, fetchAccountingPersonalAsync, fetchOperationsAsync , accountingId } = useAccountingStore();
 
     onMounted(fetchAccountingPersonalAsync);
 
@@ -30,7 +25,7 @@ export default {
     });
 
     return {
-      accountingPersonal, operations, accountingId
+      accountingPersonal, accountingId
     };
   },
 };

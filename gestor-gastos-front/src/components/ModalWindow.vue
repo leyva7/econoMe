@@ -53,16 +53,4 @@ export default {
   background-color: rgba(0, 0, 0, 0.6);
 }
 
-.modal-actions {
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-}
-
-.modal-content {
-  background-color: #fff;
-  padding: 20px;
-  border-radius: 8px;
-  /* Establece el ancho y la altura según tus necesidades */
-}
 </style>

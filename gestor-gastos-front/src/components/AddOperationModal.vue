@@ -3,7 +3,14 @@
     <h2>Nueva Operación</h2>
     <form @submit.prevent="submitOperations">
       <div class="form-group">
-        <label for="optionSelect">Tipo de gasto</label>
+        <label for="type">Tipo</label>
+        <select id="type" v-model="operation.type">
+          <option value="ingreso">Ingreso</option>
+          <option value="gasto">Gasto</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label for="optionSelect">Categoría</label>
         <select id="optionSelect" v-model="selectedOption" @change="onSelectChange">
           <option v-for="option in categories" :key="option" :value="option">
             {{ option }}
@@ -23,13 +30,6 @@
       <div class="form-group">
         <label for="description">Descripción</label>
         <textarea id="description" v-model="operation.description"></textarea>
-      </div>
-      <div class="form-group">
-        <label for="type">Tipo</label>
-        <select id="type" v-model="operation.type">
-          <option value="ingreso">Ingreso</option>
-          <option value="gasto">Gasto</option>
-        </select>
       </div>
       <div class="form-group">
         <label for="date">Fecha</label>
@@ -62,7 +62,7 @@ export default defineComponent({
     isVisible: Boolean
   },
   setup(props, { emit }) {
-    const { fetchCategoriesAsync, categories} = useAccountingStore();
+    const { fetchCategoriesSpentAsync, fetchCategoriesIncomeAsync, categories } = useAccountingStore();
     const { accountingId } = globalStore();
 
     const selectedOption = ref('');
@@ -85,11 +85,19 @@ export default defineComponent({
       selectedOption.value = ''; // Limpia la opción seleccionada en el select
     };
 
+    const updateCategories = () => {
+      if (operation.value.type === 'ingreso') {
+        fetchCategoriesIncomeAsync(accountingId.value);
+      } else if (operation.value.type === 'gasto') {
+        fetchCategoriesSpentAsync(accountingId.value);
+      }
+    };
+
     onMounted(() => {
       clearForm();
 
       if (props.isVisible) {
-        fetchCategoriesAsync(accountingId.value);
+        updateCategories();
       }
     });
 
@@ -101,12 +109,12 @@ export default defineComponent({
       }
     };
 
-    watch(() => props.isVisible, (isVisible) => {
-      if (isVisible) {
-        fetchCategoriesAsync(accountingId.value);
+    watch(() => operation.value.type, updateCategories);
+    watch(() => props.isVisible, (newValue) => {
+      if (newValue) {
+        updateCategories();
       }
     });
-
     const updateVisibility = (value) => {
       emit('update:isVisible', value);
     };
@@ -130,7 +138,7 @@ export default defineComponent({
 
         await createOperation(operation.value);
         alert('Operación registrada exitosamente.');
-        await fetchCategoriesAsync(accountingId);
+        await fetchCategoriesSpentAsync(accountingId);
         await clearForm();
         updateVisibility(false);
         location.reload();
@@ -156,6 +164,10 @@ export default defineComponent({
 </script>
 
 <style>
+
+.form-group, h2{
+  color: #ECF0F1;
+}
 
 </style>
 
