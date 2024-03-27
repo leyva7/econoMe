@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.*;
 import java.util.List;
 import java.util.Optional;
 import java.util.NoSuchElementException;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/accounting")
@@ -144,6 +145,28 @@ public class AccountingController {
         } catch (Exception e) {
             // Si hay un error, retornar una respuesta con el código de error correspondiente
             System.out.println("ERROOOOOOR");
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
+    }
+
+    @PostMapping("/operations/register")
+    public ResponseEntity<?> registerOperations(@RequestBody List<OperationsDto> operationsDtos) {
+        try {
+            // Convertir la lista de DTOs a entidades de Operations
+            List<Operations> operations = operationsDtos.stream()
+                    .map(mappingService::dtoToOperation)
+                    .collect(Collectors.toList());
+            // Crear las operaciones utilizando el servicio
+            List<Operations> savedOperations = operationsService.createOperations(operations);
+            // Convertir las operaciones guardadas a DTOs
+            List<OperationsDto> savedOperationsDtos = savedOperations.stream()
+                    .map(mappingService::operationsToDto)
+                    .collect(Collectors.toList());
+            // Retornar la respuesta con las operaciones creadas
+            return ResponseEntity.status(HttpStatus.CREATED).body(savedOperationsDtos);
+        } catch (Exception e) {
+            // Si hay un error, retornar una respuesta con el código de error correspondiente
+            System.out.println("ERROR: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }

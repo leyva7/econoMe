@@ -38,7 +38,14 @@ export const useAccountingStore = () => {
     const incomes = ref([]);
     const incomesMonths = ref([]);
     const monthlyIncomeData = ref([]);
+    const monthlySpentData = ref([]);
     const router = useRouter();
+
+    function formatDateToDDMMYYYY(dateString) {
+        const [year, month, day] = dateString.split('-');
+        return `${day}-${month}-${year}`;
+    }
+
 
     const fetchAccountingsAsync = async () => {
         try {
@@ -99,6 +106,7 @@ export const useAccountingStore = () => {
         try {
             const response = await fetchSpents(accountingId);
             spents.value = response.data;
+            processMonthlySpentData();
         } catch (error) {
             console.error('Hubo un error al obtener los gastos:', error);
         }
@@ -166,14 +174,55 @@ export const useAccountingStore = () => {
         });
     };
 
+    const processMonthlySpentData = () => {
+        const now = new Date();
+        let monthCounts = Array.from({ length: 6 }, (_, i) => {
+            let date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+            let month = date.toLocaleString('default', { month: 'short' }).substring(0, 3); // Abreviación del mes
+            let year = date.getFullYear().toString().substring(2); // Últimos dos dígitos del año
+            return `${month} ${year}`;
+        }).reverse();
+
+        let spentSums = monthCounts.map(month => {
+            return {
+                month: month,
+                total: 0
+            };
+        });
+
+        spents.value.forEach(spent => {
+            let spentDate = new Date(spent.date);
+            let spentMonth = spentDate.toLocaleString('default', { month: 'short' }).substring(0, 3); // Abreviación del mes
+            let spentYear = spentDate.getFullYear().toString().substring(2); // Últimos dos dígitos del año
+            let spentMonthYear = `${spentMonth} ${spentYear}`;
+            let index = spentSums.findIndex(sum => sum.month === spentMonthYear);
+            if (index !== -1) {
+                spentSums[index].total += spent.quantity;
+            }
+        });
+
+        monthlySpentData.value = spentSums;
+    };
+
+
     const latestSpents = computed(() => {
         // Clona el arreglo de spents para no modificar el original
         const spentsClone = [...spentsMonths.value];
         // Ordena los gastos por fecha de forma descendente
         spentsClone.sort((a, b) => new Date(b.date) - new Date(a.date));
-        // Retorna los primeros 5 elementos del arreglo ordenado
-        return spentsClone.slice(0, 5);
+        // Aplica el formateo de fecha a cada elemento y retorna los primeros 5 elementos del arreglo ordenado
+        return spentsClone.slice(0, 5).map(spent => ({
+            ...spent,
+            // Asegúrate de formatear la fecha aquí
+            date: formatDateToDDMMYYYY(spent.date)
+        }));
     });
+
+    const topSpentCategory = computed(() => {
+        // Asumiendo que processedSpents está ordenado, toma la primera categoría como la principal
+        return processedSpents.value[0] || null;
+    });
+
 
     const fetchIncomeAsync = async (accountingId) => {
         try {
@@ -244,11 +293,7 @@ export const useAccountingStore = () => {
 
         monthlyIncomeData.value = incomeSums;
 
-        console.log(monthlyIncomeData.value);
     };
-
-
-
 
 
     const latestIncomes = computed(() => {
@@ -256,8 +301,33 @@ export const useAccountingStore = () => {
         const incomesClone = [...incomesMonths.value];
         // Ordena los gastos por fecha de forma descendente
         incomesClone.sort((a, b) => new Date(b.date) - new Date(a.date));
-        // Retorna los primeros 5 elementos del arreglo ordenado
-        return incomesClone.slice(0, 5);
+        // Aplica el formateo de fecha a cada elemento y retorna los primeros 5 elementos del arreglo ordenado
+        return incomesClone.slice(0, 5).map(spent => ({
+            ...spent,
+            // Asegúrate de formatear la fecha aquí
+            date: formatDateToDDMMYYYY(spent.date)
+        }));
+    });
+
+    const monthlySavingsData = computed(() => {
+        // Asumimos que monthlySpentData y monthlyIncomeData están alineados por mes.
+        const savings = monthlyIncomeData.value.map((income, index) => {
+            // Encuentra el gasto correspondiente al mismo mes.
+            const expense = monthlySpentData.value[index];
+            // Calcula el ahorro como la diferencia entre ingresos y gastos.
+            const totalSavings = income.total - (expense ? expense.total : 0);
+            return {
+                month: income.month,
+                totalSavings
+            };
+        });
+
+        return savings;
+    });
+
+    const topIncomeCategory = computed(() => {
+        // Asumiendo que processedIncomes está ordenado, toma la primera categoría como la principal
+        return processedIncomes.value[0] || null;
     });
 
     const logout = () => {
@@ -277,7 +347,7 @@ export const useAccountingStore = () => {
 
     return {
         accountings, fetchAccountingsAsync, userRole, fetchUserRoleAsync, fetchCategoriesSpentAsync, fetchCategoriesIncomeAsync, categories, fetchAccountingPersonalAsync, accountingPersonal, username, accountingName, logout, navigate:router.push, modifyUser, modifyPassword,
-        fetchOperationsAsync, operations, fetchSpentsAsync, spents, accountingId, processedSpents, fetchSpentsMonthsAsync, spentsMonths, totalSpentMonth, latestSpents, weeklySpentData, fetchIncomeMonthsAsync,
-        fetchIncomeAsync, incomesMonths, totalIncomeMonth, latestIncomes, monthlyIncomeData, processedIncomes, processMonthlyIncomeData
+        fetchOperationsAsync, operations, fetchSpentsAsync, spents, accountingId, processedSpents, fetchSpentsMonthsAsync, spentsMonths, totalSpentMonth, latestSpents, weeklySpentData, processMonthlySpentData, monthlySpentData ,fetchIncomeMonthsAsync,
+        fetchIncomeAsync, incomesMonths, incomes,totalIncomeMonth, latestIncomes, monthlyIncomeData, processedIncomes, processMonthlyIncomeData, monthlySavingsData, topSpentCategory, topIncomeCategory
     };
 };

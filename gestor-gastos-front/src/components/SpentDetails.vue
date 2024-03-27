@@ -110,6 +110,7 @@ export default {
               legend: {
                 position: 'top',
                 labels: {
+                  color: 'black',
                   font: {
                     size: 16 // Tamaño de la letra en la leyenda
                   }
@@ -143,6 +144,7 @@ export default {
               y: {
                 beginAtZero: true,
                 ticks: {
+                  color: 'black',
                   font: {
                     size: 16 // Tamaño de la letra en el eje Y
                   }
@@ -150,6 +152,7 @@ export default {
               },
               x: {
                 ticks: {
+                  color: 'black',
                   font: {
                     size: 16 // Tamaño de la letra en el eje X
                   }
@@ -158,7 +161,7 @@ export default {
             },
             plugins: {
               legend: {
-                display: false // Esto desactivará la leyenda del gráfico
+                display: false
               }
             }
           }
@@ -239,7 +242,7 @@ table {
 .table th, .table td {
   border: 1px solid #ccc;
   padding: 2px;
-  text-align: left;
+  text-align: center;
 }
 
 .table th {

@@ -1,9 +1,9 @@
 <template>
-  <p v-if="hasData" class="total-spent">Este mes has ingresado: {{ totalIncomeMonth.toFixed(2) }} €</p>
-  <div class="spent-details">
+  <p v-if="hasData" class="total-income">Este mes has ingresado: {{ totalIncomeMonth.toFixed(2) }} €</p>
+  <div class="income-details">
     <!-- Condición para mostrar el recuadro del gráfico solo si hay datos -->
     <div v-if="hasData" class="recuadro-categorias">
-      <p class ="title-spent">Ingresos por categorías</p>
+      <p class ="title-income">Ingresos por categorías</p>
       <canvas id="topCategoriesChart"></canvas>
 
       <table class="table">
@@ -24,7 +24,7 @@
     </div>
     <div v-if="hasData" class="recuadro-secundario">
       <div v-if="hasData" class="recuadro-recientes">
-        <p class ="title-spent">Últimos ingresos</p>
+        <p class ="title-income">Últimos ingresos</p>
         <table class="table">
           <thead>
           <tr>
@@ -44,7 +44,7 @@
       </div>
 
       <div v-if="hasData" class="recuadro-evolucion">
-        <p class ="title-spent">Evolución de ingresos por meses</p>
+        <p class ="title-income">Evolución de ingresos por meses</p>
         <canvas id="lineChart"></canvas>
       </div>
     </div>
@@ -109,6 +109,7 @@ export default {
               y: {
                 beginAtZero: true,
                 ticks: {
+                  color: 'black',
                   font: {
                     size: 16 // Tamaño de la letra en el eje Y
                   }
@@ -116,6 +117,7 @@ export default {
               },
               x: {
                 ticks: {
+                  color: 'black',
                   font: {
                     size: 16 // Tamaño de la letra en el eje X
                   }
@@ -154,6 +156,7 @@ export default {
               y: {
                 beginAtZero: true,
                 ticks: {
+                  color: 'black',
                   font: {
                     size: 16 // Tamaño de la letra en el eje Y
                   }
@@ -161,6 +164,7 @@ export default {
               },
               x: {
                 ticks: {
+                  color: 'black',
                   font: {
                     size: 16 // Tamaño de la letra en el eje X
                   }
@@ -187,7 +191,7 @@ export default {
 
 <style scoped>
 
-.total-spent {
+.total-income {
   height: 5%;
   font-size: 24px;
   text-align: center;
@@ -197,7 +201,7 @@ export default {
   width: 100%;
 }
 
-.spent-details {
+.income-details {
   text-align: center;
   height: calc(95% - 80px);
   display: flex;
@@ -217,7 +221,7 @@ export default {
   border: 2px solid #2C3E50;
   padding: 15px;
   margin-right: 4%; /* Espacio entre recuadro-categorias y recuadro-secundario */
-  height: calc(100% - 16px); /* Ajusta según el padding de spent-details */
+  height: calc(100% - 16px); /* Ajusta según el padding de income-details */
 }
 
 .recuadro-secundario {
@@ -238,7 +242,7 @@ export default {
   margin-bottom: 10px;
 }
 
-p.title-spent{
+p.title-income{
   font-size: x-large;
   margin-bottom: 5px;
 }
@@ -251,7 +255,7 @@ table {
 .table th, .table td {
   border: 1px solid #ccc;
   padding: 2px;
-  text-align: left;
+  text-align: center;
 }
 
 .table th {

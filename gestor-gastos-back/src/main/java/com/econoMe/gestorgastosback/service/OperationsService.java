@@ -82,6 +82,18 @@ public class OperationsService {
 
     }
 
+    public List<Operations> createOperations(List<Operations> operations) {
+
+        List<Operations> savedOperations = new ArrayList<>();
+
+        for(int i=0; i< operations.size(); i++){
+            savedOperations.add(createOperation(operations.get(i)));
+        }
+
+        return savedOperations;
+
+    }
+
     public List<String> findAllAccountingCategoriesByType(Accounting accounting, OperationType type) {
         List<Operations> operationsAccounting = findByAccounting(accounting);
         Set<String> uniqueCategories = new HashSet<>();
