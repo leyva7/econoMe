@@ -21,7 +21,7 @@
 <script>
 import ModalWindow from './ModalWindow.vue';
 import { ref, defineComponent } from 'vue';
-import {createAccounting} from "@/service/accountingService";
+import { createAccounting } from "@/service/accountingService";
 
 export default defineComponent({
   components: {

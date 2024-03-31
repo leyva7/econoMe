@@ -14,8 +14,11 @@
         </tr>
         </thead>
         <tbody>
-        <tr v-for="income in processedIncomes" :key="income.category">
-          <td>{{ income.category }}</td>
+        <tr v-for="(income, index) in processedIncomes" :key="income.category">
+          <td>
+            <span class="category-color" :style="{ backgroundColor: categoryColors[index] }"></span>
+            {{ income.category }}
+          </td>
           <td>{{ income.total.toFixed(2) }}</td>
         </tr>
         </tbody>
@@ -116,6 +119,7 @@ export default {
                 }
               },
               x: {
+                display:false,
                 ticks: {
                   color: 'black',
                   font: {
@@ -183,7 +187,9 @@ export default {
     };
 
     return {
-      incomesMonths, fetchIncomeAsync, fetchIncomeMonthsAsync, accountingId, processedIncomes, hasData, totalIncomeMonth, latestIncomes, monthlyIncomeData
+      incomesMonths, fetchIncomeAsync, fetchIncomeMonthsAsync, accountingId, processedIncomes, hasData, totalIncomeMonth, latestIncomes, monthlyIncomeData, categoryColors: [
+        '#183c27', '#297243', '#5dac75', '#5dac75', '#5dac75', '#a4b0be'
+      ],
     };
   },
 };
@@ -229,7 +235,7 @@ export default {
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
-  height: calc(95% - 80px);;
+  height: calc(100% - 16px);
 }
 
 .recuadro-recientes, .recuadro-evolucion {
@@ -240,16 +246,20 @@ export default {
   border: 2px solid #2C3E50;
   padding: 15px;
   margin-bottom: 10px;
+  height: calc(50% - 4px);
 }
 
 p.title-income{
-  font-size: x-large;
-  margin-bottom: 5px;
+  font-size: 1.5rem;
+  margin-bottom: 15px;
+  margin-top: 10px;
+  height: 10%;
 }
 
 table {
   width: 100%;
   margin-top: 15px;
+  height: 40%;
 }
 
 .table th, .table td {
@@ -261,6 +271,15 @@ table {
 .table th {
   background-color: var(--pickled-bluewood-300);
   color: #000000;
+}
+
+.category-color {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  margin-right: 4px;
+  vertical-align: middle;
 }
 
 #topCategoriesChart {

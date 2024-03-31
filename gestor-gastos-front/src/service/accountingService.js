@@ -22,3 +22,13 @@ export const fetchCategoriesSpent = async (accountingId) => {
 export const fetchCategoriesIncome = async (accountingId) => {
     return await axios.get(`${API_URL}/${accountingId}/categoriesIncome`, { headers: getAuthHeaders() });
 };
+
+export const fetchCategoriesDifferences = async (accountingId) => {
+    return await axios.get(`${API_URL}/${accountingId}/categoryDifferences`, { headers: getAuthHeaders() });
+};
+
+export const deleteUserAccounting = async (accountingId, username) => {
+    return await axios.delete(`${API_URL}/${accountingId}/${username}`, {
+        headers: getAuthHeaders()
+    });
+};

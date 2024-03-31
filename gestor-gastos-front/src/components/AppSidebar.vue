@@ -5,45 +5,68 @@
     </div>
     <div class="divider"></div>
     <nav class="nav">
-      <a href="#" @click="navigate('/home-user')"><img src="../assets/icons/home.svg" alt="Home" class="nav-icon"> Home</a>
-      <a href="#" @click="navigate('/home-user/spent')"><img src="../assets/icons/spent.svg" alt="Gastos" class="nav-icon"> Gastos</a>
-      <a href="#" @click="navigate('/home-user/income')"><img src="../assets/icons/income.svg" alt="Ingresos" class="nav-icon"> Ingresos</a>
-      <a href="#" @click="navigate('/home-user/evolution')"><img src="../assets/icons/evolution.svg" alt="Evolucion" class="nav-icon"> Evolución</a>
+      <a href="#" @click.prevent="navigate('/home-user')"><img src="../assets/icons/home.svg" alt="Home" class="nav-icon"> Home</a>
+      <a href="#" @click.prevent="navigate('/home-user/spent')"><img src="../assets/icons/spent.svg" alt="Gastos" class="nav-icon"> Gastos</a>
+      <a href="#" @click.prevent="navigate('/home-user/income')"><img src="../assets/icons/income.svg" alt="Ingresos" class="nav-icon"> Ingresos</a>
+      <a href="#" @click.prevent="navigate('/home-user/evolution')"><img src="../assets/icons/evolution.svg" alt="Evolucion" class="nav-icon"> Evolución</a>
     </nav>
     <div class="divider"></div>
     <div class="shared-accountings">
       <span>Contabilidades Compartidas</span>
-      <button @click="$emit('openModal', 'addAccounting')">Añadir Contabilidad</button>
+      <button @click="emitOpenModal('addAccounting')">Añadir Contabilidad</button>
       <ul>
-        <a href="#" v-for="(accounting, index) in sharedAccountings" :key="index" @click.prevent="navigateToAccounting(accounting)">
-          <li class="shared-accountings-list">{{ accounting.name }}</li>
-        </a>
+        <li v-for="(accounting, index) in sharedAccountings" :key="index" @click.prevent="navigateToAccounting(accounting)" class="shared-accountings-list">
+          {{ accounting.name }}
+        </li>
       </ul>
     </div>
   </aside>
 </template>
 
 <script>
-export default {
+import {defineComponent, watch} from 'vue';
+import { useRouter } from 'vue-router';
+
+export default defineComponent({
   name: 'AppSidebar',
-  props: ['sharedAccountings'],
+  props: {
+    sharedAccountings: Array,
+  },
   emits: ['openModal'],
-  methods: {
-    navigate(path) {
-      this.$router.push({
-        path: path, // Utiliza 'path' en lugar de 'name'
-        query: { id: localStorage.getItem('personalAccountingId') }
+  setup(props, { emit }) {
+    const router = useRouter();
+
+    const navigate = (path) => {
+      router.push({
+        path: path,
+        query: { id: localStorage.getItem('personalAccountingId') },
       });
-    },
-    navigateToAccounting(accounting) {
-      this.$router.push({
+    };
+
+    const navigateToAccounting = (accounting) => {
+      router.push({
         name: 'shared',
         params: { accountingName: accounting.name },
-        query: { id: accounting.id }
+        query: { id: accounting.id },
       });
-    }
-  }
-}
+    };
+
+    const emitOpenModal = (type) => {
+      emit('openModal', type);
+    };
+
+    // Dentro de SidebarPage
+    watch(() => props.sharedAccountings, (newVal) => {
+      console.log("sharedAccountings ha cambiado:", newVal);
+    }, { deep: true });
+
+    return {
+      navigate,
+      navigateToAccounting,
+      emitOpenModal,
+    };
+  },
+});
 </script>
 
 <style>
@@ -119,11 +142,6 @@ export default {
 }
 .shared-accountings a:visited {
   color: #FFFFFF; /* Mantiene el color blanco incluso después de ser visitados */
-}
-
-.add-icon {
-  cursor: pointer;
-  margin-left: 10px;
 }
 
 </style>

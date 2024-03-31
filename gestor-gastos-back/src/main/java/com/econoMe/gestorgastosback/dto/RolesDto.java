@@ -11,6 +11,7 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class RolesDto {
+    private String username;
+    private Long accountingId;
     private Role role;
-
 }

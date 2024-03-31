@@ -57,18 +57,6 @@ public class RolesService {
         });
     }
 
-    public void updateUserRoles(User oldUser, User newUser) {
-        List<Roles> roles = findAllByUser(oldUser);
-        List<Roles> newRoles = new ArrayList<>();
-        for(int i = 0; i < roles.size(); i++){
-            if(!roles.get(i).getAccounting().getUserCreator().equals(oldUser)){
-                newRoles.add(roles.get(i));
-                newRoles.get(i).setUser(newUser);
-                createRole(newRoles.get(i));
-            }
-        }
-    }
-
     public boolean deleteRole(RolesId rolesId) {
         return rolesRepository.findById(rolesId).map(role -> {
             rolesRepository.delete(role);
@@ -92,6 +80,25 @@ public class RolesService {
             throw new RuntimeException("Se produjo un error al buscar roles por nombre de usuario y ID de contabilidad", e);
         }
     }
+
+    public List<Roles> findAllAccountingUsers(Accounting accounting){
+        try {
+            return rolesRepository.findAllByAccounting(accounting);
+        } catch (DataAccessException e) {
+            // Manejar la excepción de acceso a datos de Spring
+            throw new RuntimeException("Se produjo un error al buscar roles por nombre de usuario y ID de contabilidad", e);
+        }
+    }
+
+    public List<Roles> findAllAccountingUsersNotCreator(Accounting accounting) {
+        try {
+            // Recupera todos los roles asociados a la contabilidad excluyendo el userCreator
+            return rolesRepository.findAllByAccountingAndUserNot(accounting, accounting.getUserCreator());
+        } catch (DataAccessException e) {
+            throw new RuntimeException("Se produjo un error al buscar roles por contabilidad excluyendo al creador", e);
+        }
+    }
+
 
     public void deleteByAccounting(Accounting accounting) {
         rolesRepository.deleteByAccounting(accounting);

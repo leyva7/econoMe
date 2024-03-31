@@ -25,9 +25,6 @@
     </div>
 
   </div>
-  <div v-if="hasData" class="recuadro-secundario">
-
-  </div>
 </template>
 
 <script>

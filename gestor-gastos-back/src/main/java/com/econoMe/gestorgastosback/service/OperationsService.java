@@ -120,10 +120,7 @@ public class OperationsService {
         return operationsRepository.findByAccountingAndType(accounting, type);
     }
 
-    public List<Operations> findOperationsForCurrentMonth(Accounting accounting, OperationType type) {
-        LocalDate startOfMonth = YearMonth.now().atDay(1); // El primer día del mes actual
-        LocalDate endOfMonth = YearMonth.now().atEndOfMonth(); // El último día del mes actual
-
+    public List<Operations> findOperationsForMonth(Accounting accounting, OperationType type, LocalDate startOfMonth, LocalDate endOfMonth) {
         List<Operations> allOperations = findByAccountingAndType(accounting, type); // Obtiene todas las operaciones para la contabilidad
 
         return allOperations.stream()
@@ -132,6 +129,53 @@ public class OperationsService {
                     return (!operationDate.isBefore(startOfMonth) && !operationDate.isAfter(endOfMonth));
                 })
                 .collect(Collectors.toList());
+    }
+
+    public Map<String, Double> calculateSignificantCategoryDifferences(Accounting accounting, OperationType type) {
+        // Obtener las operaciones del mes actual
+        List<Operations> currentMonthOperations = findOperationsForMonth(accounting, type, YearMonth.now().atDay(1), YearMonth.now().atEndOfMonth());
+        // Obtener las operaciones del mes anterior
+        LocalDate startOfLastMonth = YearMonth.now().minusMonths(1).atDay(1);
+        LocalDate endOfLastMonth = YearMonth.now().minusMonths(1).atEndOfMonth();
+        List<Operations> lastMonthOperations = findOperationsForMonth(accounting, type, startOfLastMonth, endOfLastMonth);
+
+        // Agrupar y sumar las cantidades por categoría para el mes actual
+        Map<String, Double> currentMonthSumByCategory = currentMonthOperations.stream()
+                .collect(Collectors.groupingBy(Operations::getCategory, Collectors.summingDouble(Operations::getQuantity)));
+
+        // Agrupar y sumar las cantidades por categoría para el mes anterior
+        Map<String, Double> lastMonthSumByCategory = lastMonthOperations.stream()
+                .collect(Collectors.groupingBy(Operations::getCategory, Collectors.summingDouble(Operations::getQuantity)));
+
+        // Calculando diferencias
+        Map<String, Double> categoryDifferences = new HashMap<>();
+        currentMonthSumByCategory.forEach((category, sum) -> {
+            double lastMonthSum = lastMonthSumByCategory.getOrDefault(category, 0.0);
+            double difference = sum - lastMonthSum;
+            categoryDifferences.put(category, difference);
+        });
+
+        // Separar en positivos y negativos
+        Map<String, Double> positiveDifferences = categoryDifferences.entrySet().stream()
+                .filter(entry -> entry.getValue() > 0)
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+
+        Map<String, Double> negativeDifferences = categoryDifferences.entrySet().stream()
+                .filter(entry -> entry.getValue() < 0)
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+
+        // Encontrar los valores más grandes positivos y negativos
+        Optional<Map.Entry<String, Double>> maxPositive = positiveDifferences.entrySet().stream()
+                .max(Map.Entry.comparingByValue());
+
+        Optional<Map.Entry<String, Double>> maxNegative = negativeDifferences.entrySet().stream()
+                .min(Map.Entry.comparingByValue());
+
+        Map<String, Double> result = new LinkedHashMap<>();
+        maxPositive.ifPresent(entry -> result.put(entry.getKey(), entry.getValue()));
+        maxNegative.ifPresent(entry -> result.put(entry.getKey(), entry.getValue()));
+
+        return result;
     }
 
     public Operations updateOperation(Long id, Operations operation) {
@@ -159,9 +203,6 @@ public class OperationsService {
     }
 
     public void deleteByAccounting(Accounting accounting) {
-        if (!operationsRepository.existsByAccounting(accounting)) {
-            throw new IllegalStateException("La operación con la contabilidad " + accounting.getName() + " no existe.");
-        }
         operationsRepository.deleteByAccounting(accounting);
     }
 

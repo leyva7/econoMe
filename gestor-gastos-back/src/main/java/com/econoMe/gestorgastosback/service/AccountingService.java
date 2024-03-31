@@ -26,15 +26,14 @@ import java.util.stream.Collectors;
 public class AccountingService {
 
     private final AccountingRepository accountingRepository;
-    private final OperationsRepository operationsRepository;
-
+    private final OperationsService operationsService;
     private final RolesRepository rolesRepository;
     private final RolesService rolesService;
 
     @Autowired
-    public AccountingService(AccountingRepository accountingRepository, OperationsRepository operationsRepository, RolesRepository rolesRepository, RolesService rolesService){
+    public AccountingService(AccountingRepository accountingRepository, OperationsService operationsService, RolesRepository rolesRepository, RolesService rolesService){
         this.accountingRepository = accountingRepository;
-        this.operationsRepository = operationsRepository;
+        this.operationsService = operationsService;
         this.rolesRepository = rolesRepository;
         this.rolesService = rolesService;
     }
@@ -113,7 +112,6 @@ public class AccountingService {
         }
     }
 
-
     public Accounting updateAccounting(String username, Accounting accounting){
         if(accounting.getId() == null || !accountingRepository.existsById(accounting.getId())){
             throw new IllegalStateException("La contabilidad con el ID " + accounting.getId() + " no existe.");
@@ -139,16 +137,19 @@ public class AccountingService {
 
     }
 
+    @Transactional
     public void deleteAccounting(Long id, User user){
         if (!accountingRepository.existsById(id)) {
             throw new IllegalStateException("La contabilidad con el ID proporcionado no existe.");
         }
 
-        if(accountingRepository.getById(id).getUserCreator().equals(user)){
+
+        if(!accountingRepository.getById(id).getUserCreator().equals(user)){
             throw new IllegalStateException("No es ud el creador de la contabilidad.");
         }
 
-        operationsRepository.deleteByAccounting(accountingRepository.getById(id));
+        operationsService.deleteByAccounting(accountingRepository.getById(id));
+        rolesService.deleteByAccounting(findAccountingById(id));
         accountingRepository.deleteById(id);
     }
 

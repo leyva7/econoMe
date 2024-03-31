@@ -3,9 +3,9 @@ import { useRouter } from 'vue-router';
 import {
     fetchAccountings,
     fetchAccountingPersonal,
-    fetchCategoriesSpent, fetchCategoriesIncome
+    fetchCategoriesSpent, fetchCategoriesIncome, fetchCategoriesDifferences
 } from '../service/accountingService';
-import { fetchUserRole } from '../service/userRoleService';
+import { fetchUserRole, fetchUsersAccounting } from '../service/userRoleService';
 import {
     fetchIncomes,
     fetchIncomesMonths,
@@ -15,6 +15,7 @@ import {
 } from '../service/operationService';
 
 export const useAccountingStore = () => {
+    const router = useRouter();
     const accountings = ref([]);
     const userRole = ref([]);
     const categories = ref([]);
@@ -39,13 +40,13 @@ export const useAccountingStore = () => {
     const incomesMonths = ref([]);
     const monthlyIncomeData = ref([]);
     const monthlySpentData = ref([]);
-    const router = useRouter();
+    const categoriesDifferences = ref([]);
+    const usersAccounting = ref([]);
 
     function formatDateToDDMMYYYY(dateString) {
         const [year, month, day] = dateString.split('-');
         return `${day}-${month}-${year}`;
     }
-
 
     const fetchAccountingsAsync = async () => {
         try {
@@ -55,6 +56,10 @@ export const useAccountingStore = () => {
             console.error('Hubo un error al obtener las contabilidades:', error);
         }
     };
+
+    const sharedAccountings = computed(() => {
+        return accountings.value.filter(accounting => accounting.type === 'SHARED');
+    });
 
     const fetchAccountingPersonalAsync = async () => {
         try {
@@ -72,6 +77,15 @@ export const useAccountingStore = () => {
         } catch (error) {
             console.error('Error al obtener el rol del usuario:', error);
             userRole.value = null;
+        }
+    };
+
+    const fetchUsersAccountingAsync = async (accountingId) => {
+        try {
+            const response = await fetchUsersAccounting(accountingId);
+            usersAccounting.value = response.data;
+        } catch (error) {
+            console.error('Hubo un error al obtener los usuarios de la contabilidad:', error);
         }
     };
 
@@ -121,6 +135,19 @@ export const useAccountingStore = () => {
             console.error('Hubo un error al obtener los gastos:', error);
         }
     };
+
+    const latestOperations = computed(() => {
+        // Clona el arreglo de spents para no modificar el original
+        const operationsClone = [...operations.value];
+        // Ordena los gastos por fecha de forma descendente
+        operationsClone.sort((a, b) => new Date(b.date) - new Date(a.date));
+        // Aplica el formateo de fecha a cada elemento y retorna los primeros 5 elementos del arreglo ordenado
+        return operationsClone.slice(0, 5).map(operation => ({
+            ...operation,
+            // Asegúrate de formatear la fecha aquí
+            date: formatDateToDDMMYYYY(operation.date)
+        }));
+    });
 
     const processedSpents = computed(() => {
         const sumsByCategory = spentsMonths.value.reduce((acc, { category, quantity }) => {
@@ -330,6 +357,16 @@ export const useAccountingStore = () => {
         return processedIncomes.value[0] || null;
     });
 
+    const categoryDifferencesAsync = async (accountingId) => {
+        try {
+            const response = await fetchCategoriesDifferences(accountingId);
+            categoriesDifferences.value = response.data;
+        } catch (error) {
+            console.error('Hubo un error al obtener los gastos:', error);
+        }
+    };
+
+
     const logout = () => {
         localStorage.clear();
         router.push('/login');
@@ -348,6 +385,7 @@ export const useAccountingStore = () => {
     return {
         accountings, fetchAccountingsAsync, userRole, fetchUserRoleAsync, fetchCategoriesSpentAsync, fetchCategoriesIncomeAsync, categories, fetchAccountingPersonalAsync, accountingPersonal, username, accountingName, logout, navigate:router.push, modifyUser, modifyPassword,
         fetchOperationsAsync, operations, fetchSpentsAsync, spents, accountingId, processedSpents, fetchSpentsMonthsAsync, spentsMonths, totalSpentMonth, latestSpents, weeklySpentData, processMonthlySpentData, monthlySpentData ,fetchIncomeMonthsAsync,
-        fetchIncomeAsync, incomesMonths, incomes,totalIncomeMonth, latestIncomes, monthlyIncomeData, processedIncomes, processMonthlyIncomeData, monthlySavingsData, topSpentCategory, topIncomeCategory
+        fetchIncomeAsync, incomesMonths, incomes,totalIncomeMonth, latestIncomes, monthlyIncomeData, processedIncomes, processMonthlyIncomeData, monthlySavingsData, topSpentCategory, topIncomeCategory, categoryDifferencesAsync,
+        categoriesDifferences, latestOperations, sharedAccountings, fetchUsersAccountingAsync, usersAccounting
     };
 };

@@ -70,8 +70,20 @@ public class MappingService {
     public RolesDto rolesToDto(Roles roles){
        RolesDto role = new RolesDto();
        role.setRole(roles.getRole());
+       role.setUsername(roles.getUser().getUsername());
+       role.setAccountingId(roles.getAccounting().getId());
 
        return role;
+    }
+
+    public List<RolesDto> rolesListToDto(List<Roles> roles){
+        List<RolesDto> rolesDtoList = new ArrayList<>();
+
+        for(int i = 0; i < roles.size(); i++){
+            rolesDtoList.add(rolesToDto(roles.get(i)));
+        }
+
+        return rolesDtoList;
     }
 
     public OperationsDto operationsToDto(Operations operations){

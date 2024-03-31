@@ -1,9 +1,7 @@
 package com.econoMe.gestorgastosback.controller;
 
 import com.econoMe.gestorgastosback.common.OperationType;
-import com.econoMe.gestorgastosback.dto.AccountingDto;
-import com.econoMe.gestorgastosback.dto.AccountingRegistration;
-import com.econoMe.gestorgastosback.dto.OperationsDto;
+import com.econoMe.gestorgastosback.dto.*;
 import com.econoMe.gestorgastosback.model.*;
 import com.econoMe.gestorgastosback.service.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -12,10 +10,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.NoSuchElementException;
+import java.time.YearMonth;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @RestController
@@ -115,6 +113,15 @@ public class AccountingController {
         return ResponseEntity.ok(mappingService.rolesToDto(roles));
     }
 
+    @GetMapping("/{id}/userCreator")
+    public ResponseEntity<?> getAccountingUserCreator(Authentication authentication, @PathVariable Long id) {
+        if (authentication == null || !(authentication.getPrincipal() instanceof User user)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("No se ha proporcionado una autenticación válida.");
+        }
+
+        return ResponseEntity.ok(mappingService.accountingToDto(accountingService.findAccountingById(id)));
+    }
+
     @GetMapping("/{id}/categoriesSpent")
     public ResponseEntity<?> getAccountingOperationCategoriesSpent(Authentication authentication, @PathVariable Long id) {
         if (authentication == null || !(authentication.getPrincipal() instanceof UserDetails userDetails)) {
@@ -203,7 +210,7 @@ public class AccountingController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("No se ha proporcionado una autenticación válida.");
         }
 
-        return ResponseEntity.ok(mappingService.operationListToDto(operationsService.findOperationsForCurrentMonth(accountingService.findAccountingById(id), OperationType.SPENT)));
+        return ResponseEntity.ok(mappingService.operationListToDto(operationsService.findOperationsForMonth(accountingService.findAccountingById(id), OperationType.SPENT, YearMonth.now().atDay(1), YearMonth.now().atEndOfMonth())));
     }
 
     @GetMapping("/{id}/operation/income")
@@ -221,21 +228,78 @@ public class AccountingController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("No se ha proporcionado una autenticación válida.");
         }
 
-        return ResponseEntity.ok(mappingService.operationListToDto(operationsService.findOperationsForCurrentMonth(accountingService.findAccountingById(id), OperationType.INCOME)));
+        return ResponseEntity.ok(mappingService.operationListToDto(operationsService.findOperationsForMonth(accountingService.findAccountingById(id), OperationType.INCOME, YearMonth.now().atDay(1), YearMonth.now().atEndOfMonth())));
+    }
+
+    @GetMapping("/{id}/categoryDifferences")
+    public ResponseEntity<?> getCategoryDifferences(@PathVariable Long id) {
+        try {
+            Accounting accounting = accountingService.findAccountingById(id);
+            if (accounting == null) {
+                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Accounting not found with ID: " + id);
+            }
+
+            // Suponiendo que tienes un método en operationsService que calcula las diferencias
+            Map<String, Double> categoryDifferencesSpent = operationsService.calculateSignificantCategoryDifferences(accounting, OperationType.SPENT);
+            Map<String, Double> categoryDifferencesIncome = operationsService.calculateSignificantCategoryDifferences(accounting, OperationType.INCOME);
+
+            // Crear un objeto de respuesta que combine ambas listas de diferencias
+            Map<String, Object> response = new HashMap<>();
+            response.put("spentDifferences", categoryDifferencesSpent);
+            response.put("incomeDifferences", categoryDifferencesIncome);
+
+            return ResponseEntity.ok(response);
+        } catch (Exception e) {
+            // Manejar excepciones adecuadamente
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("An error occurred: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/{id}/addUser")
+    public ResponseEntity<?> addUser(Authentication authentication, @PathVariable Long id, @RequestBody RolesDto rolesDto) {
+        if (authentication == null || !(authentication.getPrincipal() instanceof UserDetails userDetails)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("No se ha proporcionado una autenticación válida.");
+        }
+
+        // Intenta obtener el usuario por ID de manera segura
+        User userToAdd = userService.getUserByUsername(rolesDto.getUsername());
+
+        // Intenta obtener la contabilidad por ID de manera segura
+        Accounting accounting = accountingService.findAccountingById(rolesDto.getAccountingId());
+
+        // Crea el nuevo rol
+        Roles newRole = new Roles(userToAdd, accounting, rolesDto.getRole());
+        Roles createdRole = rolesService.createRole(newRole);
+
+        // Retorna la respuesta con el rol creado
+        return ResponseEntity.ok(mappingService.rolesToDto(createdRole));
     }
 
 
-    @GetMapping("/all")
-    public ResponseEntity<List<Accounting>> getAllAccounting() {
-        List<Accounting> accountings = accountingService.findAllAccounting();
-        return ResponseEntity.ok(accountings);
+    @GetMapping("/{id}/users")
+    public ResponseEntity<?> getAccountingUsers(Authentication authentication, @PathVariable Long id) {
+        if (authentication == null || !(authentication.getPrincipal() instanceof User user)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("No se ha proporcionado una autenticación válida.");
+        }
+
+        return ResponseEntity.ok(mappingService.rolesListToDto(rolesService.findAllAccountingUsersNotCreator(accountingService.findAccountingById(id))));
     }
 
+    @DeleteMapping("/{id}/deleteUser")
+    public ResponseEntity<?> deleteUser(Authentication authentication, @PathVariable Long id, @RequestBody Map<String, String> body) {
+        if (authentication == null || !(authentication.getPrincipal() instanceof UserDetails)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("No se ha proporcionado una autenticación válida.");
+        }
+        String username = body.get("username");
+        User user = userService.getUserByUsername(username);
+        rolesService.deleteRole(new RolesId(user.getId(), id));
+        return ResponseEntity.ok().build();
+    }
 
     // Ejemplo: Eliminar contabilidad
-    @DeleteMapping("/{id}")
-    public ResponseEntity<?> deleteAccounting(@PathVariable Long id, @RequestBody User user) {
-        accountingService.deleteAccounting(id, user);
+    @DeleteMapping("/{id}/{username}")
+    public ResponseEntity<?> deleteAccounting(@PathVariable Long id, @PathVariable String username) {
+        accountingService.deleteAccounting(id, userService.getUserByUsername(username));
         return ResponseEntity.ok().build();
     }
 }

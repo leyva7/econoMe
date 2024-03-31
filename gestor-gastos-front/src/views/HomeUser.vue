@@ -38,7 +38,7 @@ export default {
   },
   setup() {
     const isModalOpen = ref(false);
-    const { accountings, fetchAccountingsAsync, userRole, fetchUserRoleAsync, categories, fetchCategories} = useAccountingStore();
+    const { accountings, sharedAccountings, fetchAccountingsAsync, userRole, fetchUserRoleAsync, categories, fetchCategories} = useAccountingStore();
     const {accountingId} = globalStore();
     const modalContentType = ref('');
     const router = useRouter();
@@ -46,10 +46,6 @@ export default {
     onMounted(async () => {
       await fetchAccountingsAsync();
       await fetchUserRoleAsync(accountingId.value);
-    });
-
-    const sharedAccountings = computed(() => {
-      return accountings.value.filter(accounting => accounting.type === 'SHARED');
     });
 
     watch(accountingId, async (newId, oldId) => {

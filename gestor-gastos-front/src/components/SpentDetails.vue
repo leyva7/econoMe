@@ -14,8 +14,11 @@
         </tr>
         </thead>
         <tbody>
-        <tr v-for="spent in processedSpents" :key="spent.category">
-          <td>{{ spent.category }}</td>
+        <tr v-for="(spent, index) in processedSpents" :key="spent.category">
+          <td>
+            <span class="category-color" :style="{ backgroundColor: categoryColors[index] }"></span>
+            {{ spent.category }}
+          </td>
           <td>{{ spent.total.toFixed(2) }}</td>
         </tr>
         </tbody>
@@ -108,7 +111,10 @@ export default {
             responsive: true,
             plugins: {
               legend: {
-                position: 'top',
+                display: false,
+                position: 'left',
+                align: 'center',
+                padding: '100',
                 labels: {
                   color: 'black',
                   font: {
@@ -124,7 +130,6 @@ export default {
 
     const initLineChart = () => {
       const ctx = document.getElementById('lineChart');
-      console.log(weeklySpentData.value);
       if (ctx) {
         if(linesChart.value) linesChart.value.destroy(); // Destruye el chart anterior si existe
         linesChart.value = new Chart(ctx, {
@@ -170,7 +175,7 @@ export default {
     };
 
     return {
-      spentsMonths, fetchSpentsMonthsAsync, accountingId, processedSpents, hasData, totalSpentMonth, latestSpents, weeklySpentData
+      spentsMonths, fetchSpentsMonthsAsync, accountingId, processedSpents, hasData, totalSpentMonth, latestSpents, weeklySpentData, categoryColors: ['#480707', '#a01414', '#e61c1c', '#ff6a6a', '#ffc7c7', '#a4b0be']
     };
   },
 };
@@ -180,7 +185,7 @@ export default {
 
 .total-spent {
   height: 5%;
-  font-size: 24px;
+  font-size: 1.5rem;
   text-align: center;
   margin-bottom: 20px;
   font-weight: bold;
@@ -216,7 +221,7 @@ export default {
   display: flex;
   flex-direction: column;
   justify-content: flex-start;
-  height: calc(95% - 80px);;
+  height: calc(100% - 16px);
 }
 
 .recuadro-recientes, .recuadro-evolucion {
@@ -227,16 +232,20 @@ export default {
   border: 2px solid #2C3E50;
   padding: 15px;
   margin-bottom: 10px;
+  height: calc(50% - 4px);
 }
 
 p.title-spent{
-  font-size: x-large;
-  margin-bottom: 5px;
+  font-size: 1.5rem;
+  margin-bottom: 15px;
+  margin-top: 10px;
+  height: 10%;
 }
 
 table {
   width: 100%;
   margin-top: 15px;
+  height: 40%;
 }
 
 .table th, .table td {
@@ -250,9 +259,18 @@ table {
   color: #000000;
 }
 
+.category-color {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  margin-right: 4px;
+  vertical-align: middle;
+}
+
 #topCategoriesChart {
-  max-width: 100%;
-  height: 50%;
+  width: auto;
+  height: 45%;
   margin: auto;
 }
 
