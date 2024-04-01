@@ -4,15 +4,15 @@ import {
     fetchAccountings,
     fetchAccountingPersonal,
     fetchCategoriesSpent, fetchCategoriesIncome, fetchCategoriesDifferences
-} from '../service/accountingService';
-import { fetchUserRole, fetchUsersAccounting } from '../service/userRoleService';
+} from '@/service/accountingService';
+import { fetchUserRole, fetchUsersAccounting } from '@/service/userRoleService';
 import {
     fetchIncomes,
     fetchIncomesMonths,
     fetchOperations,
     fetchSpents,
     fetchSpentsMonths
-} from '../service/operationService';
+} from '@/service/operationService';
 
 export const useAccountingStore = () => {
     const router = useRouter();
@@ -59,6 +59,10 @@ export const useAccountingStore = () => {
 
     const sharedAccountings = computed(() => {
         return accountings.value.filter(accounting => accounting.type === 'SHARED');
+    });
+
+    const accountingSharedSelected = computed(() => {
+            return sharedAccountings.value.filter(accounting => accounting.id === Number(accountingId.value));
     });
 
     const fetchAccountingPersonalAsync = async () => {
@@ -163,6 +167,22 @@ export const useAccountingStore = () => {
             topCategoriesSpents.push({ category: 'Otros', total: otherTotal });
         }
         return topCategoriesSpents;
+    });
+
+    const processedSpentsUser = computed(() => {
+        const sumsByCategory = spentsMonths.value.reduce((acc, { username, quantity }) => {
+            acc[username] = (acc[username] || 0) + parseFloat(quantity);
+            return acc;
+        }, {});
+        const sortedCategories = Object.entries(sumsByCategory)
+            .sort((a, b) => b[1] - a[1])
+            .map(([username, total]) => ({ username, total }));
+        const topUsersSpent = sortedCategories.slice(0, 5);
+        const otherTotal = sortedCategories.slice(5).reduce((acc, { total }) => acc + total, 0);
+        if (otherTotal > 0) {
+            topUsersSpent.push({ category: 'Otros', total: otherTotal });
+        }
+        return topUsersSpent;
     });
 
     const totalSpentMonth = computed(() => {
@@ -287,6 +307,22 @@ export const useAccountingStore = () => {
         return topCategoriesIncomes;
     });
 
+    const processedIncomesUser = computed(() => {
+        const sumsByCategory = incomesMonths.value.reduce((acc, { username, quantity }) => {
+            acc[username] = (acc[username] || 0) + parseFloat(quantity);
+            return acc;
+        }, {});
+        const sortedCategories = Object.entries(sumsByCategory)
+            .sort((a, b) => b[1] - a[1])
+            .map(([username, total]) => ({ username, total }));
+        const topUsersIncomes = sortedCategories.slice(0, 5);
+        const otherTotal = sortedCategories.slice(5).reduce((acc, { total }) => acc + total, 0);
+        if (otherTotal > 0) {
+            topUsersIncomes.push({ category: 'Otros', total: otherTotal });
+        }
+        return topUsersIncomes;
+    });
+
     const totalIncomeMonth = computed(() => {
         return incomesMonths.value.reduce((total, { quantity }) => total + quantity, 0);
     });
@@ -386,6 +422,6 @@ export const useAccountingStore = () => {
         accountings, fetchAccountingsAsync, userRole, fetchUserRoleAsync, fetchCategoriesSpentAsync, fetchCategoriesIncomeAsync, categories, fetchAccountingPersonalAsync, accountingPersonal, username, accountingName, logout, navigate:router.push, modifyUser, modifyPassword,
         fetchOperationsAsync, operations, fetchSpentsAsync, spents, accountingId, processedSpents, fetchSpentsMonthsAsync, spentsMonths, totalSpentMonth, latestSpents, weeklySpentData, processMonthlySpentData, monthlySpentData ,fetchIncomeMonthsAsync,
         fetchIncomeAsync, incomesMonths, incomes,totalIncomeMonth, latestIncomes, monthlyIncomeData, processedIncomes, processMonthlyIncomeData, monthlySavingsData, topSpentCategory, topIncomeCategory, categoryDifferencesAsync,
-        categoriesDifferences, latestOperations, sharedAccountings, fetchUsersAccountingAsync, usersAccounting
+        categoriesDifferences, latestOperations, sharedAccountings, fetchUsersAccountingAsync, usersAccounting, accountingSharedSelected, processedSpentsUser, processedIncomesUser
     };
 };

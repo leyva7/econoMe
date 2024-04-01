@@ -30,7 +30,7 @@
 </template>
 
 <script>
-import { onMounted, ref, watch } from 'vue';
+import { onMounted, ref } from 'vue';
 import { useAccountingStore } from "@/stores/accountingStore";
 import { addUser as addUserApi, deleteUserAccounting } from "@/service/userRoleService";
 
@@ -49,17 +49,12 @@ export default {
       await accountingStore.fetchUsersAccountingAsync(accountingId.value);
     });
 
-    watch(() => props.isVisible, async (newValue) => {
-      if (newValue) {
-        await accountingStore.fetchUsersAccountingAsync(accountingId.value);
-      }
-    });
-
-    const removeUser = (username) => {
+    const removeUser = async(username) => {
       try{
         deleteUserAccounting(accountingId.value, username);
         console.log(`Eliminado usuario con username: ${username}`);
         closeModal();
+        await accountingStore.fetchUsersAccountingAsync(accountingId.value);
       }
       catch (error){
         console.error('Error al borrar usuario:', error);
@@ -77,6 +72,7 @@ export default {
         await addUserApi(accountingData.accountingId, accountingData);
         alert("Usuario añadido con éxito");
         closeModal();
+        await accountingStore.fetchUsersAccountingAsync(accountingId.value);
       } catch (error) {
         console.error('Error al añadir usuario:', error);
         alert('Ocurrió un error al añadir el usuario. Por favor, inténtalo de nuevo.');
