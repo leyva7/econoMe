@@ -3,6 +3,8 @@ package com.econoMe.gestorgastosback.service;
 import com.econoMe.gestorgastosback.common.OperationType;
 import com.econoMe.gestorgastosback.common.Role;
 import com.econoMe.gestorgastosback.common.Type;
+import com.econoMe.gestorgastosback.controller.AccountingController;
+import com.econoMe.gestorgastosback.dto.OperationFilterDto;
 import com.econoMe.gestorgastosback.model.Accounting;
 import com.econoMe.gestorgastosback.model.Operations;
 import com.econoMe.gestorgastosback.model.Roles;
@@ -33,6 +35,28 @@ public class OperationsService {
 
     public List<Operations> findAllOperations() {
         return operationsRepository.findAll();
+    }
+
+    public List<Operations> findAllOperationsAccountingUser(User user) {
+        // Obtener todos los roles del usuario
+        List<Roles> roles = rolesService.findAllByUser(user);
+
+        // Crear una lista para almacenar las operaciones de las contabilidades asociadas al usuario
+        List<Operations> operationsAccountingUser = new ArrayList<>();
+
+        // Iterar sobre los roles del usuario
+        for (Roles role : roles) {
+            // Obtener la contabilidad asociada al rol
+            Accounting accounting = role.getAccounting();
+
+            // Obtener las operaciones asociadas a la contabilidad
+            List<Operations> operations = operationsRepository.findByAccounting(accounting);
+
+            // Agregar las operaciones a la lista general
+            operationsAccountingUser.addAll(operations);
+        }
+
+        return operationsAccountingUser;
     }
 
     public Operations findById(Long id) {
@@ -176,6 +200,68 @@ public class OperationsService {
         maxNegative.ifPresent(entry -> result.put(entry.getKey(), entry.getValue()));
 
         return result;
+    }
+
+    public List<Operations> findFilteredOperations(OperationFilterDto operationFilterDto, User user) {
+        // Obtener todas las operaciones para el usuario dado.
+        List<Operations> operations = findAllOperationsAccountingUser(user);
+
+        // Filtrar por ID de contabilidad si está presente.
+        if (operationFilterDto.getAccountingId() != null) {
+            operations = operations.stream()
+                    .filter(op -> op.getAccounting().getId().equals(Long.valueOf(operationFilterDto.getAccountingId())))
+                    .collect(Collectors.toList());
+        }
+
+        // Filtrar por tipo de operación si está presente.
+        if (operationFilterDto.getType() != null) {
+            if (!operationFilterDto.getType().equalsIgnoreCase("BOTH")) {
+                operations = operations.stream()
+                        .filter(op -> op.getType().toString().equalsIgnoreCase(operationFilterDto.getType()))
+                        .collect(Collectors.toList());
+            }
+        }
+
+        // Filtrar por categoría si está presente.
+        if (operationFilterDto.getCategory() != null) {
+            if(!operationFilterDto.getCategory().equalsIgnoreCase("ALL")){
+                operations = operations.stream()
+                        .filter(op -> op.getCategory().equalsIgnoreCase(operationFilterDto.getCategory()))
+                        .collect(Collectors.toList());
+            }
+        }
+
+        // Filtrar por cantidad mínima si está presente.
+        if (operationFilterDto.getQuantityMin() != null) {
+            operations = operations.stream()
+                    .filter(op -> op.getQuantity() >= operationFilterDto.getQuantityMin())
+                    .collect(Collectors.toList());
+        }
+
+        // Filtrar por cantidad máxima si está presente.
+        if (operationFilterDto.getQuantityMax() != null) {
+            operations = operations.stream()
+                    .filter(op -> op.getQuantity() <= operationFilterDto.getQuantityMax())
+                    .collect(Collectors.toList());
+        }
+
+        // Filtrar por fecha de inicio si está presente.
+        if (operationFilterDto.getDateStart() != null) {
+            operations = operations.stream()
+                    .filter(op -> !op.getDate().isBefore(operationFilterDto.getDateStart()))
+                    .collect(Collectors.toList());
+        }
+
+        // Filtrar por fecha de fin si está presente.
+        if (operationFilterDto.getDateEnd() != null) {
+            operations = operations.stream()
+                    .filter(op -> !op.getDate().isAfter(operationFilterDto.getDateEnd()))
+                    .collect(Collectors.toList());
+        }
+
+        Collections.sort(operations, Comparator.comparing(Operations::getDate));
+
+        return operations;
     }
 
     public Operations updateOperation(Long id, Operations operation) {

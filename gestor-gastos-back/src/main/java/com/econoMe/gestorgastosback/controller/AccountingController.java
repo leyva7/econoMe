@@ -195,6 +195,14 @@ public class AccountingController {
         return ResponseEntity.ok(mappingService.operationListToDto(operationsService.findAllUserOperation(user)));
     }
 
+    @GetMapping("/operationAccountings/all")
+    public ResponseEntity<?> getAllAccountingUserOperation(Authentication authentication) {
+        if (authentication == null || !(authentication.getPrincipal() instanceof User user)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("No se ha proporcionado una autenticación válida.");
+        }
+        return ResponseEntity.ok(mappingService.operationListToDto(operationsService.findAllOperationsAccountingUser(user)));
+    }
+
     @GetMapping("/{id}/operation/spent")
     public ResponseEntity<?> getAccountingSpent(Authentication authentication, @PathVariable Long id) {
         if (authentication == null || !(authentication.getPrincipal() instanceof User user)) {
@@ -293,6 +301,22 @@ public class AccountingController {
         String username = body.get("username");
         User user = userService.getUserByUsername(username);
         rolesService.deleteRole(new RolesId(user.getId(), id));
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/operation/filterOperation")
+    public ResponseEntity<?> getFilteredOperations(Authentication authentication, @ModelAttribute OperationFilterDto operationFilterDto) {
+        // Usar operationFilterDto para filtrar las operaciones en el servicio y devolver los resultados
+        if (authentication == null || !(authentication.getPrincipal() instanceof User user)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("No se ha proporcionado una autenticación válida.");
+        }
+        List<OperationsDto> filteredOperations = mappingService.operationListToDto(operationsService.findFilteredOperations(operationFilterDto, user));
+        return ResponseEntity.ok(filteredOperations);
+    }
+
+    @DeleteMapping("operation/{id}")
+    public ResponseEntity<?> deleteAccounting(@PathVariable Long id) {
+        operationsService.deleteOperation(id);
         return ResponseEntity.ok().build();
     }
 

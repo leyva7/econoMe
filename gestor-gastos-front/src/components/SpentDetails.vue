@@ -166,8 +166,17 @@ export default {
             },
             plugins: {
               legend: {
-                display: false
-              }
+                display: true,
+                position: 'top',
+                align: 'center',
+                padding: '100',
+                labels: {
+                  color: 'black',
+                  font: {
+                    size: 16 // Tamaño de la letra en la leyenda
+                  }
+                }
+              },
             }
           }
         });

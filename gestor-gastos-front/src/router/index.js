@@ -12,6 +12,7 @@ import SpentDetails from "@/components/SpentDetails.vue";
 import IncomeDetails from "@/components/IncomeDetails.vue";
 import EvolutionDetails from "@/components/EvolutionDetails.vue";
 import SharedAccountings from "@/components/SharedAccountings.vue";
+import OperationDetails from "@/components/OperationDetails.vue";
 
 const routes = [
   {
@@ -47,6 +48,11 @@ const routes = [
         path: 'evolution',
         name: 'evolution',
         component: EvolutionDetails,
+      },
+      {
+        path: 'operation',
+        name: 'operation',
+        component: OperationDetails,
       },
       {
         path: 'shared/:accountingName',

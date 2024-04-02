@@ -177,6 +177,7 @@ export default {
   border: 2px solid #2C3E50;
   padding: 15px;
   height: calc(75% - 80px);
+  overflow-y: auto;
 }
 
 table {

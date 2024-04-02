@@ -10,8 +10,9 @@ import {
     fetchIncomes,
     fetchIncomesMonths,
     fetchOperations,
+    fetchAllOperations,
     fetchSpents,
-    fetchSpentsMonths
+    fetchSpentsMonths, fetchAllAccountingsUserOperations
 } from '@/service/operationService';
 
 export const useAccountingStore = () => {
@@ -33,6 +34,8 @@ export const useAccountingStore = () => {
         return router.currentRoute.value.query.id;
     });
     const operations = ref([]);
+    const allOperations = ref([]);
+    const allAccountingUserOperations = ref([]);
     const spents = ref([]);
     const spentsMonths = ref([]);
     const weeklySpentData = ref([]);
@@ -42,11 +45,6 @@ export const useAccountingStore = () => {
     const monthlySpentData = ref([]);
     const categoriesDifferences = ref([]);
     const usersAccounting = ref([]);
-
-    function formatDateToDDMMYYYY(dateString) {
-        const [year, month, day] = dateString.split('-');
-        return `${day}-${month}-${year}`;
-    }
 
     const fetchAccountingsAsync = async () => {
         try {
@@ -111,10 +109,42 @@ export const useAccountingStore = () => {
         }
     };
 
+    const fetchCategoriesAsync = async (accountingId) => {
+        try {
+            const [spentResponse, incomeResponse] = await Promise.all([
+                fetchCategoriesSpent(accountingId),
+                fetchCategoriesIncome(accountingId)
+            ]);
+            // Combina las listas de categorías y elimina duplicados.
+            const combinedCategories = [...new Set([...spentResponse.data, ...incomeResponse.data])];
+            categories.value = combinedCategories;
+        } catch (error) {
+            console.error('Hubo un error al obtener las categorías combinadas:', error);
+        }
+    };
+
     const fetchOperationsAsync = async (accountingId) => {
         try {
             const response = await fetchOperations(accountingId)
             operations.value = response.data;
+        } catch (error) {
+            console.error('Hubo un error al obtener las operaciones:', error);
+        }
+    };
+
+    const fetchAllOperationsAsync = async () => {
+        try {
+            const response = await fetchAllOperations(accountingId)
+            allOperations.value = response.data;
+        } catch (error) {
+            console.error('Hubo un error al obtener las operaciones:', error);
+        }
+    };
+
+    const fetchAllAccountingsUserOperationsAsync = async () => {
+        try {
+            const response = await fetchAllAccountingsUserOperations(accountingId)
+            allAccountingUserOperations.value = response.data;
         } catch (error) {
             console.error('Hubo un error al obtener las operaciones:', error);
         }
@@ -141,16 +171,10 @@ export const useAccountingStore = () => {
     };
 
     const latestOperations = computed(() => {
-        // Clona el arreglo de spents para no modificar el original
-        const operationsClone = [...operations.value];
-        // Ordena los gastos por fecha de forma descendente
-        operationsClone.sort((a, b) => new Date(b.date) - new Date(a.date));
-        // Aplica el formateo de fecha a cada elemento y retorna los primeros 5 elementos del arreglo ordenado
-        return operationsClone.slice(0, 5).map(operation => ({
-            ...operation,
-            // Asegúrate de formatear la fecha aquí
-            date: formatDateToDDMMYYYY(operation.date)
-        }));
+        return operations.value
+            .slice()
+            .sort((a, b) => new Date(b.date.split('-').reverse().join('-')) - new Date(a.date.split('-').reverse().join('-')))
+            .slice(0, 5);
     });
 
     const processedSpents = computed(() => {
@@ -192,18 +216,21 @@ export const useAccountingStore = () => {
     const processWeeklySpentData = () => {
         const weeks = {};
         spentsMonths.value.forEach(spent => {
-            const spentDate = new Date(spent.date);
+            // Convierte la fecha de dd-mm-yyyy a yyyy-mm-dd
+            const [day, month, year] = spent.date.split('-');
+            const spentDate = new Date(`${year}-${month}-${day}`);
+
             const dayOfMonth = spentDate.getDate();
 
             // Determina la semana del mes basada en el día
             let weekOfMonth;
-            if (dayOfMonth <= 6) {
+            if (dayOfMonth <= 7) {
                 weekOfMonth = 1;
-            } else if (dayOfMonth <= 13) {
+            } else if (dayOfMonth <= 14) {
                 weekOfMonth = 2;
-            } else if (dayOfMonth <= 20) {
+            } else if (dayOfMonth <= 21) {
                 weekOfMonth = 3;
-            } else if (dayOfMonth <= 27) {
+            } else if (dayOfMonth <= 28) {
                 weekOfMonth = 4;
             } else {
                 weekOfMonth = 5;
@@ -220,6 +247,7 @@ export const useAccountingStore = () => {
             return { week: `Semana ${week}`, total };
         });
     };
+
 
     const processMonthlySpentData = () => {
         const now = new Date();
@@ -252,17 +280,12 @@ export const useAccountingStore = () => {
     };
 
 
+
     const latestSpents = computed(() => {
-        // Clona el arreglo de spents para no modificar el original
-        const spentsClone = [...spentsMonths.value];
-        // Ordena los gastos por fecha de forma descendente
-        spentsClone.sort((a, b) => new Date(b.date) - new Date(a.date));
-        // Aplica el formateo de fecha a cada elemento y retorna los primeros 5 elementos del arreglo ordenado
-        return spentsClone.slice(0, 5).map(spent => ({
-            ...spent,
-            // Asegúrate de formatear la fecha aquí
-            date: formatDateToDDMMYYYY(spent.date)
-        }));
+        return spentsMonths.value
+            .slice()
+            .sort((a, b) => new Date(b.date.split('-').reverse().join('-')) - new Date(a.date.split('-').reverse().join('-')))
+            .slice(0, 5);
     });
 
     const topSpentCategory = computed(() => {
@@ -360,16 +383,10 @@ export const useAccountingStore = () => {
 
 
     const latestIncomes = computed(() => {
-        // Clona el arreglo de spents para no modificar el original
-        const incomesClone = [...incomesMonths.value];
-        // Ordena los gastos por fecha de forma descendente
-        incomesClone.sort((a, b) => new Date(b.date) - new Date(a.date));
-        // Aplica el formateo de fecha a cada elemento y retorna los primeros 5 elementos del arreglo ordenado
-        return incomesClone.slice(0, 5).map(spent => ({
-            ...spent,
-            // Asegúrate de formatear la fecha aquí
-            date: formatDateToDDMMYYYY(spent.date)
-        }));
+        return incomesMonths.value
+            .slice()
+            .sort((a, b) => new Date(b.date.split('-').reverse().join('-')) - new Date(a.date.split('-').reverse().join('-')))
+            .slice(0, 5);
     });
 
     const monthlySavingsData = computed(() => {
@@ -416,12 +433,11 @@ export const useAccountingStore = () => {
         router.push('/modify-password');
     };
 
-
-
     return {
         accountings, fetchAccountingsAsync, userRole, fetchUserRoleAsync, fetchCategoriesSpentAsync, fetchCategoriesIncomeAsync, categories, fetchAccountingPersonalAsync, accountingPersonal, username, accountingName, logout, navigate:router.push, modifyUser, modifyPassword,
         fetchOperationsAsync, operations, fetchSpentsAsync, spents, accountingId, processedSpents, fetchSpentsMonthsAsync, spentsMonths, totalSpentMonth, latestSpents, weeklySpentData, processMonthlySpentData, monthlySpentData ,fetchIncomeMonthsAsync,
         fetchIncomeAsync, incomesMonths, incomes,totalIncomeMonth, latestIncomes, monthlyIncomeData, processedIncomes, processMonthlyIncomeData, monthlySavingsData, topSpentCategory, topIncomeCategory, categoryDifferencesAsync,
-        categoriesDifferences, latestOperations, sharedAccountings, fetchUsersAccountingAsync, usersAccounting, accountingSharedSelected, processedSpentsUser, processedIncomesUser
+        categoriesDifferences, latestOperations, sharedAccountings, fetchUsersAccountingAsync, usersAccounting, accountingSharedSelected, processedSpentsUser, processedIncomesUser, fetchCategoriesAsync,
+        fetchAllOperationsAsync, allOperations, fetchAllAccountingsUserOperationsAsync, allAccountingUserOperations
     };
 };

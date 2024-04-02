@@ -5,10 +5,31 @@
     </div>
     <div class="divider"></div>
     <nav class="nav">
-      <a href="#" @click.prevent="navigate('/home-user')"><img src="../assets/icons/home.svg" alt="Home" class="nav-icon"> Home</a>
-      <a href="#" @click.prevent="navigate('/home-user/spent')"><img src="../assets/icons/spent.svg" alt="Gastos" class="nav-icon"> Gastos</a>
-      <a href="#" @click.prevent="navigate('/home-user/income')"><img src="../assets/icons/income.svg" alt="Ingresos" class="nav-icon"> Ingresos</a>
-      <a href="#" @click.prevent="navigate('/home-user/evolution')"><img src="../assets/icons/evolution.svg" alt="Evolucion" class="nav-icon"> Evolución</a>
+      <a href="#"
+         @click.prevent="navigateHome('/home-user')"
+         :class="{ 'active-link': activePath === '/home-user' }">
+        <img src="../assets/icons/home.svg" alt="Home" class="nav-icon"> Home
+      </a>
+      <a href="#"
+         @click.prevent="navigateHome('/home-user/spent')"
+         :class="{ 'active-link': activePath === '/home-user/spent' }">
+        <img src="../assets/icons/spent.svg" alt="Spent" class="nav-icon"> Gastos
+      </a>
+      <a href="#"
+         @click.prevent="navigateHome('/home-user/income')"
+         :class="{ 'active-link': activePath === '/home-user/income' }">
+        <img src="../assets/icons/income.svg" alt="Income" class="nav-icon"> Ingresos
+      </a>
+      <a href="#"
+         @click.prevent="navigateHome('/home-user/evolution')"
+         :class="{ 'active-link': activePath === '/home-user/evolution' }">
+        <img src="../assets/icons/evolution.svg" alt="Spent" class="nav-icon"> Evolución
+      </a>
+      <a href="#"
+         @click.prevent="navigate('/home-user/operation')"
+         :class="{ 'active-link': activePath === '/home-user/operation'}">
+        <img src="../assets/icons/evolution.svg" alt="Operation" class="nav-icon"> Operaciones
+      </a>
     </nav>
     <div class="divider"></div>
     <div class="shared-accountings">
@@ -24,8 +45,9 @@
 </template>
 
 <script>
-import {defineComponent, watch} from 'vue';
+import {defineComponent, ref, watch} from 'vue';
 import { useRouter } from 'vue-router';
+import { useRoute } from 'vue-router';
 
 export default defineComponent({
   name: 'AppSidebar',
@@ -35,8 +57,20 @@ export default defineComponent({
   emits: ['openModal'],
   setup(props, { emit }) {
     const router = useRouter();
+    const route = useRoute(); // Obtiene la ruta actual
+    const activePath = ref(route.path); // Almacena la ruta activa
+
+    watch(route, (newRoute) => {
+      activePath.value = newRoute.path; // Actualiza la ruta activa cuando cambie la ruta
+    });
 
     const navigate = (path) => {
+      router.push({
+        path: path
+      });
+    };
+
+    const navigateHome = (path) => {
       router.push({
         path: path,
         query: { id: localStorage.getItem('personalAccountingId') },
@@ -61,7 +95,8 @@ export default defineComponent({
     }, { deep: true });
 
     return {
-      navigate,
+      activePath,
+      navigate, navigateHome,
       navigateToAccounting,
       emitOpenModal,
     };
@@ -85,6 +120,12 @@ export default defineComponent({
   text-align: center;
   box-sizing: border-box;
   overflow-y: auto;
+}
+
+.active-link {
+  background-color: rgba(255, 255, 255, 0.4); /* Fondo más oscuro para el enlace activo */
+  color: #fff; /* Color de texto para el enlace activo */
+  border-radius: 4px; /* Opcional: añade bordes redondeados */
 }
 
 .divider{

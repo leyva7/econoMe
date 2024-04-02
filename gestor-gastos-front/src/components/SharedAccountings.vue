@@ -12,118 +12,128 @@
     </div>
   </div>
   <div class="shared-accounting-details">
-    <div v-if="hasDataSpent" class="spents-container">
-      <p class="title-shared">Gastos</p>
-      <canvas id="topCategoriesChart"></canvas>
-      <!-- Tabla de processedSpentsUser debajo del gráfico -->
-      <div class="table-container">
+    <div class="grid-container">
+      <div v-if="hasDataSpent" class="chart-spents-container">
+        <p class="title-shared">Gastos</p>
+        <div class="chart-container">
+          <canvas id="topCategoriesChart"></canvas>
+        </div>
+      </div>
+      <div v-if="hasDataIncome" class="chart-income-container">
+        <p class="title-shared">Ingresos</p>
+        <div class="chart-container">
+          <canvas id="topCategoriesIncomeChart"></canvas>
+        </div>
+      </div>
+      <div class="operations-users-container">
+        <div v-if="hasDataOperations" class="operations-container">
+          <p class="title-shared">Últimas operaciones</p>
+          <table class="table">
+            <thead>
+            <tr>
+              <th>Categoría</th>
+              <th>Cantidad</th>
+              <th>Tipo de operación</th>
+              <th>Fecha</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr v-for="operation in latestOperations" :key="operation.id">
+              <td>{{ operation.category }}</td>
+              <td>{{ operation.quantity.toFixed(2) }}</td>
+              <td>{{ operation.type === 'INCOME' ? 'Ingreso' : 'Gasto' }}</td>
+              <td>{{ operation.date }}</td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+        <h3 v-else>No hay datos</h3>
+        <!-- Container para la lista de usuarios movido aquí -->
+      </div>
+      <div v-if="hasDataSpent" class="spents-container">
+        <!-- Tabla de processedSpentsUser debajo del gráfico -->
         <p class="title-shared">Detalle de Gastos</p>
-        <table class="table">
-          <thead>
-          <tr>
-            <th>Categoría</th>
-            <th>Total</th>
-          </tr>
-          </thead>
-          <tbody>
-          <tr v-for="(spent, index) in processedSpents" :key="spent.category">
-            <td>
-              <span class="category-color" :style="{ backgroundColor: categorySpentColors[index] }"></span>
-              {{ spent.category }}
-            </td>
-            <td>{{ spent.total.toFixed(2) }}</td>
-          </tr>
-          </tbody>
-        </table>
-        <table class="table">
-          <thead>
-          <tr>
-            <th>Usuario</th>
-            <th>Cantidad</th>
-          </tr>
-          </thead>
-          <tbody>
-          <tr v-for="spent in processedSpentsUser" :key="spent.id">
-            <td>{{ spent.username }}</td>
-            <td>{{ spent.total }}</td>
-          </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-    <h3 v-else>No hay datos</h3>
-    <div v-if="hasDataIncome" class="income-container">
-      <p class="title-shared">Ingresos</p>
-      <canvas id="topCategoriesIncomeChart"></canvas>
-      <!-- Tabla de processedIncomesUser debajo del gráfico -->
-      <div class="table-container">
-        <p class="title-shared">Detalle de Ingresos</p>
-        <table class="table">
-          <thead>
-          <tr>
-            <th>Categoría</th>
-            <th>Total</th>
-          </tr>
-          </thead>
-          <tbody>
-          <tr v-for="(income, index) in processedIncomes" :key="income.category">
-            <td>
-              <span class="category-color" :style="{ backgroundColor: categoryIncomeColors[index] }"></span>
-              {{ income.category }}
-            </td>
-            <td>{{ income.total.toFixed(2) }}</td>
-          </tr>
-          </tbody>
-        </table>
-        <table class="table">
-          <thead>
-          <tr>
-            <th>Usuario</th>
-            <th>Cantidad</th>
-          </tr>
-          </thead>
-          <tbody>
-          <tr v-for="income in processedIncomesUser" :key="income.id">
-            <td>{{ income.username }}</td>
-            <td>{{ income.total }}</td>
-          </tr>
-          </tbody>
-        </table>
-      </div>
-    </div>
-    <h3 v-else>No hay datos</h3>
-    <div class="operations-users-container">
-      <div v-if="hasDataOperations" class="operations-container">
-        <p class="title-shared">Últimas operaciones</p>
-        <table class="table">
-          <thead>
-          <tr>
-            <th>Categoría</th>
-            <th>Cantidad</th>
-            <th>Tipo de operación</th>
-            <th>Fecha</th>
-          </tr>
-          </thead>
-          <tbody>
-          <tr v-for="operation in latestOperations" :key="operation.id">
-            <td>{{ operation.category }}</td>
-            <td>{{ operation.quantity.toFixed(2) }}</td>
-            <td>{{ operation.type === 'INCOME' ? 'Ingreso' : 'Gasto' }}</td>
-            <td>{{ operation.date }}</td>
-          </tr>
-          </tbody>
-        </table>
+        <div class="table-container">
+          <table class="table">
+            <thead>
+            <tr>
+              <th>Categoría</th>
+              <th>Total</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr v-for="(spent, index) in processedSpents" :key="spent.category">
+              <td>
+                <span class="category-color" :style="{ backgroundColor: categorySpentColors[index] }"></span>
+                {{ spent.category }}
+              </td>
+              <td>{{ spent.total.toFixed(2) }}</td>
+            </tr>
+            </tbody>
+          </table>
+          <table class="table">
+            <thead>
+            <tr>
+              <th>Usuario</th>
+              <th>Cantidad</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr v-for="spent in processedSpentsUser" :key="spent.id">
+              <td>{{ spent.username }}</td>
+              <td>{{ spent.total }}</td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
       <h3 v-else>No hay datos</h3>
-      <!-- Container para la lista de usuarios movido aquí -->
-      <section class="user-list-container">
+      <div v-if="hasDataIncome" class="income-container">
+        <!-- Tabla de processedIncomesUser debajo del gráfico -->
+        <p class="title-shared">Detalle de Ingresos</p>
+        <div class="table-container">
+          <table class="table">
+            <thead>
+            <tr>
+              <th>Categoría</th>
+              <th>Total</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr v-for="(income, index) in processedIncomes" :key="income.category">
+              <td>
+                <span class="category-color" :style="{ backgroundColor: categoryIncomeColors[index] }"></span>
+                {{ income.category }}
+              </td>
+              <td>{{ income.total.toFixed(2) }}</td>
+            </tr>
+            </tbody>
+          </table>
+          <table class="table">
+            <thead>
+            <tr>
+              <th>Usuario</th>
+              <th>Cantidad</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr v-for="income in processedIncomesUser" :key="income.id">
+              <td>{{ income.username }}</td>
+              <td>{{ income.total }}</td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <h3 v-else>No hay datos</h3>
+      <div class="user-list-container">
         <h3>Usuarios Actuales</h3>
         <ul class="user-list">
           <li v-for="(user, index) in usersAccounting" :key="index">
             {{ user.username}} {{user.role}}
           </li>
         </ul>
-      </section>
+      </div>
     </div>
   </div>
 </template>
@@ -232,7 +242,7 @@ export default {
             plugins: {
               legend: {
                 display: false,
-                position: 'left',
+                position: 'top',
                 align: 'center',
                 padding: '100',
                 labels: {
@@ -250,13 +260,12 @@ export default {
 
     const initIncomeChart = () => {
       const ctx = document.getElementById('topCategoriesIncomeChart');
-      console.log(ctx);
       if (ctx && chartIncomes.value) {
         chartIncomes.value.destroy(); // Destruye el gráfico anterior si existe
       }
       if (ctx) {
         chartIncomes.value = new Chart(ctx, {
-          type: 'bar', // Cambia 'pie' por 'bar'
+          type: 'pie', // Cambia 'pie' por 'bar'
           data: {
             labels: processedIncomes.value.map(({ category }) => category), // Categorías
             datasets: [{
@@ -264,16 +273,13 @@ export default {
               data: processedIncomes.value.map(({ total }) => total), // Totales
               backgroundColor: [
                 '#183c27', '#297243', '#5dac75', '#5dac75', '#5dac75', '#a4b0be'
-              ],
-              borderColor: [
-                '#183c27', '#297243', '#5dac75', '#5dac75', '#5dac75', '#a4b0be'
-              ],
-              borderWidth: 1
+              ]
             }]
           },
           options: {
             scales: {
               y: {
+                display: false,
                 beginAtZero: true,
                 ticks: {
                   color: 'black',
@@ -295,8 +301,17 @@ export default {
             responsive: true,
             plugins: {
               legend: {
-                display: false // Puedes cambiarlo a true si deseas mostrar la leyenda
-              }
+                display: false,
+                position: 'top',
+                align: 'center',
+                padding: '100',
+                labels: {
+                  color: 'black',
+                  font: {
+                    size: 16 // Tamaño de la letra en la leyenda
+                  }
+                }
+              },
             }
           }
         });
@@ -346,27 +361,39 @@ export default {
 }
 
 .shared-accounting-details {
-  display: flex;
-  flex-direction: row;
-  align-items: flex-start; /* Ajuste para alinear el contenido al inicio */
   padding: 20px;
   gap: 20px;
   overflow: hidden; /* Para evitar desbordamiento */
-  height: calc(95% - 80px);
+  height: calc(100% - 80px);
 }
 
-.spents-container, .income-container, .operations-container {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 10px;
-  padding: 10px;
+.grid-container {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* Tres columnas */
+  grid-template-rows: 50% 50%; /* Dos filas, cada una ocupa el 50% de la altura */
+  gap: 20px; /* Espacio entre grid items */
+  height: calc(95% - 80px); /* Ajusta la altura total del contenedor del grid */
+  padding: 20px;
+}
+
+
+.chart-spents-container, .chart-income-container, .operations-users-container,
+.spents-container, .income-container, .user-list-container {
+  width: 100%;
+  height: 100%;
+  overflow: auto;
   border-radius: 10px;
   background-color: #ffffff;
   box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-  height: calc(100% - 16px);
-  overflow-y: auto; /* Permite desplazamiento vertical si necesario */
+  text-align: center;
+}
+
+.chart-container {
+  height: 70%; /* Altura del contenedor del gráfico */
+  width: 100%; /* Ancho del contenedor del gráfico */
+  display: flex; /* Habilita flexbox para los contenedores de los gráficos */
+  justify-content: center; /* Centra los gráficos horizontalmente */
+  align-items: center; /* Centra los gráficos verticalmente */
 }
 
 .operations-users-container {
@@ -374,21 +401,27 @@ export default {
   display: flex;
   flex-direction: column;
   justify-content: space-between;
-  height: calc(100% - 16px);
 }
 
 .title-shared {
   font-size: x-large;
+  height: 5%;
+}
+
+.table-container{
+  display: flex;
+  height: 70%;
+  justify-content: space-between;
+  padding: 10px;
 }
 
 .table {
-  width: 100%;
   margin-top: 15px;
 }
 
 .table th, .table td {
   border: 1px solid #ccc;
-  padding: 2px;
+  padding: 4px;
   text-align: center;
 }
 
@@ -461,7 +494,6 @@ export default {
   max-width: 100%; /* Ajuste para ocupar el espacio disponible */
   overflow-y: auto;
   overflow-x: hidden;
-  padding: 10px;
   border: 1px solid #ccc;
   border-radius: 5px;
   background-color: #f2f2f2;
@@ -490,8 +522,8 @@ export default {
 }
 
 #topCategoriesChart, #topCategoriesIncomeChart {
-  width: auto;
-  height: 45%; /* Ajuste para que los gráficos ocupen una altura proporcional */
+  width: 100%;
+  height: 100%; /* Ajuste para que los gráficos ocupen una altura proporcional */
   margin: auto;
 }
 </style>
