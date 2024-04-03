@@ -18,7 +18,7 @@
 </template>
 
 <script>
-import { ref, onMounted, watch} from 'vue';
+import { provide, ref, onMounted, watch} from 'vue';
 import { computed } from 'vue';
 import { useRouter } from 'vue-router';
 import SidebarPage from "@/components/AppSidebar.vue";
@@ -82,6 +82,8 @@ export default {
       }
       return false;
     });
+
+    provide('modalData', { isModalOpen, modalContentType, toggleModal });
 
     return {
       isModalOpen,

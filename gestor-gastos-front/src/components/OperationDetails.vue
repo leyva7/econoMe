@@ -1,4 +1,5 @@
 <template>
+  <AddOperationModal :isVisible="isModalOpen" :operationToEdit="operationToEdit" @update:isVisible="toggleModal" />
   <div class="operation-container">
     <p class="operation-title">Operaciones</p>
     <div class="operation-details">
@@ -70,7 +71,10 @@
             <td>{{ operation.quantity }}</td>
             <td>{{ operation.date }}</td>
             <td>
-              <button v-if="accountingsRoles[operation.accountingId] === 'EDITOR'" @click="editOperation(operation.id)">Editar</button>
+              <button v-if="accountingsRoles[operation.accountingId] === 'EDITOR'" @click="editOperation(operation)">Editar</button>
+              <div v-else class="visualizer-img" >
+                <img src="../assets/icons/eye.svg" alt="Visualizer">
+              </div>
               <button v-if="accountingsRoles[operation.accountingId] === 'EDITOR'" @click="deleteOperation(operation.id)">Borrar</button>
             </td>
           </tr>
@@ -87,7 +91,10 @@
 </template>
 
 <script>
-import { ref, watch, reactive, onMounted, computed } from 'vue';
+import AddOperationModal from "@/components/AddOperationModal.vue";
+
+
+import { ref, watch, reactive, onMounted, computed, inject } from 'vue';
 import { useAccountingStore } from '@/stores/accountingStore.js';
 import {
   fetchFilteredOperations,
@@ -95,6 +102,10 @@ import {
 } from '@/service/operationService'
 
 export default {
+  name: 'OperationDetails',
+  components:{
+    AddOperationModal
+  },
   setup() {
     const accountingStore = useAccountingStore();
     const { accountings, fetchAccountingsAsync, fetchAllAccountingsUserOperationsAsync, allAccountingUserOperations, fetchCategoriesSpentAsync, fetchCategoriesIncomeAsync, fetchCategoriesAsync, categories, fetchUserRoleAsync, userRole } = accountingStore;
@@ -108,6 +119,8 @@ export default {
     const dateEnd = ref('');
 
     const accountingsRoles = reactive({});
+    const { isModalOpen, toggleModal } = inject('modalData');
+    const operationToEdit = ref(null);
 
     const currentPage = ref(1);
     const operationsPerPage = 10;
@@ -198,14 +211,16 @@ export default {
       if (currentPage.value > 1) currentPage.value--;
     };
 
-    const editOperation = (id) => {
-      console.log(id);
+    const editOperation = (operation) => {
+      operationToEdit.value = operation;
+      isModalOpen.value = true; // Asegúrate de que esta variable controle la visibilidad del modal.
     };
     const deleteOperation = async (id) => {
       try {
         const response = await deleteOperationApi(id);
-        console.log(response);
-        console.log("Eliminando operación");
+        console.log("Eliminando operación", response);
+        await fetchAllAccountingsUserOperationsAsync();
+        location.reload();
       } catch (error) {
         console.error("Error aplicando filtros:", error);
       }
@@ -225,6 +240,7 @@ export default {
       accountingsRoles,
       applyFilters,
       paginatedOperations, nextPage, prevPage, currentPage, totalPages,
+      isModalOpen, toggleModal, operationToEdit,
       editOperation, deleteOperation
     };
   },
@@ -272,7 +288,8 @@ export default {
 }
 
 .operations-table-container {
-  overflow-x: auto; /* Añadido para asegurar responsividad en la tabla */
+  overflow-x: auto; /* Permite el desplazamiento horizontal */
+  max-width: 100%; /* Asegura que no se desborde del viewport */
 }
 
 .operations-table {
@@ -282,7 +299,7 @@ export default {
 
 .operations-table th, .operations-table td {
   border: 1px solid #ccc;
-  padding: 8px;
+  padding: 6px;
   text-align: left;
 }
 
@@ -300,6 +317,19 @@ button {
   gap: 10px;
   justify-content: center; /* Centra los controles de paginación */
   margin-top: 20px;
+}
+
+.visualizer-img {
+  display: flex;
+  justify-content: center; /* Centra horizontalmente */
+  align-items: center; /* Centra verticalmente */
+}
+
+@media (max-width: 768px) { /* Ajusta según tus necesidades */
+  .pagination-controls button {
+    padding: 10px 20px; /* Aumenta el padding para hacer el botón más grande */
+    font-size: 16px; /* Aumenta el tamaño de fuente para mejorar la legibilidad */
+  }
 }
 </style>
 

@@ -46,6 +46,20 @@ export const useAccountingStore = () => {
     const categoriesDifferences = ref([]);
     const usersAccounting = ref([]);
 
+    function formatDateToDDMMYYYY(date) {
+        const d = new Date(date);
+        let day = '' + d.getDate();
+        let month = '' + (d.getMonth() + 1);
+        const year = d.getFullYear();
+
+        if (day.length < 2)
+            day = '0' + day;
+        if (month.length < 2)
+            month = '0' + month;
+
+        return [day, month, year].join('-');
+    }
+
     const fetchAccountingsAsync = async () => {
         try {
             const response = await fetchAccountings();
@@ -438,6 +452,6 @@ export const useAccountingStore = () => {
         fetchOperationsAsync, operations, fetchSpentsAsync, spents, accountingId, processedSpents, fetchSpentsMonthsAsync, spentsMonths, totalSpentMonth, latestSpents, weeklySpentData, processMonthlySpentData, monthlySpentData ,fetchIncomeMonthsAsync,
         fetchIncomeAsync, incomesMonths, incomes,totalIncomeMonth, latestIncomes, monthlyIncomeData, processedIncomes, processMonthlyIncomeData, monthlySavingsData, topSpentCategory, topIncomeCategory, categoryDifferencesAsync,
         categoriesDifferences, latestOperations, sharedAccountings, fetchUsersAccountingAsync, usersAccounting, accountingSharedSelected, processedSpentsUser, processedIncomesUser, fetchCategoriesAsync,
-        fetchAllOperationsAsync, allOperations, fetchAllAccountingsUserOperationsAsync, allAccountingUserOperations
+        fetchAllOperationsAsync, allOperations, fetchAllAccountingsUserOperationsAsync, allAccountingUserOperations, formatDateToDDMMYYYY
     };
 };

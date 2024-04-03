@@ -110,6 +110,9 @@ public class MappingService {
 
     public Operations dtoToOperation(OperationsDto operationsDto){
         Operations operations = new Operations();
+        operations.setId(operationsDto.getId());
+        System.out.println("aaaaaaaaaa" + operations.getId());
+        System.out.println("eeeeeeeeee" + operationsDto.getId());
         operations.setDate(operationsDto.getDate());
         operations.setQuantity(operationsDto.getQuantity());
         operations.setCategory(operationsDto.getCategory());

@@ -10,7 +10,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.server.ResponseStatusException;
 
 import java.time.YearMonth;
 import java.util.*;
@@ -151,7 +150,6 @@ public class AccountingController {
             return ResponseEntity.status(HttpStatus.CREATED).body(mappingService.operationsToDto(savedOperation));
         } catch (Exception e) {
             // Si hay un error, retornar una respuesta con el código de error correspondiente
-            System.out.println("ERROOOOOOR");
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
     }
@@ -176,6 +174,16 @@ public class AccountingController {
             System.out.println("ERROR: " + e.getMessage());
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
         }
+    }
+
+    @PutMapping("/operation")
+    public ResponseEntity<OperationsDto> updateOperation(@RequestBody OperationsDto operationsDto) {
+        // Mapear la solicitud de registro a una entidad Accounting
+        Operations operation = mappingService.dtoToOperation(operationsDto);
+        // Crear la contabilidad utilizando el servicio
+        Operations savedOperation = operationsService.updateOperation(operationsDto.getId(), operation);
+        // Retornar la respuesta con la contabilidad creada
+        return ResponseEntity.status(HttpStatus.CREATED).body(mappingService.operationsToDto(savedOperation));
     }
 
     @GetMapping("/{id}/operation/all")

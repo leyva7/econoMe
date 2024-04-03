@@ -28,7 +28,7 @@
       <a href="#"
          @click.prevent="navigate('/home-user/operation')"
          :class="{ 'active-link': activePath === '/home-user/operation'}">
-        <img src="../assets/icons/evolution.svg" alt="Operation" class="nav-icon"> Operaciones
+        <img src="../assets/icons/operations.svg" alt="Operation" class="nav-icon"> Operaciones
       </a>
     </nav>
     <div class="divider"></div>

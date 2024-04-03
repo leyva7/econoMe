@@ -1,5 +1,5 @@
 <template>
-    <div id="app">
+    <div id="main-app">
       <div class="container">
         <div class="left-panel">
           <AppDescription />
@@ -31,7 +31,7 @@
     margin:0px;
   }
   
-  #app {
+  #main-app {
     display: flex;
     flex-direction: column; /* Ajusta según la estructura de tu aplicación */
     margin:0;

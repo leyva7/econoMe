@@ -52,28 +52,63 @@ import ModalWindow from './ModalWindow.vue';
 import {ref, defineComponent, computed, watch, onMounted} from 'vue';
 import { useAccountingStore } from '../stores/accountingStore';
 import { globalStore} from "@/stores/globalStore";
-import { createOperation } from "@/service/operationService";
+import { createOperation, updateOperation } from "@/service/operationService";
 
 export default defineComponent({
   components: {
     ModalWindow
   },
   props: {
-    isVisible: Boolean
+    isVisible: Boolean,
+    operationToEdit: {
+      type: Object,
+      default: () => null,
+    },
   },
   setup(props, { emit }) {
-    const { fetchCategoriesSpentAsync, fetchCategoriesIncomeAsync, categories } = useAccountingStore();
+    const { fetchCategoriesSpentAsync, fetchCategoriesIncomeAsync, categories, formatDateToDDMMYYYY } = useAccountingStore();
     const { accountingId } = globalStore();
+
+    const isEditMode = computed(() => props.operationToEdit !== null);
 
     const selectedOption = ref('');
     const customOption = ref('');
     const operation = ref({
-      type: '',
+      id: '',
+      type: determineInitialType(),
       description: '',
       category: '',
       date: '',
       quantity: ''
     });
+
+    function determineInitialType() {
+      // Esta función determina el valor inicial de "type"
+      if (props.operationToEdit) {
+        return props.operationToEdit.type === 'INCOME' ? 'ingreso' : 'gasto';
+      }
+      return ''; // Valor por defecto si no es modo de edición
+    }
+
+    const initializeForm = () => {
+      console.log(isEditMode.value);
+      if (isEditMode.value) {
+        // Convertir el valor de type de INCOME/SPENT a ingreso/gasto para el formulario
+        operation.value.type = props.operationToEdit.type === 'INCOME' ? 'ingreso' : 'gasto';
+
+        // Establecer la fecha, descripción y cantidad directamente
+        let dateParts = props.operationToEdit.date.split('-');
+        operation.value.date = `${dateParts[2]}-${dateParts[1]}-${dateParts[0]}`;
+        operation.value.quantity = props.operationToEdit.quantity;
+        operation.value.description = props.operationToEdit.description;
+        operation.value.id = props.operationToEdit.id;
+
+        // Verificar si la categoría existe en la lista de categorías disponibles
+        selectedOption.value = props.operationToEdit.category;
+      } else {
+        clearForm();
+      }
+    };
 
     const clearForm = () => {
       operation.value.type = '';
@@ -86,17 +121,18 @@ export default defineComponent({
     };
 
     const updateCategories = () => {
+      const currentAccountingId = isEditMode.value ? props.operationToEdit.accountingId : accountingId.value;
       if (operation.value.type === 'ingreso') {
-        fetchCategoriesIncomeAsync(accountingId.value);
+        fetchCategoriesIncomeAsync(currentAccountingId);
       } else if (operation.value.type === 'gasto') {
-        fetchCategoriesSpentAsync(accountingId.value);
+        fetchCategoriesSpentAsync(currentAccountingId);
       }
     };
 
     onMounted(() => {
       clearForm();
-
       if (props.isVisible) {
+        initializeForm()
         updateCategories();
       }
     });
@@ -109,14 +145,17 @@ export default defineComponent({
       }
     };
 
-    watch(() => operation.value.type, updateCategories);
-    watch(() => props.isVisible, (newValue) => {
-      if (newValue) {
-        updateCategories();
-      }
+    watch(() => operation.value.type, () => {
+      // Utiliza newType para determinar qué categorías cargar
+      console.log("watch");
+      updateCategories();
     });
+
+    watch([() => props.operationToEdit, () => props.isVisible], initializeForm, { immediate: true });
+
     const updateVisibility = (value) => {
       emit('update:isVisible', value);
+      clearForm();
     };
     const submitOperations = async () => {
 
@@ -125,19 +164,32 @@ export default defineComponent({
         alert('Por favor, completa todos los campos.');
         return;
       }
-      try {
-        operation.value.accountingId = accountingId;
-        operation.value.username = localStorage.getItem('username');
-        if (operation.value.type.toLowerCase() === 'ingreso') {
-          operation.value.type = 'INCOME';
-        } else {
-          operation.value.type = 'SPENT';
-        }
-        // Asigna la categoría basada en si la opción personalizada está seleccionada o no
-        operation.value.category = isCustomOptionSelected.value ? customOption.value : selectedOption.value;
 
-        await createOperation(operation.value);
-        alert('Operación registrada exitosamente.');
+      operation.value.accountingId = accountingId;
+      operation.value.username = localStorage.getItem('username');
+      if (operation.value.type.toLowerCase() === 'ingreso') {
+        operation.value.type = 'INCOME';
+      } else {
+        operation.value.type = 'SPENT';
+      }
+      // Asigna la categoría basada en si la opción personalizada está seleccionada o no
+      operation.value.category = isCustomOptionSelected.value ? customOption.value : selectedOption.value;
+      operation.value.date = formatDateToDDMMYYYY(operation.value.date);
+
+      try {
+
+        if (isEditMode.value) {
+          // Suponiendo que tienes una función updateOperation disponible para actualizar la operación
+          operation.value.id = props.operationToEdit.id;
+          operation.value.accountingId = props.operationToEdit.accountingId;
+          console.log(operation.value);
+          await updateOperation(operation.value);
+          alert('Operación actualizada exitosamente.');
+        } else {
+          await createOperation(operation.value);
+          alert('Operación registrada exitosamente.');
+        }
+
         await fetchCategoriesSpentAsync(accountingId);
         await clearForm();
         updateVisibility(false);
@@ -156,7 +208,8 @@ export default defineComponent({
       isCustomOptionSelected,
       onSelectChange,
       submitOperations,
-      categories
+      categories,
+      initializeForm
     };
   }
 });
