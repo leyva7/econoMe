@@ -75,8 +75,8 @@ export default {
         alert('Usuario y contabilidad registrados exitosamente.');
         router.push('/');
       } catch (error) {
-        console.error('Error al registrar usuario y contabilidad:', error);
-        alert('Ocurrió un error al registrar el usuario y la contabilidad. Por favor, inténtalo de nuevo.');
+        console.error('Error al registrar usuario y contabilidad:', error.response.data.error);
+        alert('Error al registrar usuario y contabilidad: ' + error.response.data.error);
       }
     };
 

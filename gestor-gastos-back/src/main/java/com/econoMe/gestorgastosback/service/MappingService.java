@@ -5,7 +5,6 @@ import com.econoMe.gestorgastosback.model.Accounting;
 import com.econoMe.gestorgastosback.model.Operations;
 import com.econoMe.gestorgastosback.model.Roles;
 import com.econoMe.gestorgastosback.model.User;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
@@ -14,8 +13,13 @@ import java.util.List;
 @Service
 public class MappingService {
 
-    @Autowired UserService userService;
-    @Autowired AccountingService accountingService;
+    private final UserService userService;
+    private final AccountingService accountingService;
+
+    MappingService(UserService userService, AccountingService accountingService){
+        this.userService = userService;
+        this.accountingService = accountingService;
+    }
 
     public UserDto userToDto(User user) {
         UserDto dto = new UserDto();
@@ -60,8 +64,8 @@ public class MappingService {
     public List<AccountingDto> accountingDtoList(List<Accounting> accountingList){
         List<AccountingDto> accountingDtoList = new ArrayList<>();
 
-        for(int i=0; i<accountingList.size(); i++){
-            accountingDtoList.add(accountingToDto(accountingList.get(i)));
+        for (Accounting accounting : accountingList) {
+            accountingDtoList.add(accountingToDto(accounting));
         }
 
         return accountingDtoList;
@@ -79,8 +83,8 @@ public class MappingService {
     public List<RolesDto> rolesListToDto(List<Roles> roles){
         List<RolesDto> rolesDtoList = new ArrayList<>();
 
-        for(int i = 0; i < roles.size(); i++){
-            rolesDtoList.add(rolesToDto(roles.get(i)));
+        for (Roles role : roles) {
+            rolesDtoList.add(rolesToDto(role));
         }
 
         return rolesDtoList;
@@ -101,8 +105,8 @@ public class MappingService {
     }
     public List<OperationsDto> operationListToDto(List<Operations> operations){
         List<OperationsDto> operationsDto = new ArrayList<>();
-        for(int i = 0; i < operations.size();i++){
-            operationsDto.add(operationsToDto(operations.get(i)));
+        for (Operations operation : operations) {
+            operationsDto.add(operationsToDto(operation));
         }
 
         return operationsDto;
@@ -111,8 +115,6 @@ public class MappingService {
     public Operations dtoToOperation(OperationsDto operationsDto){
         Operations operations = new Operations();
         operations.setId(operationsDto.getId());
-        System.out.println("aaaaaaaaaa" + operations.getId());
-        System.out.println("eeeeeeeeee" + operationsDto.getId());
         operations.setDate(operationsDto.getDate());
         operations.setQuantity(operationsDto.getQuantity());
         operations.setCategory(operationsDto.getCategory());

@@ -15,14 +15,10 @@ public interface RolesRepository extends JpaRepository<Roles, RolesId> {
 
     Optional<Roles> findByUserUsernameAndAccountingId(String username, Long accountingId);
 
-    List<Roles> findAllByAccounting(Accounting accounting);
-
     List<Roles> findAllByAccountingAndUserNot(Accounting accounting, User userCreator);
 
     List<Roles> findAllByUser(User user);
 
     void deleteByAccounting(Accounting accounting);
-
-    void deleteByUser(User user);
 
 }

@@ -4,11 +4,10 @@ import com.econoMe.gestorgastosback.common.OperationType;
 import com.econoMe.gestorgastosback.dto.*;
 import com.econoMe.gestorgastosback.model.*;
 import com.econoMe.gestorgastosback.service.*;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.YearMonth;
@@ -19,31 +18,33 @@ import java.util.stream.Collectors;
 @RequestMapping("/api/accounting")
 public class AccountingController {
 
+    private final AccountingService accountingService;
+    private final RolesService rolesService;
+    private final UserService userService;
+    private final OperationsService operationsService;
+    private final MappingService mappingService;
+    private final JwtService jwtService;
+
     @Autowired
-    private AccountingService accountingService;
-    @Autowired
-    private RolesService rolesService;
-    @Autowired
-    private UserService userService;
-    @Autowired
-    private OperationsService operationsService;
-    @Autowired
-    private MappingService mappingService;
+    AccountingController(AccountingService accountingService, RolesService rolesService, UserService userService, OperationsService operationsService, MappingService mappingService, JwtService jwtService){
+        this.accountingService = accountingService;
+        this.rolesService = rolesService;
+        this.userService = userService;
+        this.operationsService = operationsService;
+        this.mappingService = mappingService;
+        this.jwtService = jwtService;
+    }
+
+    private User getUserFromRequest(HttpServletRequest request) {
+        String token = jwtService.getTokenFromRequest(request);
+        return jwtService.getUserFromToken(token);
+    }
 
     // Registro de contabilidad
     @PostMapping("/register")
     public ResponseEntity<AccountingDto> registerAccounting(@RequestBody AccountingRegistration accountingRegistration) {
-        try {
-            // Mapear la solicitud de registro a una entidad Accounting
-            Accounting accounting = mappingService.accountingRegisterToAccounting(accountingRegistration);
-            // Crear la contabilidad utilizando el servicio
-            Accounting savedAccounting = accountingService.createAccounting(accounting);
-            // Retornar la respuesta con la contabilidad creada
-            return ResponseEntity.status(HttpStatus.CREATED).body(mappingService.accountingToDto(savedAccounting));
-        } catch (Exception e) {
-            // Si hay un error, retornar una respuesta con el código de error correspondiente
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+        Accounting savedAccounting = accountingService.createAccounting(mappingService.accountingRegisterToAccounting(accountingRegistration));
+        return ResponseEntity.status(HttpStatus.CREATED).body(mappingService.accountingToDto(savedAccounting));
     }
 
     // Actualización de datos de la contabilidad
@@ -54,104 +55,64 @@ public class AccountingController {
     }
 
     @GetMapping("/accountingUserShared")
-    public ResponseEntity<?> getUserById(Authentication authentication) {
-        if (authentication == null || !(authentication.getPrincipal() instanceof UserDetails userDetails)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("No se ha proporcionado una autenticación válida.");
-        }
+    public ResponseEntity<?> findUserById(HttpServletRequest request) {
 
-        String username = userDetails.getUsername();
-
-        List<Accounting> accounting = accountingService.findAccountingsSharedByUser(userService.getUserByUsername(username));
+        List<Accounting> accounting = accountingService.findAccountingsSharedByUser(getUserFromRequest(request));
         return ResponseEntity.ok(mappingService.accountingDtoList(accounting));
     }
 
     @GetMapping("/accountingPersonal")
-    public ResponseEntity<?> getPersonalAccounting(Authentication authentication) {
-        if (authentication == null || !(authentication.getPrincipal() instanceof UserDetails userDetails)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("No se ha proporcionado una autenticación válida.");
-        }
+    public ResponseEntity<?> findPersonalAccounting(HttpServletRequest request) {
 
-        Optional<Accounting> personalAccountingOptional = accountingService.findPersonalAccounting(userService.getUserByUsername(userDetails.getUsername()));
+        Optional<Accounting> personalAccountingOptional = accountingService.findPersonalAccounting(getUserFromRequest(request));
         if (personalAccountingOptional.isPresent()) {
             Accounting personalAccounting = personalAccountingOptional.get();
             return ResponseEntity.ok(mappingService.accountingToDto(personalAccounting));
         } else {
-            // Manejo de caso donde no se encuentra la contabilidad personal
             return ResponseEntity.notFound().build();
         }
-
     }
 
     @GetMapping("/accountingUser")
-    public ResponseEntity<?> getAllUserAccounting(Authentication authentication) {
-        if (authentication == null || !(authentication.getPrincipal() instanceof UserDetails userDetails)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("No se ha proporcionado una autenticación válida.");
-        }
+    public ResponseEntity<List<AccountingDto>> getAllUserAccounting(HttpServletRequest request) {
 
-        Optional<Accounting> personalAccountingOptional = accountingService.findPersonalAccounting(userService.getUserByUsername(userDetails.getUsername()));
-        if (personalAccountingOptional.isPresent()) {
-            Accounting personalAccounting = personalAccountingOptional.get();
-            List<Accounting> accountings = accountingService.findAccountingsSharedByUser(userService.getUserByUsername(userDetails.getUsername()));
-            accountings.add(personalAccounting);
-
-            return ResponseEntity.ok(mappingService.accountingDtoList(accountings));
-        } else {
-            return ResponseEntity.notFound().build();
-        }
-
+        List<Accounting> accountings = accountingService.findAllUserAccounting(getUserFromRequest(request));
+        return ResponseEntity.ok(mappingService.accountingDtoList(accountings));
     }
 
     @GetMapping("/{id}/rol")
-    public ResponseEntity<?> getAccountingRole(Authentication authentication, @PathVariable Long id) {
-        if (authentication == null || !(authentication.getPrincipal() instanceof User user)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("No se ha proporcionado una autenticación válida.");
-        }
+    public ResponseEntity<?> getAccountingRole(HttpServletRequest request, @PathVariable Long id) {
 
-        Roles roles = rolesService.findRoleById(new RolesId(user.getId(), accountingService.findAccountingById(id).getId()))
-                .orElseThrow(() -> new NoSuchElementException("No se encontró el rol para la contabilidad."));
+        Roles roles = rolesService.findById(new RolesId(getUserFromRequest(request).getId(), accountingService.findAccountingById(id).getId()));
         return ResponseEntity.ok(mappingService.rolesToDto(roles));
     }
 
     @GetMapping("/{id}/userCreator")
-    public ResponseEntity<?> getAccountingUserCreator(Authentication authentication, @PathVariable Long id) {
-        if (authentication == null || !(authentication.getPrincipal() instanceof User user)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("No se ha proporcionado una autenticación válida.");
-        }
+    public ResponseEntity<?> getAccountingUserCreator(@PathVariable Long id) {
 
         return ResponseEntity.ok(mappingService.accountingToDto(accountingService.findAccountingById(id)));
     }
 
     @GetMapping("/{id}/categoriesSpent")
-    public ResponseEntity<?> getAccountingOperationCategoriesSpent(Authentication authentication, @PathVariable Long id) {
-        if (authentication == null || !(authentication.getPrincipal() instanceof UserDetails userDetails)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("No se ha proporcionado una autenticación válida.");
-        }
+    public ResponseEntity<?> getAccountingOperationCategoriesSpent(@PathVariable Long id) {
 
         return ResponseEntity.ok(operationsService.findAllAccountingCategoriesByType(accountingService.findAccountingById(id), OperationType.SPENT));
     }
 
     @GetMapping("/{id}/categoriesIncome")
-    public ResponseEntity<?> getAccountingOperationCategoriesIncome(Authentication authentication, @PathVariable Long id) {
-        if (authentication == null || !(authentication.getPrincipal() instanceof UserDetails userDetails)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("No se ha proporcionado una autenticación válida.");
-        }
+    public ResponseEntity<?> getAccountingOperationCategoriesIncome(@PathVariable Long id) {
 
         return ResponseEntity.ok(operationsService.findAllAccountingCategoriesByType(accountingService.findAccountingById(id), OperationType.INCOME));
     }
 
     @PostMapping("/operation/register")
     public ResponseEntity<?> registerOperation(@RequestBody OperationsDto operationsDto) {
-        try {
-            // Mapear la solicitud de registro a una entidad Accounting
-            Operations operation = mappingService.dtoToOperation(operationsDto);
-            // Crear la contabilidad utilizando el servicio
-            Operations savedOperation = operationsService.createOperation(operation);
-            // Retornar la respuesta con la contabilidad creada
-            return ResponseEntity.status(HttpStatus.CREATED).body(mappingService.operationsToDto(savedOperation));
-        } catch (Exception e) {
-            // Si hay un error, retornar una respuesta con el código de error correspondiente
-            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
-        }
+        // Mapear la solicitud de registro a una entidad Accounting
+        Operations operation = mappingService.dtoToOperation(operationsDto);
+        // Crear la contabilidad utilizando el servicio
+        Operations savedOperation = operationsService.createOperation(operation);
+        // Retornar la respuesta con la contabilidad creada
+        return ResponseEntity.status(HttpStatus.CREATED).body(mappingService.operationsToDto(savedOperation));
     }
 
     @PostMapping("/operations/register")
@@ -183,66 +144,47 @@ public class AccountingController {
         // Crear la contabilidad utilizando el servicio
         Operations savedOperation = operationsService.updateOperation(operationsDto.getId(), operation);
         // Retornar la respuesta con la contabilidad creada
-        return ResponseEntity.status(HttpStatus.CREATED).body(mappingService.operationsToDto(savedOperation));
+        return ResponseEntity.ok(mappingService.operationsToDto(savedOperation));
     }
 
     @GetMapping("/{id}/operation/all")
-    public ResponseEntity<?> getAllUserOperationByAccounting(Authentication authentication, @PathVariable Long id) {
-        if (authentication == null || !(authentication.getPrincipal() instanceof User user)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("No se ha proporcionado una autenticación válida.");
-        }
+    public ResponseEntity<?> getAllUserOperationByAccounting(HttpServletRequest request, @PathVariable Long id) {
 
-        return ResponseEntity.ok(mappingService.operationListToDto(operationsService.findAllUserOperationByAccounting(user, accountingService.findAccountingById(id))));
+        return ResponseEntity.ok(mappingService.operationListToDto(operationsService.findAllUserOperationByAccounting(getUserFromRequest(request), accountingService.findAccountingById(id))));
     }
 
     @GetMapping("/operation/all")
-    public ResponseEntity<?> getAllUserOperation(Authentication authentication) {
-        if (authentication == null || !(authentication.getPrincipal() instanceof User user)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("No se ha proporcionado una autenticación válida.");
-        }
-        return ResponseEntity.ok(mappingService.operationListToDto(operationsService.findAllUserOperation(user)));
+    public ResponseEntity<?> getAllUserOperation(HttpServletRequest request) {
+
+        return ResponseEntity.ok(mappingService.operationListToDto(operationsService.findAllUserOperation(getUserFromRequest(request))));
     }
 
     @GetMapping("/operationAccountings/all")
-    public ResponseEntity<?> getAllAccountingUserOperation(Authentication authentication) {
-        if (authentication == null || !(authentication.getPrincipal() instanceof User user)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("No se ha proporcionado una autenticación válida.");
-        }
-        return ResponseEntity.ok(mappingService.operationListToDto(operationsService.findAllOperationsAccountingUser(user)));
+    public ResponseEntity<?> getAllAccountingUserOperation(HttpServletRequest request) {
+
+        return ResponseEntity.ok(mappingService.operationListToDto(operationsService.findAllOperationsAccountingUser(getUserFromRequest(request))));
     }
 
     @GetMapping("/{id}/operation/spent")
-    public ResponseEntity<?> getAccountingSpent(Authentication authentication, @PathVariable Long id) {
-        if (authentication == null || !(authentication.getPrincipal() instanceof User user)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("No se ha proporcionado una autenticación válida.");
-        }
+    public ResponseEntity<?> getAccountingSpent(@PathVariable Long id) {
 
         return ResponseEntity.ok(mappingService.operationListToDto(operationsService.findByAccountingAndType(accountingService.findAccountingById(id), OperationType.SPENT)));
     }
 
     @GetMapping("/{id}/operation/spentMonth")
-    public ResponseEntity<?> getAccountingSpentMonth(Authentication authentication, @PathVariable Long id) {
-        if (authentication == null || !(authentication.getPrincipal() instanceof User user)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("No se ha proporcionado una autenticación válida.");
-        }
+    public ResponseEntity<?> getAccountingSpentMonth(@PathVariable Long id) {
 
         return ResponseEntity.ok(mappingService.operationListToDto(operationsService.findOperationsForMonth(accountingService.findAccountingById(id), OperationType.SPENT, YearMonth.now().atDay(1), YearMonth.now().atEndOfMonth())));
     }
 
     @GetMapping("/{id}/operation/income")
-    public ResponseEntity<?> fetAccountingIncome(Authentication authentication, @PathVariable Long id) {
-        if (authentication == null || !(authentication.getPrincipal() instanceof User user)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("No se ha proporcionado una autenticación válida.");
-        }
+    public ResponseEntity<?> getAccountingIncome(@PathVariable Long id) {
 
         return ResponseEntity.ok(mappingService.operationListToDto(operationsService.findByAccountingAndType(accountingService.findAccountingById(id), OperationType.INCOME)));
     }
 
     @GetMapping("/{id}/operation/incomeMonth")
-    public ResponseEntity<?> getAccountingIncomeMonth(Authentication authentication, @PathVariable Long id) {
-        if (authentication == null || !(authentication.getPrincipal() instanceof User user)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("No se ha proporcionado una autenticación válida.");
-        }
+    public ResponseEntity<?> getAccountingIncomeMonth(@PathVariable Long id) {
 
         return ResponseEntity.ok(mappingService.operationListToDto(operationsService.findOperationsForMonth(accountingService.findAccountingById(id), OperationType.INCOME, YearMonth.now().atDay(1), YearMonth.now().atEndOfMonth())));
     }
@@ -272,13 +214,9 @@ public class AccountingController {
     }
 
     @PostMapping("/{id}/addUser")
-    public ResponseEntity<?> addUser(Authentication authentication, @PathVariable Long id, @RequestBody RolesDto rolesDto) {
-        if (authentication == null || !(authentication.getPrincipal() instanceof UserDetails userDetails)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("No se ha proporcionado una autenticación válida.");
-        }
-
+    public ResponseEntity<?> addUser(@PathVariable Long id, @RequestBody RolesDto rolesDto) {
         // Intenta obtener el usuario por ID de manera segura
-        User userToAdd = userService.getUserByUsername(rolesDto.getUsername());
+        User userToAdd = userService.findById(id);
 
         // Intenta obtener la contabilidad por ID de manera segura
         Accounting accounting = accountingService.findAccountingById(rolesDto.getAccountingId());
@@ -293,19 +231,14 @@ public class AccountingController {
 
 
     @GetMapping("/{id}/users")
-    public ResponseEntity<?> getAccountingUsers(Authentication authentication, @PathVariable Long id) {
-        if (authentication == null || !(authentication.getPrincipal() instanceof User user)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("No se ha proporcionado una autenticación válida.");
-        }
+    public ResponseEntity<?> getAccountingUsers(@PathVariable Long id) {
 
         return ResponseEntity.ok(mappingService.rolesListToDto(rolesService.findAllAccountingUsersNotCreator(accountingService.findAccountingById(id))));
     }
 
     @DeleteMapping("/{id}/deleteUser")
-    public ResponseEntity<?> deleteUser(Authentication authentication, @PathVariable Long id, @RequestBody Map<String, String> body) {
-        if (authentication == null || !(authentication.getPrincipal() instanceof UserDetails)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("No se ha proporcionado una autenticación válida.");
-        }
+    public ResponseEntity<?> deleteUser(@PathVariable Long id, @RequestBody Map<String, String> body) {
+
         String username = body.get("username");
         User user = userService.getUserByUsername(username);
         rolesService.deleteRole(new RolesId(user.getId(), id));
@@ -313,12 +246,9 @@ public class AccountingController {
     }
 
     @GetMapping("/operation/filterOperation")
-    public ResponseEntity<?> getFilteredOperations(Authentication authentication, @ModelAttribute OperationFilterDto operationFilterDto) {
-        // Usar operationFilterDto para filtrar las operaciones en el servicio y devolver los resultados
-        if (authentication == null || !(authentication.getPrincipal() instanceof User user)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("No se ha proporcionado una autenticación válida.");
-        }
-        List<OperationsDto> filteredOperations = mappingService.operationListToDto(operationsService.findFilteredOperations(operationFilterDto, user));
+    public ResponseEntity<?> getFilteredOperations(HttpServletRequest request, @ModelAttribute OperationFilterDto operationFilterDto) {
+
+        List<OperationsDto> filteredOperations = mappingService.operationListToDto(operationsService.findFilteredOperations(operationFilterDto, getUserFromRequest(request)));
         return ResponseEntity.ok(filteredOperations);
     }
 

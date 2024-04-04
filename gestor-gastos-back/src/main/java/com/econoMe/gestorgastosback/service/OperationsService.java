@@ -2,14 +2,15 @@ package com.econoMe.gestorgastosback.service;
 
 import com.econoMe.gestorgastosback.common.OperationType;
 import com.econoMe.gestorgastosback.common.Role;
-import com.econoMe.gestorgastosback.common.Type;
-import com.econoMe.gestorgastosback.controller.AccountingController;
 import com.econoMe.gestorgastosback.dto.OperationFilterDto;
+import com.econoMe.gestorgastosback.exception.OperationException;
+import com.econoMe.gestorgastosback.exception.RoleException;
 import com.econoMe.gestorgastosback.model.Accounting;
 import com.econoMe.gestorgastosback.model.Operations;
 import com.econoMe.gestorgastosback.model.Roles;
 import com.econoMe.gestorgastosback.model.User;
 import com.econoMe.gestorgastosback.repository.OperationsRepository;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -17,14 +18,11 @@ import java.time.LocalDate;
 import java.time.YearMonth;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.time.ZoneId;
 
 @Service
 public class OperationsService {
 
-    @Autowired
     private final OperationsRepository operationsRepository;
-    @Autowired
     private final RolesService rolesService;
 
     @Autowired
@@ -33,102 +31,37 @@ public class OperationsService {
         this.rolesService = rolesService;
     }
 
-    public List<Operations> findAllOperations() {
-        return operationsRepository.findAll();
-    }
-
-    public List<Operations> findAllOperationsAccountingUser(User user) {
-        // Obtener todos los roles del usuario
-        List<Roles> roles = rolesService.findAllByUser(user);
-
-        // Crear una lista para almacenar las operaciones de las contabilidades asociadas al usuario
-        List<Operations> operationsAccountingUser = new ArrayList<>();
-
-        // Iterar sobre los roles del usuario
-        for (Roles role : roles) {
-            // Obtener la contabilidad asociada al rol
-            Accounting accounting = role.getAccounting();
-
-            // Obtener las operaciones asociadas a la contabilidad
-            List<Operations> operations = operationsRepository.findByAccounting(accounting);
-
-            // Agregar las operaciones a la lista general
-            operationsAccountingUser.addAll(operations);
-        }
-
-        return operationsAccountingUser;
-    }
-
-    public Operations findById(Long id) {
-        return operationsRepository.findById(id).orElseThrow(() -> new NoSuchElementException("No se encontró la operación de ID: " + id));
-    }
-
-    public List<Operations> findByAccounting(Accounting accounting) {
-        List<Operations> operations = operationsRepository.findByAccounting(accounting);
-
-        if (operations.isEmpty()) {
-            return new ArrayList<>();
-        } else {
-            return operations;
-        }
-    }
-
-    public List<Operations> findByUsername(User user) {
-        List<Operations> operations = operationsRepository.findByUser(user);
-
-        if (operations.isEmpty()) {
-            throw new RuntimeException("La lista del usuario " + user.getUsername() + " está vacía");
-        } else {
-            return operations;
-        }
-
-    }
-
     public Operations createOperation(Operations operation) {
 
-        if(rolesService.findByUserUsernameAndAccountingId(operation.getUser().getUsername(), operation.getAccounting().getId()).isEmpty()){
-            throw new IllegalStateException("No existe ningún rol para el usuario " + operation.getUser().getUsername() + " y la contabilidad " + operation.getAccounting().getName()+ " no existe.");
-        }
-
-        Optional<Roles> rolesOptional = rolesService.findByUserUsernameAndAccountingId(operation.getUser().getUsername(), operation.getAccounting().getId());
-
-        if (rolesOptional.isPresent()) {
-            if(rolesOptional.get().getRole().equals(Role.EDITOR)){
+            if(rolesService.findByUserUsernameAndAccountingId(operation.getUser().getUsername(), operation.getAccounting().getId()).getRole().equals(Role.EDITOR)){
                 return operationsRepository.save(operation);
             }
             else{
-                throw new RuntimeException("El usuario " + operation.getUser().getUsername() + " no tiene rol de editor en la contabilidad " + operation.getAccounting().getId());
+                throw new RoleException("El usuario " + operation.getUser().getUsername() + " no tiene rol de editor en la contabilidad " + operation.getAccounting().getId());
             }
-
-        } else {
-            throw new RuntimeException("No se encontró la tupla para el usuario " + operation.getUser().getUsername() + " y la contabilidad " + operation.getAccounting().getId());
-        }
-
     }
 
     public List<Operations> createOperations(List<Operations> operations) {
+        return operations.stream().map(this::createOperation).collect(Collectors.toList());
+    }
 
-        List<Operations> savedOperations = new ArrayList<>();
+    public List<Operations> findAllOperationsAccountingUser(User user) {
+        return rolesService.findAllByUser(user).stream()
+                .map(Roles::getAccounting)
+                .flatMap(accounting -> operationsRepository.findByAccounting(accounting).stream())
+                .collect(Collectors.toList());
+    }
 
-        for(int i=0; i< operations.size(); i++){
-            savedOperations.add(createOperation(operations.get(i)));
-        }
-
-        return savedOperations;
-
+    public List<Operations> findByAccounting(Accounting accounting) {
+        return operationsRepository.findByAccounting(accounting);
     }
 
     public List<String> findAllAccountingCategoriesByType(Accounting accounting, OperationType type) {
-        List<Operations> operationsAccounting = findByAccounting(accounting);
-        Set<String> uniqueCategories = new HashSet<>();
-
-        for (Operations operation : operationsAccounting) {
-            if (operation.getType().equals(type)) {
-                uniqueCategories.add(operation.getCategory());
-            }
-        }
-
-        return new ArrayList<>(uniqueCategories);
+        return findByAccounting(accounting).stream()
+                .filter(op -> op.getType() == type)
+                .map(Operations::getCategory)
+                .distinct()
+                .collect(Collectors.toList());
     }
 
 
@@ -145,13 +78,8 @@ public class OperationsService {
     }
 
     public List<Operations> findOperationsForMonth(Accounting accounting, OperationType type, LocalDate startOfMonth, LocalDate endOfMonth) {
-        List<Operations> allOperations = findByAccountingAndType(accounting, type); // Obtiene todas las operaciones para la contabilidad
-
-        return allOperations.stream()
-                .filter(operation -> {
-                    LocalDate operationDate = operation.getDate(); // Ya es LocalDate, no se necesita conversión
-                    return (!operationDate.isBefore(startOfMonth) && !operationDate.isAfter(endOfMonth));
-                })
+        return findByAccountingAndType(accounting, type).stream()
+                .filter(op -> !op.getDate().isBefore(startOfMonth) && !op.getDate().isAfter(endOfMonth))
                 .collect(Collectors.toList());
     }
 
@@ -259,44 +187,27 @@ public class OperationsService {
                     .collect(Collectors.toList());
         }
 
-        Collections.sort(operations, Comparator.comparing(Operations::getDate));
+        operations.sort(Comparator.comparing(Operations::getDate));
 
         return operations;
     }
 
     public Operations updateOperation(Long id, Operations operation) {
         if (id == null || !operationsRepository.existsById(id)) {
-            throw new IllegalStateException("La operación con el ID " + operation.getId() + " no existe.");
+            throw new OperationException("La operación con el ID " + operation.getId() + " no existe.");
         }
         return operationsRepository.save(operation);
     }
 
-    public void updateUserOperation(User oldUser, User newUser) {
-        List<Operations> operation = findAllUserOperation(oldUser);
-        List<Operations> newOperation = new ArrayList<>();
-        for(int i = 0; i < operation.size(); i++){
-            newOperation.add(operation.get(i));
-            newOperation.get(i).setUser(newUser);
-            createOperation(newOperation.get(i));
-        }
-    }
-
     public void deleteOperation(Long id) {
         if (!operationsRepository.existsById(id)) {
-            throw new IllegalStateException("La operación con el ID " + id + " no existe.");
+            throw new OperationException("La operación con el ID " + id + " no existe.");
         }
         operationsRepository.deleteById(id);
     }
 
     public void deleteByAccounting(Accounting accounting) {
         operationsRepository.deleteByAccounting(accounting);
-    }
-
-    public void deleteByUser(User user) {
-        if (!operationsRepository.existsByUser(user)) {
-            throw new IllegalStateException("La operación con el usuario " + user.getUsername() + " no existe.");
-        }
-        operationsRepository.deleteByUser(user);
     }
 
 }

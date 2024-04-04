@@ -2,12 +2,14 @@ package com.econoMe.gestorgastosback.dto;
 
 
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.NoArgsConstructor;
 import lombok.Data;
 
+@Data
+@Builder
 @NoArgsConstructor
 @AllArgsConstructor
-@Data
 public class UserDto {
     private String username;
     private String name;

@@ -1,7 +1,7 @@
 package com.econoMe.gestorgastosback.security;
 
+import com.econoMe.gestorgastosback.exception.UserException;
 import com.econoMe.gestorgastosback.repository.UserRepository;
-import com.econoMe.gestorgastosback.exception.UsernameNotFoundException;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
@@ -42,7 +42,7 @@ public class ApplicationConfig {
     @Bean
     public UserDetailsService userDetailsService() {
         return username -> userRepository.findByUsername(username)
-                .orElseThrow(()-> new UsernameNotFoundException("User not found "));
+                .orElseThrow(()-> new UserException("Usuario no encontrado "));
     }
 
 

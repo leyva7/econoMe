@@ -1,17 +1,11 @@
 package com.econoMe.gestorgastosback.service;
 
-import com.econoMe.gestorgastosback.common.Role;
 import com.econoMe.gestorgastosback.dto.RegistrationDto;
 import com.econoMe.gestorgastosback.dto.UserDto;
 import com.econoMe.gestorgastosback.model.Accounting;
-import com.econoMe.gestorgastosback.model.Roles;
 import com.econoMe.gestorgastosback.model.User;
-import com.econoMe.gestorgastosback.repository.AccountingRepository;
-import com.econoMe.gestorgastosback.repository.UserRepository;
-import com.econoMe.gestorgastosback.common.Type;
 
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 

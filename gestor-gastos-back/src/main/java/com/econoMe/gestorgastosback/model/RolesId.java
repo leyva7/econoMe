@@ -1,35 +1,20 @@
 package com.econoMe.gestorgastosback.model;
 
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 import java.io.Serializable;
 import java.util.Objects;
 
+@Getter
+@Setter
+@AllArgsConstructor
+@NoArgsConstructor
 public class RolesId implements Serializable {
     private Long user;
     private Long accounting;
-
-    public RolesId() {
-    }
-
-    public RolesId(Long user, Long accountingId) {
-        this.user = user;
-        this.accounting = accountingId;
-    }
-
-    public Long getUsername() {
-        return user;
-    }
-
-    public void setUsername(Long user) {
-        this.user = user;
-    }
-
-    public Long getAccountingId() {
-        return accounting;
-    }
-
-    public void setAccountingId(Long accountingId) {
-        this.accounting = accountingId;
-    }
 
     @Override
     public boolean equals(Object o) {

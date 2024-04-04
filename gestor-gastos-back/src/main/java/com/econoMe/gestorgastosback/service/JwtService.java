@@ -1,8 +1,8 @@
 package com.econoMe.gestorgastosback.service;
 
+import com.econoMe.gestorgastosback.exception.UserException;
 import com.econoMe.gestorgastosback.model.User;
 import com.econoMe.gestorgastosback.repository.UserRepository;
-import com.econoMe.gestorgastosback.exception.UsernameNotFoundException;
 import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -84,7 +84,7 @@ public class JwtService {
 
     public User getUserFromToken(String token) {
         String username = getUsernameFromToken(token);
-        return userRepository.findByUsername(username).orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
+        return userRepository.findByUsername(username).orElseThrow(() -> new UserException("Usuario no encontrado"));
     }
 
     public String getTokenFromRequest(HttpServletRequest request) {

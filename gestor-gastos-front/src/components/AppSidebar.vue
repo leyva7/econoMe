@@ -5,29 +5,19 @@
     </div>
     <div class="divider"></div>
     <nav class="nav">
-      <a href="#"
-         @click.prevent="navigateHome('/home-user')"
-         :class="{ 'active-link': activePath === '/home-user' }">
+      <a href="#" @click.prevent="navigateHome('/home-user')">
         <img src="../assets/icons/home.svg" alt="Home" class="nav-icon"> Home
       </a>
-      <a href="#"
-         @click.prevent="navigateHome('/home-user/spent')"
-         :class="{ 'active-link': activePath === '/home-user/spent' }">
+      <a href="#" @click.prevent="navigateHome('/home-user/spent')">
         <img src="../assets/icons/spent.svg" alt="Spent" class="nav-icon"> Gastos
       </a>
-      <a href="#"
-         @click.prevent="navigateHome('/home-user/income')"
-         :class="{ 'active-link': activePath === '/home-user/income' }">
+      <a href="#" @click.prevent="navigateHome('/home-user/income')">
         <img src="../assets/icons/income.svg" alt="Income" class="nav-icon"> Ingresos
       </a>
-      <a href="#"
-         @click.prevent="navigateHome('/home-user/evolution')"
-         :class="{ 'active-link': activePath === '/home-user/evolution' }">
+      <a href="#" @click.prevent="navigateHome('/home-user/evolution')">
         <img src="../assets/icons/evolution.svg" alt="Spent" class="nav-icon"> Evolución
       </a>
-      <a href="#"
-         @click.prevent="navigate('/home-user/operation')"
-         :class="{ 'active-link': activePath === '/home-user/operation'}">
+      <a href="#" @click.prevent="navigate('/home-user/operation')">
         <img src="../assets/icons/operations.svg" alt="Operation" class="nav-icon"> Operaciones
       </a>
     </nav>
@@ -122,12 +112,6 @@ export default defineComponent({
   overflow-y: auto;
 }
 
-.active-link {
-  background-color: rgba(255, 255, 255, 0.4); /* Fondo más oscuro para el enlace activo */
-  color: #fff; /* Color de texto para el enlace activo */
-  border-radius: 4px; /* Opcional: añade bordes redondeados */
-}
-
 .divider{
   border-bottom: 1px solid #FFFFFF;
 }
@@ -153,11 +137,20 @@ export default defineComponent({
   text-decoration: none;
 }
 
+.nav a{
+  transition: color 0.3s ease;
+}
+
 .nav a, .shared-accountings details summary {
-  color: #FFFFFF;
+  color: rgba(255, 255, 255, 0.78);
   padding: 5px 0;
   text-decoration: none;
   font-size: 20px;
+}
+
+.nav a:hover {
+  color: #f0f0f0;
+  filter: brightness(150%);
 }
 
 .shared-accountings details {
