@@ -1,19 +1,21 @@
 <template>
-  <div id="window">
+  <div id="window" class="d-flex vh-100 overflow-hidden bg-custom-blue-900">
     <!-- Sidebar con navegación y contabilidades compartidas -->
-    <SidebarPage :sharedAccountings="sharedAccountings" @openModal="handleOpenModal"/>
+    <div style="flex: 0 0 15%; overflow-y: auto;">
+      <SidebarPage :sharedAccountings="sharedAccountings" @openModal="handleOpenModal"/>
+    </div>
     <AddAccountingModal :isVisible="isModalOpen && modalContentType === 'addAccounting'" @update:isVisible="toggleModal" />
     <AddOperationModal :isVisible="isModalOpen && modalContentType === 'addOperations'" @update:isVisible="toggleModal" />
 
-    <main class="content">
+    <div style="flex: 0 0 85%; overflow-y: auto;">
       <TopBar />
-      <div class="dynamic-content">
+      <div class="dynamic-content p-3 overflow-auto">
         <router-view></router-view>
-        <button v-if="shouldShowAddButton" @click="openOperationsModal" class="add-floating-button">
-          <span class="plus-icon">+</span>
+        <button v-if="shouldShowAddButton" @click="openOperationsModal" class="add-floating-button position-fixed" style="right: 25px; bottom: 30px;">
+          <i class="fa-solid fa-plus "></i>
         </button>
       </div>
-    </main>
+    </div>
   </div>
 </template>
 
@@ -105,11 +107,6 @@ export default {
 
 
 <style scoped>
-#window {
-  display: flex;
-  height: 100vh;
-  overflow: hidden;
-}
 
 .form-group label {
   display: block;
@@ -181,11 +178,6 @@ export default {
   align-items: center; /* Centrado vertical */
 }
 
-.plus-icon {
-  font-size: 60px; /* Tamaño específico para el símbolo "+" */
-  line-height: 1; /* Asegura que el símbolo "+" se centre verticalmente */
-}
-
 .add-floating-button:hover {
   background-color: #2C3E50;
   box-shadow: 0px 15px 20px #2C3E50;
@@ -195,6 +187,10 @@ export default {
 
 .add-floating-button:active {
   transform: translateY(-1px);
+}
+
+.form-group, window.h2{
+  color: #ECF0F1;
 }
 
 </style>

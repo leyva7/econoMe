@@ -1,24 +1,25 @@
 <template>
-  <div class="main-container">
-    <div class="form-container">
-      <form @submit.prevent="submitForm" class="register-form">
-        <div class="form-group">
-          <label for="currentPassword">Contraseña actual</label>
-          <input type="password" id="currentPassword" v-model.trim="userPassword.currentPassword">
-        </div>
+  <div class="container-fluid py-5 bg-custom-blue-900 d-flex align-items-center" style="min-height: 100vh;">
+    <div class="row justify-content-center w-100">
+      <div class="col-sm-12 col-md-6 col-lg-4">
+        <h2 class="text-white mb-4 text-center">Cambiar Contraseña</h2>
+        <form @submit.prevent="submitForm" class="bg-white shadow p-4 rounded">
+          <div class="mb-3">
+            <label for="currentPassword" class="form-label">Contraseña actual</label>
+            <input type="password" class="form-control" id="currentPassword" v-model.trim="userPassword.currentPassword" required>
+          </div>
 
-        <div class="form-group">
-          <label for="newPassword">Contraseña nueva</label>
-          <input type="password" id="newPassword" v-model.trim="userPassword.newPassword">
-        </div>
+          <div class="mb-3">
+            <label for="newPassword" class="form-label">Contraseña nueva</label>
+            <input type="password" class="form-control" id="newPassword" v-model.trim="userPassword.newPassword" required>
+          </div>
 
-        <div class="form-group">
-          <button type="submit">Cambiar contraseña</button>
-        </div>
-        <div class="form-group">
-          <button type="button" @click="home">Volver atrás</button>
-        </div>
-      </form>
+          <div class="text-end">
+            <button type="submit" class="btn btn-primary me-2">Cambiar contraseña</button>
+            <button type="button" @click="home" class="btn btn-secondary">Volver atrás</button>
+          </div>
+        </form>
+      </div>
     </div>
   </div>
 </template>
@@ -72,64 +73,5 @@ export default {
 
 
 <style scoped>
-.main-container{
-  background-color: var(--blue-chill-300);
-}
 
-.form-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
-  background-color: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(5px);
-}
-
-.register-form {
-  padding: 20px;
-  border-radius: 15px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-  max-width: 400px;
-  width: 100%;
-  background-color: white; /* Fondo sólido para el formulario para mejorar la legibilidad */
-}
-
-.form-group {
-  display: flex;
-  flex-direction: column;
-}
-
-input[type="text"],
-input[type="mail"],
-input[type="password"] {
-  padding: 10px 0;
-  border: none;
-  border-bottom: 2px solid #ccc;
-  background-color: transparent;
-  margin-bottom: 15px;
-}
-
-input[type="text"]:focus,
-input[type="mail"]:focus,
-input[type="password"]:focus {
-  outline: none;
-  border-bottom-color: #007bff;
-}
-
-button {
-  padding: 10px;
-  border: none;
-  border-radius: 5px;
-  background-color: #007bff;
-  color: white;
-  cursor: pointer;
-  align-self: center; /* Asegura que el botón esté centrado en el formulario */
-}
-
-button:hover {
-  background-color: #0056b3;
-}
 </style>

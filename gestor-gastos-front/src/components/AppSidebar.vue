@@ -1,41 +1,41 @@
 <template>
-  <aside class="sidebar">
-    <div class="logo-section">
-      <img src="../assets/img/econome.png" alt="Logo" class="logo">
+  <nav class="sidebar d-flex flex-column bg-custom-blue-900 vh-100 overflow-auto p-4 text-center">
+    <div class="logo-section my-4 text-center">
+      <img src="../assets/img/econome.png" alt="Logo" class="logo img-fluid" v-if="!isNarrowScreen">
     </div>
-    <div class="divider"></div>
-    <nav class="nav">
-      <a href="#" @click.prevent="navigateHome('/home-user')">
-        <img src="../assets/icons/home.svg" alt="Home" class="nav-icon"> Home
+    <hr class="text-white">
+    <nav class="nav flex-column align-items-center my-4 color-white-less">
+      <a href="#" @click.prevent="navigateHome('/home-user')" class="color-white-less">
+        <img src="../assets/icons/home.svg" alt="Home" class="nav-icon "> Home
       </a>
-      <a href="#" @click.prevent="navigateHome('/home-user/spent')">
+      <a href="#" @click.prevent="navigateHome('/home-user/spent')" class="color-white-less">
         <img src="../assets/icons/spent.svg" alt="Spent" class="nav-icon"> Gastos
       </a>
-      <a href="#" @click.prevent="navigateHome('/home-user/income')">
+      <a href="#" @click.prevent="navigateHome('/home-user/income')" class="color-white-less">
         <img src="../assets/icons/income.svg" alt="Income" class="nav-icon"> Ingresos
       </a>
-      <a href="#" @click.prevent="navigateHome('/home-user/evolution')">
+      <a href="#" @click.prevent="navigateHome('/home-user/evolution')" class="color-white-less">
         <img src="../assets/icons/evolution.svg" alt="Spent" class="nav-icon"> Evolución
       </a>
-      <a href="#" @click.prevent="navigate('/home-user/operation')">
+      <a href="#" @click.prevent="navigate('/home-user/operation')" class="color-white-less">
         <img src="../assets/icons/operations.svg" alt="Operation" class="nav-icon"> Operaciones
       </a>
     </nav>
-    <div class="divider"></div>
-    <div class="shared-accountings">
-      <span>Contabilidades Compartidas</span>
-      <button @click="emitOpenModal('addAccounting')">Añadir Contabilidad</button>
-      <ul>
-        <li v-for="(accounting, index) in sharedAccountings" :key="index" @click.prevent="navigateToAccounting(accounting)" class="shared-accountings-list">
+    <hr class="text-white">
+    <div class="shared-accountings mt-4 color-white-less">
+      <span class="text-white">Contabilidades Compartidas</span>
+      <button @click="emitOpenModal('addAccounting')" class="btn btn-outline-light mt-2">Añadir Contabilidad</button>
+      <ul class="list-unstyled mt-3">
+        <li v-for="(accounting, index) in sharedAccountings" :key="index" @click.prevent="navigateToAccounting(accounting)" class="mb-2">
           {{ accounting.name }}
         </li>
       </ul>
     </div>
-  </aside>
+  </nav>
 </template>
 
 <script>
-import {defineComponent, ref, watch} from 'vue';
+import {defineComponent, ref, watch, watchEffect} from 'vue';
 import { useRouter } from 'vue-router';
 import { useRoute } from 'vue-router';
 
@@ -49,6 +49,8 @@ export default defineComponent({
     const router = useRouter();
     const route = useRoute(); // Obtiene la ruta actual
     const activePath = ref(route.path); // Almacena la ruta activa
+
+    const isNarrowScreen = ref(false);
 
     watch(route, (newRoute) => {
       activePath.value = newRoute.path; // Actualiza la ruta activa cuando cambie la ruta
@@ -79,6 +81,15 @@ export default defineComponent({
       emit('openModal', type);
     };
 
+    window.addEventListener('resize', () => {
+      isNarrowScreen.value = window.innerWidth < 1350;
+    });
+
+    watchEffect(() => {
+      // Actualiza isNarrowScreen basado en el ancho de la ventana
+      isNarrowScreen.value = window.innerWidth < 1300; // Ejemplo de umbral
+    });
+
     // Dentro de SidebarPage
     watch(() => props.sharedAccountings, (newVal) => {
       console.log("sharedAccountings ha cambiado:", newVal);
@@ -89,36 +100,13 @@ export default defineComponent({
       navigate, navigateHome,
       navigateToAccounting,
       emitOpenModal,
+      isNarrowScreen
     };
   },
 });
 </script>
 
 <style>
-.sidebar, .content {
-  overflow-y: auto; /* Permite desplazamiento interno si es necesario */
-}
-
-.sidebar {
-  width: 15%;
-  background-color: #2C3E50;
-  color: #FFFFFF;
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  height: 100vh;
-  text-align: center;
-  box-sizing: border-box;
-  overflow-y: auto;
-}
-
-.divider{
-  border-bottom: 1px solid #FFFFFF;
-}
-
-.divider, .logo-section, .nav, .shared-accountings {
-  margin-bottom: 30px;
-}
 
 .logo-section, .nav a, .shared-accountings details summary, .shared-accountings details {
   display: flex;
@@ -137,10 +125,6 @@ export default defineComponent({
   text-decoration: none;
 }
 
-.nav a{
-  transition: color 0.3s ease;
-}
-
 .nav a, .shared-accountings details summary {
   color: rgba(255, 255, 255, 0.78);
   padding: 5px 0;
@@ -148,34 +132,10 @@ export default defineComponent({
   font-size: 20px;
 }
 
-.nav a:hover {
-  color: #f0f0f0;
-  filter: brightness(150%);
-}
-
 .shared-accountings details {
   display: flex;
   align-items: center;
   justify-content: space-between;
-}
-
-.shared-accountings ul {
-  list-style-type: none; /* Quita los puntos */
-  padding: 0;
-  margin: 20px 0; /* Agrega un poco de margen arriba y abajo de la lista */
-}
-
-.shared-accountings a {
-  color: #FFFFFF; /* Establece el color del texto de los enlaces a blanco */
-  text-decoration: none; /* Remueve el subrayado de los enlaces */
-}
-
-.shared-accountings li {
-  margin-bottom: 10px; /* Aumenta la separación */
-  border: 2px solid #FFFFFF; /* Borde blanco alrededor de la lista */
-}
-.shared-accountings a:visited {
-  color: #FFFFFF; /* Mantiene el color blanco incluso después de ser visitados */
 }
 
 </style>

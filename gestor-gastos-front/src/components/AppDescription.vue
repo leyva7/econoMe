@@ -20,11 +20,11 @@
   .product-description h1 {
     font-size: 2.5rem;
     margin-bottom: 0.5rem;
+    text-align: center;
   }
   
   .product-description h2 {
     font-size: 1.5rem;
-    color: var(--pickled-bluewood-900);
     margin-bottom: 1rem;
   }
   

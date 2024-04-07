@@ -1,58 +1,68 @@
 <template>
-  <p v-if="hasData" class="total-income">Este mes has ingresado: {{ totalIncomeMonth.toFixed(2) }} €</p>
-  <div class="income-details">
-    <!-- Condición para mostrar el recuadro del gráfico solo si hay datos -->
-    <div v-if="hasData" class="recuadro-categorias">
-      <p class ="title-income">Ingresos por categorías</p>
-      <canvas id="topCategoriesChart"></canvas>
+  <div class="container mt-5">
+    <h2 class="text-center mb-4">{{ hasData ? 'Este mes has ingresado: ' + totalIncomeMonth.toFixed(2) + ' €' : 'No hay datos disponibles' }}</h2>
 
-      <table class="table">
-        <thead>
-        <tr>
-          <th>Categoría</th>
-          <th>Total</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr v-for="(income, index) in processedIncomes" :key="income.category">
-          <td>
-            <span class="category-color" :style="{ backgroundColor: categoryColors[index] }"></span>
-            {{ income.category }}
-          </td>
-          <td>{{ income.total.toFixed(2) }}</td>
-        </tr>
-        </tbody>
-      </table>
-
-    </div>
-    <div v-if="hasData" class="recuadro-secundario">
-      <div v-if="hasData" class="recuadro-recientes">
-        <p class ="title-income">Últimos ingresos</p>
-        <table class="table">
-          <thead>
-          <tr>
-            <th>Categoría</th>
-            <th>Cantidad</th>
-            <th>Fecha</th>
-          </tr>
-          </thead>
-          <tbody>
-          <tr v-for="income in latestIncomes" :key="income.id">
-            <td>{{ income.category }}</td>
-            <td>{{ income.quantity.toFixed(2) }}</td>
-            <td>{{ income.date }}</td>
-          </tr>
-          </tbody>
-        </table>
+    <div v-if="hasData" class="row g-4">
+      <!-- Gráfico por Categorías y Últimos Gastos en pantallas grandes; se apilan en pantallas más pequeñas -->
+      <div class="col-12 col-lg-6">
+        <div class="p-3 bg-white rounded shadow">
+          <h3 class="mb-3 text-center">Ingresos por categorías</h3>
+          <div style="width: 100%; height: auto;">
+            <canvas id="topCategoriesChart"></canvas>
+          </div>
+          <!-- Tabla de categorías justo debajo del gráfico -->
+          <table class="table mt-3">
+            <thead>
+            <tr>
+              <th>Categoría</th>
+              <th>Total</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr v-for="(income, index) in processedIncomes" :key="income.category">
+              <td>
+                <span class="category-color" :style="{ backgroundColor: categoryColors[index] }"></span>
+                {{ income.category }}
+              </td>
+              <td>{{ income.total.toFixed(2) }}</td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
-
-      <div v-if="hasData" class="recuadro-evolucion">
-        <p class ="title-income">Evolución de ingresos por meses</p>
-        <canvas id="lineChart"></canvas>
+      <div class="col-12 col-lg-6">
+        <!-- Evolución de los Gastos -->
+        <div class="p-3 bg-white rounded shadow">
+          <h3 class="mb-3 text-center">Evolución de ingresos por meses</h3>
+          <div style="width: 100%; height: 100%;">
+            <canvas id="lineChart"></canvas>
+          </div>
+        </div>
+      </div>
+      <div class="col-12">
+        <div class="p-3 bg-white rounded shadow">
+          <h3 class="mb-3 text-center">Últimos ingresos</h3>
+          <table class="table">
+            <thead>
+            <tr>
+              <th>Categoría</th>
+              <th>Cantidad</th>
+              <th>Fecha</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr v-for="income in latestIncomes" :key="income.id">
+              <td>{{ income.category }}</td>
+              <td>{{ income.quantity.toFixed(2) }}</td>
+              <td>{{ income.date }}</td>
+            </tr>
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
-    <!-- Muestra un mensaje cuando no hay datos -->
-    <p v-else>No hay datos disponibles</p>
+    <!-- Mensaje si no hay datos -->
+    <p v-else class="text-center">No hay datos disponibles</p>
   </div>
 </template>
 
@@ -75,6 +85,7 @@ export default {
     onMounted(async () => {
       await fetchIncomeMonthsAsync(accountingId.value);
       await fetchIncomeAsync(accountingId.value);
+      console.log(monthlyIncomeData.value);
       // Revisa después de obtener los datos si hay gastos
       hasData.value = incomesMonths.value.length > 0;
       nextTick(() => {
@@ -197,71 +208,6 @@ export default {
 
 <style scoped>
 
-.total-income {
-  height: 5%;
-  font-size: 24px;
-  text-align: center;
-  margin-bottom: 20px;
-  font-weight: bold;
-  color: #2C3E50;
-  width: 100%;
-}
-
-.income-details {
-  text-align: center;
-  height: calc(95% - 80px);
-  display: flex;
-  flex-direction: row;
-  padding: 20px;
-  background-color: #f0f0f0;
-}
-
-.recuadro-categorias {
-  flex: 1 1 48%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  box-sizing: border-box;
-  background-color: #ffffff;
-  border-radius: 20px;
-  border: 2px solid #2C3E50;
-  padding: 15px;
-  margin-right: 4%; /* Espacio entre recuadro-categorias y recuadro-secundario */
-  height: calc(100% - 16px); /* Ajusta según el padding de income-details */
-}
-
-.recuadro-secundario {
-  flex: 1 1 48%;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  height: calc(100% - 16px);
-}
-
-.recuadro-recientes, .recuadro-evolucion {
-  flex: 1;
-  box-sizing: border-box;
-  background-color: #ffffff;
-  border-radius: 20px;
-  border: 2px solid #2C3E50;
-  padding: 15px;
-  margin-bottom: 10px;
-  height: calc(50% - 4px);
-}
-
-p.title-income{
-  font-size: 1.5rem;
-  margin-bottom: 15px;
-  margin-top: 10px;
-  height: 10%;
-}
-
-table {
-  width: 100%;
-  margin-top: 15px;
-  height: 40%;
-}
-
 .table th, .table td {
   border: 1px solid #ccc;
   padding: 2px;
@@ -281,19 +227,5 @@ table {
   margin-right: 4px;
   vertical-align: middle;
 }
-
-#topCategoriesChart {
-  max-width: 100%;
-  height: 50%;
-  margin: auto;
-}
-
-#lineChart{
-  max-width: 100%;
-  height: 80%;
-  margin: auto;
-}
-
-
 
 </style>

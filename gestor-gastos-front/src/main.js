@@ -4,7 +4,6 @@ import router from './router'; // Importa Vue Router
 
 import './assets/styles/global.css';
 import './assets/styles/forms.css';
-import '@fontsource/poppins';
 
 // Crea una instancia de la aplicación Vue
 const app = createApp(App);

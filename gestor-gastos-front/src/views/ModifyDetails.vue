@@ -1,34 +1,31 @@
 <template>
-  <div class="main-container">
-    <div class="form-container">
-      <form @submit.prevent="submitForm" class="register-form">
-        <div class="form-group">
-          <label for="username">Nombre de usuario</label>
-          <input type="text" id="username" v-model.trim="user.username" required placeholder="Tu username">
-        </div>
-
-        <div class="form-group">
-          <label for="name">Nombre</label>
-          <input type="text" id="name" v-model.trim="user.name" required placeholder="Tu nombre">
-        </div>
-
-        <div class="form-group">
-          <label for="surname">Apellidos</label>
-          <input type="text" id="surname" v-model.trim="user.surname" required placeholder="Tus apellidos">
-        </div>
-
-        <div class="form-group">
-          <label for="mail">Correo Electrónico</label>
-          <input type="email" id="mail" v-model.trim="user.mail" required placeholder="Tu correo electrónico">
-        </div>
-
-        <div class="form-group">
-          <button type="submit">Cambiar datos</button>
-        </div>
-        <div class="form-group">
-          <button type="button" @click="home">Volver atrás</button>
-        </div>
-      </form>
+  <div class="container-fluid py-5 bg-custom-blue-900 d-flex align-items-center" style="min-height: 100vh;">
+    <div class="row justify-content-center w-100">
+      <div class="col-sm-12 col-md-6 col-lg-4"> <!-- Ajusta esta línea para cambiar el ancho -->
+        <h2 class="text-white mb-4 text-center">Modificar Datos</h2>
+        <form @submit.prevent="submitForm" class="bg-white shadow p-4 rounded">
+          <div class="mb-3">
+            <label for="username" class="form-label">Nombre de usuario</label>
+            <input type="text" class="form-control" id="username" v-model.trim="user.username" required placeholder="Tu username">
+          </div>
+          <div class="mb-3">
+            <label for="name" class="form-label">Nombre</label>
+            <input type="text" class="form-control" id="name" v-model.trim="user.name" required placeholder="Tu nombre">
+          </div>
+          <div class="mb-3">
+            <label for="surname" class="form-label">Apellidos</label>
+            <input type="text" class="form-control" id="surname" v-model.trim="user.surname" required placeholder="Tus apellidos">
+          </div>
+          <div class="mb-3">
+            <label for="mail" class="form-label">Correo Electrónico</label>
+            <input type="email" class="form-control" id="mail" v-model.trim="user.mail" required placeholder="Tu correo electrónico">
+          </div>
+          <div class="text-end">
+            <button type="submit" class="btn btn-primary me-2">Cambiar datos</button>
+            <button type="button" @click="home" class="btn btn-secondary">Volver atrás</button>
+          </div>
+        </form>
+      </div>
     </div>
   </div>
 </template>
@@ -111,64 +108,5 @@ export default {
 
 
 <style scoped>
-.main-container{
-  background-color: var(--blue-chill-300);
-}
 
-.form-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
-  background-color: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(5px);
-}
-
-.register-form {
-  padding: 20px;
-  border-radius: 15px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-  max-width: 400px;
-  width: 100%;
-  background-color: white; /* Fondo sólido para el formulario para mejorar la legibilidad */
-}
-
-.form-group {
-  display: flex;
-  flex-direction: column;
-}
-
-input[type="text"],
-input[type="mail"],
-input[type="password"] {
-  padding: 10px 0;
-  border: none;
-  border-bottom: 2px solid #ccc;
-  background-color: transparent;
-  margin-bottom: 15px;
-}
-
-input[type="text"]:focus,
-input[type="mail"]:focus,
-input[type="password"]:focus {
-  outline: none;
-  border-bottom-color: #007bff;
-}
-
-button {
-  padding: 10px;
-  border: none;
-  border-radius: 5px;
-  background-color: #007bff;
-  color: white;
-  cursor: pointer;
-  align-self: center; /* Asegura que el botón esté centrado en el formulario */
-}
-
-button:hover {
-  background-color: #0056b3;
-}
 </style>

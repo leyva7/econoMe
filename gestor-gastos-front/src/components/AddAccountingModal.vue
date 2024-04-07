@@ -1,18 +1,21 @@
 <template>
   <ModalWindow :isVisible="isVisible" @update:isVisible="updateVisibility">
-    <h2>Añadir Contabilidad Compartida</h2>
-    <form @submit.prevent="submitSharedAccounting">
-      <div class="form-group">
-        <label for="accountName">Nombre de contabilidad</label>
-        <input type="text" id="accountName" v-model="accountName">
+    <div class="modal-header">
+      <h5 class="modal-title">Añadir Contabilidad Compartida</h5>
+      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" @click="updateVisibility(false)"></button>
+    </div>
+    <form @submit.prevent="submitSharedAccounting" class="modal-body">
+      <div class="mb-3">
+        <label for="accountName" class="form-label">Nombre de contabilidad</label>
+        <input type="text" id="accountName" v-model="accountName" class="form-control">
       </div>
-      <div class="form-group">
-        <label for="description">Descripción</label>
-        <textarea id="description" v-model="description"></textarea>
+      <div class="mb-3">
+        <label for="description" class="form-label">Descripción</label>
+        <textarea id="description" v-model="description" class="form-control"></textarea>
       </div>
-      <div class="modal-actions">
-        <button type="submit" class="btn-primary">Aceptar</button>
-        <button type="button" @click="updateVisibility(false)" class="btn-secondary">Cancelar</button>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" @click="updateVisibility(false)">Cancelar</button>
+        <button type="submit" class="btn bg-custom-blue-900 text-white">Aceptar</button>
       </div>
     </form>
   </ModalWindow>
@@ -78,9 +81,5 @@ export default defineComponent({
 </script>
 
 <style>
-
-.form-group, h2{
-  color: #ECF0F1;
-}
 
 </style>

@@ -1,91 +1,110 @@
 <template>
   <AddOperationModal :isVisible="isModalOpen" :operationToEdit="operationToEdit" @update:isVisible="toggleModal" />
-  <div class="operation-container">
-    <p class="operation-title">Operaciones</p>
-    <div class="operation-details">
-      <div class="filters-container">
-        <div class="filter">
-          <!-- Selección de contabilidad -->
-          <label for="accounting">Contabilidad:</label>
-          <select v-model="selectedAccountingId" id="accounting">
-            <option v-for="accounting in accountings" :key="accounting.id" :value="accounting.id">{{ accounting.name }}</option>
-          </select>
-        </div>
 
-        <div class="filter">
-          <!-- Selección del tipo de operación -->
-          <label for="type">Operación:</label>
-          <select v-model="selectedType">
-            <option value="INCOME">Ingreso</option>
-            <option value="SPENT">Gasto</option>
-            <option value="BOTH">Ambas</option>
-          </select>
-        </div>
+  <div class="container mt-5">
+    <div class="text-center mb-4">
+      <p class="fs-4">Operaciones</p>
+    </div>
 
-        <div class="filter">
-          <!-- Selección de categoría basada en el tipo de operación -->
-          <label for="category">Categoría:</label>
-          <select v-model="selectedCategory">
-            <option value="ALL">Todas</option>
-            <option v-for="category in categories" :key="category" :value="category">{{ category }}</option>
-          </select>
+    <!-- Filtros -->
+    <div class="mb-3">
+      <div class="row g-3 justify-content-center">
+        <!-- Selección de contabilidad -->
+        <div class="col-md-auto">
+          <div class="form-floating">
+            <select v-model="selectedAccountingId" id="accounting" class="form-select">
+              <option v-for="accounting in accountings" :key="accounting.id" :value="accounting.id">{{ accounting.name }}</option>
+            </select>
+            <label for="accounting">Contabilidad:</label>
+          </div>
         </div>
-
-        <div class="filter">
-          <!-- Filtros adicionales -->
-          <label for="quantity">Cantidad mínima:</label>
-          <input type="number" v-model.number="quantityMin" placeholder="Cantidad Mínima" />
-          <label for="quantity">Cantidad máxima:</label>
-          <input type="number" v-model.number="quantityMax" placeholder="Cantidad Máxima" />
+        <!-- Selección del tipo de operación -->
+        <div class="col-md-auto">
+          <div class="form-floating">
+            <select v-model="selectedType" class="form-select">
+              <option value="INCOME">Ingreso</option>
+              <option value="SPENT">Gasto</option>
+              <option value="BOTH">Ambas</option>
+            </select>
+            <label for="type">Operación:</label>
+          </div>
         </div>
-
-        <div class="filter">
-          <label for="date">Fecha inicio:</label>
-          <input type="date" v-model="dateStart" placeholder="Desde" />
-          <label for="date">Fecha fin:</label>
-          <input type="date" v-model="dateEnd" placeholder="Hasta" />
+        <!-- Selección de categoría -->
+        <div class="col-md-auto">
+          <div class="form-floating">
+            <select v-model="selectedCategory" class="form-select">
+              <option value="ALL">Todas</option>
+              <option v-for="category in categories" :key="category" :value="category">{{ category }}</option>
+            </select>
+            <label for="category">Categoría:</label>
+          </div>
         </div>
-
-          <button @click="applyFilters">Aplicar Filtros</button>
+        <div class="col-md-auto">
+          <div class="d-flex align-items-center gap-2">
+            <div class="form-floating">
+              <input type="number" class="form-control" id="quantityMin" v-model.number="quantityMin" placeholder="Cantidad Mínima">
+              <label for="quantityMin">Cantidad mínima:</label>
+            </div>
+            <div class="form-floating">
+              <input type="number" class="form-control" id="quantityMax" v-model.number="quantityMax" placeholder="Cantidad Máxima">
+              <label for="quantityMax">Cantidad máxima:</label>
+            </div>
+          </div>
+        </div>
+        <div class="col-md-auto">
+          <div class="d-flex align-items-center gap-2">
+            <div class="form-floating">
+              <input type="date" class="form-control" id="dateStart" v-model="dateStart" placeholder="Desde">
+              <label for="dateStart">Fecha inicio:</label>
+            </div>
+            <div class="form-floating">
+              <input type="date" class="form-control" id="dateEnd" v-model="dateEnd" placeholder="Hasta">
+              <label for="dateEnd">Fecha fin:</label>
+            </div>
+          </div>
+        </div>
+        <div class="d-flex justify-content-end mt-3">
+          <button @click="applyFilters" class="btn btn-primary">Aplicar Filtros</button>
+        </div>
       </div>
+    </div>
 
-      <div class="operations-table-container">
-        <table class="operations-table">
-          <thead>
-          <tr>
-            <th>Usuario</th>
-            <th>Contabilidad</th>
-            <th>Operación</th>
-            <th>Categoría</th>
-            <th>Cantidad</th>
-            <th>Fecha</th>
-            <th>Acciones</th>
-          </tr>
-          </thead>
-          <tbody>
-          <tr v-for="operation in paginatedOperations" :key="operation.id">
-            <td>{{ operation.username }}</td>
-            <td>{{ accountings.find(accounting => accounting.id === operation.accountingId)?.name }}</td>
-            <td>{{ operation.type === 'INCOME' ? 'Ingreso' : 'Gasto' }}</td>
-            <td>{{ operation.category }}</td>
-            <td>{{ operation.quantity }}</td>
-            <td>{{ operation.date }}</td>
-            <td>
-              <button v-if="accountingsRoles[operation.accountingId] === 'EDITOR'" @click="editOperation(operation)">Editar</button>
-              <div v-else class="visualizer-img" >
-                <img src="../assets/icons/eye.svg" alt="Visualizer">
-              </div>
-              <button v-if="accountingsRoles[operation.accountingId] === 'EDITOR'" @click="deleteOperation(operation.id)">Borrar</button>
-            </td>
-          </tr>
-          </tbody>
-        </table>
-      </div>
-      <div class="pagination-controls">
-        <button @click="prevPage" :disabled="currentPage <= 1">Anterior</button>
-        <span>Página {{ currentPage }} de {{ totalPages }}</span>
-        <button @click="nextPage" :disabled="currentPage >= totalPages">Siguiente</button>
-      </div>
+    <!-- Tabla de operaciones y paginación -->
+    <div class="table-responsive">
+      <table class="table">
+        <thead>
+        <tr>
+          <th>Usuario</th>
+          <th>Contabilidad</th>
+          <th>Operación</th>
+          <th>Categoría</th>
+          <th>Cantidad</th>
+          <th>Fecha</th>
+          <th>Acciones</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr v-for="operation in paginatedOperations" :key="operation.id">
+          <td>{{ operation.username }}</td>
+          <td>{{ accountings.find(accounting => accounting.id === operation.accountingId)?.name }}</td>
+          <td>{{ operation.type === 'INCOME' ? 'Ingreso' : 'Gasto' }}</td>
+          <td>{{ operation.category }}</td>
+          <td>{{ operation.quantity }}</td>
+          <td>{{ operation.date }}</td>
+          <td>
+            <div class="d-flex justify-content-around">
+              <button class="btn btn-primary btn-sm" v-if="accountingsRoles[operation.accountingId] === 'EDITOR'" @click="editOperation(operation)">Editar</button>
+              <button class="btn btn-danger btn-sm" v-if="accountingsRoles[operation.accountingId] === 'EDITOR'" @click="deleteOperation(operation.id)">Eliminar</button>
+            </div>
+          </td>
+        </tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="d-flex justify-content-center">
+      <button @click="prevPage" class="btn btn-secondary me-2" :disabled="currentPage <= 1">Anterior</button>
+      <span class="me-2">Página {{ currentPage }} de {{ totalPages }}</span>
+      <button @click="nextPage" class="btn btn-secondary" :disabled="currentPage >= totalPages">Siguiente</button>
     </div>
   </div>
 </template>
@@ -248,64 +267,6 @@ export default {
 </script>
 
 <style scoped>
-.operation-container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 20px;
-}
-
-.operation-details{
-  padding: 10px;
-  background-color: #ffffff;
-  border-radius: 20px;
-  border: 2px solid #2C3E50;
-}
-
-.operation-title {
-  text-align: center;
-  font-size: 24px;
-  margin-bottom: 20px;
-}
-
-.filters-container {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 15px;
-  justify-content: center;
-  margin-bottom: 20px;
-}
-
-.filter {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-}
-
-.filter label {
-  margin-bottom: 5px;
-  font-weight: bold;
-}
-
-.operations-table-container {
-  overflow-x: auto; /* Permite el desplazamiento horizontal */
-  max-width: 100%; /* Asegura que no se desborde del viewport */
-}
-
-.operations-table {
-  margin: auto; /* Centra la tabla */
-  border-collapse: collapse;
-}
-
-.operations-table th, .operations-table td {
-  border: 1px solid #ccc;
-  padding: 6px;
-  text-align: left;
-}
-
-.operations-table th {
-  background-color: #f2f2f2;
-}
 
 button {
   margin-right: 5px;

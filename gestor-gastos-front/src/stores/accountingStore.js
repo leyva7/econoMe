@@ -322,7 +322,6 @@ export const useAccountingStore = () => {
         try {
             const response = await fetchIncomesMonths(accountingId);
             incomesMonths.value = response.data;
-            processWeeklySpentData();
         } catch (error) {
             console.error('Hubo un error al obtener los gastos:', error);
         }
@@ -368,22 +367,20 @@ export const useAccountingStore = () => {
         const now = new Date();
         let monthCounts = Array.from({ length: 6 }, (_, i) => {
             let date = new Date(now.getFullYear(), now.getMonth() - i, 1);
-            let month = date.toLocaleString('default', { month: 'short' }).substring(0, 3); // Abreviación del mes
-            let year = date.getFullYear().toString().substring(2); // Últimos dos dígitos del año
-            return `${month} ${year}`;
-        }).reverse();
+            let month = date.toLocaleString('default', { month: 'short' }); // Obtiene la abreviatura del mes
+            let year = date.getFullYear().toString().slice(-2); // Últimos dos dígitos del año
+            return `${month} ${year}`; // Combina mes y año
+        }).reverse(); // Asegura el orden correcto
 
-        let incomeSums = monthCounts.map(month => {
-            return {
-                month: month,
-                total: 0
-            };
-        });
+        let incomeSums = monthCounts.map(month => ({
+            month,
+            total: 0,
+        }));
 
         incomes.value.forEach(income => {
-            let incomeDate = new Date(income.date);
-            let incomeMonth = incomeDate.toLocaleString('default', { month: 'short' }).substring(0, 3); // Abreviación del mes
-            let incomeYear = incomeDate.getFullYear().toString().substring(2); // Últimos dos dígitos del año
+            let incomeDate = new Date(income.date.split('-').reverse().join('/')); // Convierte a formato adecuado para JS
+            let incomeMonth = incomeDate.toLocaleString('default', { month: 'short' }); // Obtiene la abreviatura del mes
+            let incomeYear = incomeDate.getFullYear().toString().slice(-2); // Últimos dos dígitos del año
             let incomeMonthYear = `${incomeMonth} ${incomeYear}`;
             let index = incomeSums.findIndex(sum => sum.month === incomeMonthYear);
             if (index !== -1) {
@@ -392,7 +389,6 @@ export const useAccountingStore = () => {
         });
 
         monthlyIncomeData.value = incomeSums;
-
     };
 
 

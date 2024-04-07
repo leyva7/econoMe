@@ -1,17 +1,18 @@
 <template>
-    <div id="main-app">
-      <div class="container">
-        <div class="left-panel">
-          <AppDescription />
-        </div>
-        <div class="right-panel">
-          <UserLogin />
-        </div>
+  <div class="container-fluid vh-100">
+    <div class="row h-100">
+      <div class="col-md-6 d-flex align-items-center justify-content-center bg-custom-blue-500 text-black">
+        <AppDescription />
+      </div>
+      <div class="col-md-6 d-flex align-items-center justify-content-center bg-custom-blue-300">
+        <UserLogin />
       </div>
     </div>
-  </template>
-  
-  <script>
+  </div>
+</template>
+
+
+<script>
   import AppDescription from '../components/AppDescription.vue';
   import UserLogin from '../components/UserLogin.vue';
 
@@ -26,37 +27,5 @@
   </script>
   
   <style>
-  
-  body{
-    margin:0px;
-  }
-  
-  #main-app {
-    display: flex;
-    flex-direction: column; /* Ajusta según la estructura de tu aplicación */
-    margin:0;
-  }
-  .container {
-    display: flex; /* Activamos Flexbox */
-    height: 100vh; /* El contenedor toma toda la altura de la ventana */
-  }
-  
-  .left-panel, .right-panel {
-    flex: 1; /* Cada panel toma una cantidad igual del espacio disponible */
-    display: flex;
-    justify-content: center; /* Centra el contenido horizontalmente */
-    align-items: center; /* Centra el contenido verticalmente */
-    padding: 20px; /* Añade un poco de padding para no pegar el contenido a los bordes */
-    text-align: center;
-  }
-  
-  /* Ejemplo de cómo aplicar los colores de fondo usando tu paleta */
-  .left-panel {
-    background-color: var(--pickled-bluewood-500);
-  }
-  
-  .right-panel {
-    background-color: var(--pickled-bluewood-300);
-  }
   
   </style>

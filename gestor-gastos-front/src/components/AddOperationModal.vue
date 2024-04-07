@@ -218,9 +218,5 @@ export default defineComponent({
 
 <style>
 
-.form-group, h2{
-  color: #ECF0F1;
-}
-
 </style>
 

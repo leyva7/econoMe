@@ -3,8 +3,6 @@ import { createRouter, createWebHistory } from 'vue-router';
 import FirstView from '@/views/First-view.vue';
 import UserRegister from '@/views/UserRegister.vue';
 import HomeUser from '@/views/HomeUser.vue';
-import {createApp} from "vue";
-import App from "@/App.vue";
 import ModifyDetails from "@/views/ModifyDetails.vue";
 import ModifyPassword from "@/views/ModifyPassword.vue";
 import HomeDetails from "@/components/HomeDetails.vue";
@@ -78,7 +76,4 @@ const router = createRouter({
   routes,
 });
 
-const app = createApp(App);
-app.use(router);
-app.mount('#app');
 export default router;

@@ -1,29 +1,41 @@
 <template>
-  <p v-if="hasData" class="title">Evolución</p>
-  <p v-else class="title">No hay datos disponibles</p>
-  <div class="evolution-details">
-    <div v-if="hasData" class="recuadro-tendencia">
-      <p class ="title-evolution">Evolución últimos 6 meses</p>
-      <canvas id="evolution"></canvas>
-    </div>
-    <div v-if="hasData" class="recuadro-secundario">
-      <p class="title-evolution">Ahorros en los últimos 6 meses</p>
-      <table class="table">
-        <thead>
-        <tr>
-          <th>Mes</th>
-          <th>Ahorro</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr v-for="saving in monthlySavingsData" :key="saving.month">
-          <td>{{ saving.month }}</td>
-          <td>{{ saving.totalSavings.toFixed(2) }} €</td>
-        </tr>
-        </tbody>
-      </table>
-    </div>
+  <div class="container mt-5">
+    <h2 class="text-center mb-4">Evolución</h2>
 
+    <!-- Gráfico de Evolución y Ahorros -->
+    <div v-if="hasData" class="row">
+      <div class="col-12 col-lg-6 mb-3">
+        <div class="p-3 bg-white rounded shadow h-100">
+          <h3 class="text-center mb-3">Evolución últimos 6 meses</h3>
+          <div class="chart-container" style="width: 100%; height: auto;">
+            <canvas id="evolution"></canvas>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-12 col-lg-6 mb-3">
+        <div class="p-3 bg-white rounded shadow">
+          <h3 class="text-center mb-3">Ahorro últimos 6 meses</h3>
+            <table class="table">
+              <thead>
+              <tr>
+                <th>Mes</th>
+                <th>Ahorro</th>
+              </tr>
+              </thead>
+              <tbody>
+              <tr v-for="saving in monthlySavingsData" :key="saving.month">
+                <td>{{ saving.month }}</td>
+                <td>{{ saving.totalSavings.toFixed(2) }} €</td>
+              </tr>
+              </tbody>
+            </table>
+        </div>
+      </div>
+
+    <!-- Mensaje si no hay datos -->
+    </div>
+    <p v-else class="text-center">No hay datos disponibles</p>
   </div>
 </template>
 
@@ -102,6 +114,7 @@ export default {
               }
             },
             responsive: true,
+            maintainAspectRatio: false,
             plugins: {
               legend: {
                 display: true,
@@ -129,62 +142,6 @@ export default {
 
 <style scoped>
 
-.title {
-  height: 5%;
-  font-size: x-large;
-  text-align: center;
-  margin-bottom: 20px;
-  font-weight: bold;
-  color: #2C3E50;
-  width: 100%;
-}
-
-.title-evolution{
-  font-size: x-large;
-}
-
-.evolution-details {
-  text-align: center;
-  height: calc(95% - 80px);
-  display: flex;
-  flex-direction: row;
-  padding: 20px;
-  background-color: #f0f0f0;
-}
-
-.recuadro-tendencia {
-  flex: 1 1 48%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  box-sizing: border-box;
-  background-color: #ffffff;
-  border-radius: 20px;
-  border: 2px solid #2C3E50;
-  padding: 15px;
-  margin-right: 4%; /* Espacio entre recuadro-categorias y recuadro-secundario */
-  height: calc(100% - 16px); /* Ajusta según el padding de income-details */
-}
-
-.recuadro-secundario {
-  flex: 1 1 48%;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-start;
-  box-sizing: border-box;
-  background-color: #ffffff;
-  border-radius: 20px;
-  border: 2px solid #2C3E50;
-  padding: 15px;
-  height: calc(75% - 80px);
-  overflow-y: auto;
-}
-
-table {
-  width: 100%;
-  margin-top: 15px;
-}
-
 .table th, .table td {
   border: 1px solid #ccc;
   padding: 2px;
@@ -196,9 +153,4 @@ table {
   color: #000000;
 }
 
-#evolution{
-  max-width: 100%;
-  height: 80%;
-  margin: auto;
-}
 </style>
