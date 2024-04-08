@@ -7,7 +7,7 @@
       <div class="col-12 col-lg-6 mb-3">
         <div class="p-3 bg-white rounded shadow h-100">
           <h3 class="text-center mb-3">Evolución últimos 6 meses</h3>
-          <div class="chart-container" style="width: 100%; height: auto;">
+          <div class="chart-container">
             <canvas id="evolution"></canvas>
           </div>
         </div>
@@ -141,16 +141,5 @@ export default {
 </script>
 
 <style scoped>
-
-.table th, .table td {
-  border: 1px solid #ccc;
-  padding: 2px;
-  text-align: center;
-}
-
-.table th {
-  background-color: var(--pickled-bluewood-300);
-  color: #000000;
-}
 
 </style>

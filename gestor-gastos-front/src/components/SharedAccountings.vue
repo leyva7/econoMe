@@ -7,12 +7,13 @@
         </h3>
         <h3 v-else>No hay datos</h3>
 
-        <div v-if="isUserCreator">
-          <!-- Botones de gestión para el creador -->
-          <UserManagementModal :isVisible="isModalOpen" @update:isVisible="toggleModal" @close="isModalOpen = false"/>
-          <button @click="openUserManagement" class="btn btn-info me-2">Gestionar Usuarios</button>
+        <div v-if="isUserCreator" class="my-3 button-group">
+          <button @click="openUserManagementModal" class="btn btn-primary me-2">Gestionar usuarios</button>
           <button @click="deleteAccounting" class="btn btn-danger">Eliminar Contabilidad</button>
         </div>
+
+        <UserManagementModal :isVisible="isUserManagementModalOpen" @update:isVisible="closeModal" />
+
       </div>
     </div>
 
@@ -22,7 +23,7 @@
         <div class="card h-100">
           <h4 class="card-header">Gastos por Categorías</h4>
           <div class="card-body">
-            <div style="width: 100%; height: 100%;">
+            <div class="chart-container">
               <canvas id="topCategoriesChart"></canvas>
             </div>
           </div>
@@ -33,7 +34,7 @@
         <div class="card h-100">
           <h4 class="card-header">Ingresos por Categorías</h4>
           <div class="card-body">
-            <div style="width: 100%; height: 100%;">
+            <div class="chart-container">
               <canvas id="topCategoriesIncomeChart"></canvas>
             </div>
           </div>
@@ -152,11 +153,12 @@
 
       <div class="col-12 col-lg-4">
         <div class="card h-100">
-          <h4 class="card-header">Usuarios Actuales</h4>
+          <h4 class="card-header">Usuarios</h4>
           <div class="card-body">
-            <ul class="user-list">
-              <li v-for="(user, index) in usersAccounting" :key="index">
-                {{ user.username}} {{user.role}}
+            <ul class="user-list list-group">
+              <li v-for="(user, index) in usersAccounting" :key="index" class="list-group-item d-flex justify-content-between align-items-center">
+                {{ user.username }}
+                <span class="badge bg-primary rounded-pill">{{ user.role === 'EDITOR' ? 'EDITOR' : 'VISUALIZADOR' }}</span>
               </li>
             </ul>
           </div>
@@ -170,13 +172,13 @@
 import { useAccountingStore } from '@/stores/accountingStore.js';
 import {deleteUserAccounting as deleteAccountingApi} from "@/service/accountingService"
 import {ref, onMounted, nextTick} from "vue";
-import UserManagementModal from './UserManagementModal.vue';
 import { useRouter } from 'vue-router';
 import {Chart} from "chart.js";
+import UserManagementModal from "@/components/UserManagementModal.vue";
 export default {
   name: "SharedAccountings",
   components: {
-    UserManagementModal
+    UserManagementModal,
   },
   setup() {
     const accountingStore = useAccountingStore();
@@ -184,12 +186,13 @@ export default {
       spentsMonths, fetchSpentsMonthsAsync, processedIncomes, incomesMonths, fetchIncomeMonthsAsync, processedSpentsUser, processedIncomesUser, latestOperations, fetchOperationsAsync} = accountingStore;
     const router = useRouter();
     const isUserCreator = ref(false);
-    const isModalOpen = ref(false); // Añadido para controlar la visibilidad del modal
     const chart = ref(null);
     const chartIncomes = ref(null);
     const hasDataSpent = ref(false);
     const hasDataIncome = ref(false);
     const hasDataOperations = ref(false);
+
+    const isUserManagementModalOpen = ref(false);
 
     onMounted(async () => {
       await fetchAccountingsAsync();
@@ -211,6 +214,14 @@ export default {
       });
     });
 
+    const openUserManagementModal = () => {
+      isUserManagementModalOpen.value = true;
+    };
+
+    const closeModal = () => {
+      isUserManagementModalOpen.value = false;
+    };
+
     const calculateIsUserCreator = () => {
       const sharedAccounting = sharedAccountings.value.find(accounting => accounting.id === Number(accountingId.value));
       if (sharedAccounting) {
@@ -218,10 +229,6 @@ export default {
       } else {
         isUserCreator.value = false;
       }
-    };
-
-    const openUserManagement = () => {
-      isModalOpen.value = true; // Abre el modal
     };
 
     const deleteAccounting = async () => {
@@ -266,6 +273,8 @@ export default {
                 display: false,
               }
             },
+            responsive: true,
+            maintainAspectRatio: false,
             plugins: {
               legend: {
                 display: false,
@@ -349,7 +358,7 @@ export default {
     return {
       accountings,
       sharedAccountings,
-      isUserCreator, openUserManagement, deleteAccounting, isModalOpen,
+      isUserCreator, deleteAccounting,
       usersAccounting,
       accountingSharedSelected,
       processedSpents,
@@ -360,6 +369,7 @@ export default {
       processedSpentsUser,
       processedIncomesUser,
       latestOperations,
+      isUserManagementModalOpen, openUserManagementModal, closeModal,
       categorySpentColors: ['#480707', '#a01414', '#e61c1c', '#ff6a6a', '#ffc7c7', '#a4b0be'],
       categoryIncomeColors: ['#183c27', '#297243', '#5dac75', '#5dac75', '#5dac75', '#a4b0be']
     };
@@ -369,35 +379,19 @@ export default {
 
 <style scoped>
 
-.table th, .table td {
-  border: 1px solid #ccc;
-  padding: 4px;
-  text-align: center;
+.user-list {
+  margin-bottom: 0; /* Elimina el margen inferior si es necesario */
 }
 
-.table th {
-  background-color: var(--pickled-bluewood-300);
-  color: #000000;
+.list-group-item {
+  background-color: #f8f9fa; /* Color de fondo ligero para cada elemento */
+  border-color: #dee2e6; /* Color del borde */
 }
 
-.category-color {
-  display: inline-block;
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  margin-right: 4px;
-  vertical-align: middle;
+.list-group-item:nth-child(odd) {
+  background-color: #e9ecef; /* Alternar colores de fondo para mejor legibilidad */
 }
 
-.user-list li {
-  width: 100%;
-  padding: 10px;
-  margin: 5px 0;
-  background-color: #ecf0f1;
-  border-radius: 5px;
-  box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
-  text-align: center;
-}
 </style>
 
 

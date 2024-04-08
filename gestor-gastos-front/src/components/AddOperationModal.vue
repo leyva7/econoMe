@@ -146,8 +146,6 @@ export default defineComponent({
     };
 
     watch(() => operation.value.type, () => {
-      // Utiliza newType para determinar qué categorías cargar
-      console.log("watch");
       updateCategories();
     });
 

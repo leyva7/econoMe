@@ -8,9 +8,9 @@
     <AddOperationModal :isVisible="isModalOpen && modalContentType === 'addOperations'" @update:isVisible="toggleModal" />
 
     <div style="flex: 0 0 85%; overflow-y: auto;">
-      <TopBar />
+      <TopBar/>
       <div class="dynamic-content p-3 overflow-auto">
-        <router-view></router-view>
+        <router-view @openModal="handleOpenModal"></router-view>
         <button v-if="shouldShowAddButton" @click="openOperationsModal" class="add-floating-button position-fixed" style="right: 25px; bottom: 30px;">
           <i class="fa-solid fa-plus "></i>
         </button>

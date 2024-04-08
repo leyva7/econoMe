@@ -26,7 +26,7 @@
       <span class="text-white">Contabilidades Compartidas</span>
       <button @click="emitOpenModal('addAccounting')" class="btn btn-outline-light mt-2">Añadir Contabilidad</button>
       <ul class="list-unstyled mt-3">
-        <li v-for="(accounting, index) in sharedAccountings" :key="index" @click.prevent="navigateToAccounting(accounting)" class="mb-2">
+        <li v-for="(accounting, index) in sharedAccountings" :key="index" @click.prevent="navigateToAccounting(accounting)" class="mb-2 cursor-pointer clickable-item">
           {{ accounting.name }}
         </li>
       </ul>
@@ -53,7 +53,7 @@ export default defineComponent({
     const isNarrowScreen = ref(false);
 
     watch(route, (newRoute) => {
-      activePath.value = newRoute.path; // Actualiza la ruta activa cuando cambie la ruta
+      activePath.value = newRoute.path;
     });
 
     const navigate = (path) => {
@@ -86,14 +86,8 @@ export default defineComponent({
     });
 
     watchEffect(() => {
-      // Actualiza isNarrowScreen basado en el ancho de la ventana
       isNarrowScreen.value = window.innerWidth < 1300; // Ejemplo de umbral
     });
-
-    // Dentro de SidebarPage
-    watch(() => props.sharedAccountings, (newVal) => {
-      console.log("sharedAccountings ha cambiado:", newVal);
-    }, { deep: true });
 
     return {
       activePath,

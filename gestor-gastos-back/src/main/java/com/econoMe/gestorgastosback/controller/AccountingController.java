@@ -216,10 +216,10 @@ public class AccountingController {
     @PostMapping("/{id}/addUser")
     public ResponseEntity<?> addUser(@PathVariable Long id, @RequestBody RolesDto rolesDto) {
         // Intenta obtener el usuario por ID de manera segura
-        User userToAdd = userService.findById(id);
+        User userToAdd = userService.getUserByUsername(rolesDto.getUsername());
 
         // Intenta obtener la contabilidad por ID de manera segura
-        Accounting accounting = accountingService.findAccountingById(rolesDto.getAccountingId());
+        Accounting accounting = accountingService.findAccountingById(id);
 
         // Crea el nuevo rol
         Roles newRole = new Roles(userToAdd, accounting, rolesDto.getRole());

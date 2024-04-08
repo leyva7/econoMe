@@ -28,7 +28,7 @@ public class RolesService {
         String userUsername = role.getUser().getUsername();
         Long accountingId = role.getAccounting().getId();
 
-        rolesRepository.findByUserUsernameAndAccountingId(userUsername, accountingId).orElseThrow(() -> new RoleException("El rol para este usuario y contabilidad ya existe."));
+        System.out.println(rolesRepository.findByUserUsernameAndAccountingId(userUsername, accountingId));
 
         return rolesRepository.save(role);
     }

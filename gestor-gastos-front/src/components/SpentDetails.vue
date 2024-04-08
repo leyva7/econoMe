@@ -7,7 +7,7 @@
       <div class="col-12 col-lg-6">
         <div class="p-3 bg-white rounded shadow">
           <h3 class="mb-3 text-center">Gastos por categorías</h3>
-          <div style="width: 100%; height: auto;">
+          <div class="chart-container">
             <canvas id="topCategoriesChart"></canvas>
           </div>
           <!-- Tabla de categorías justo debajo del gráfico -->
@@ -34,7 +34,7 @@
         <!-- Evolución de los Gastos -->
         <div class="p-3 bg-white rounded shadow">
           <h3 class="mb-3 text-center">Evolución de gastos por semanas</h3>
-          <div style="width: 100%; height: 100%;">
+          <div class="chart-container">
             <canvas id="lineChart"></canvas>
           </div>
         </div>
@@ -204,26 +204,5 @@ export default {
 </script>
 
 <style scoped>
-
-
-.table th, .table td {
-  border: 1px solid #ccc;
-  padding: 2px;
-  text-align: center;
-}
-
-.table th {
-  background-color: var(--pickled-bluewood-300);
-  color: #000000;
-}
-
-.category-color {
-  display: inline-block;
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-  margin-right: 4px;
-  vertical-align: middle;
-}
 
 </style>

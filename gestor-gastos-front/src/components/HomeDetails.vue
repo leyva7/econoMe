@@ -9,7 +9,7 @@
         <!-- Gastos VS Ingresos -->
         <div class="p-3 bg-white rounded shadow">
           <h3 class="text-center mb-3">Gastos VS Ingresos</h3>
-          <div style="width: 100%; height: auto;">
+          <div class="chart-container">
             <canvas id="comparativeChart"></canvas>
           </div>
         </div>
@@ -194,19 +194,5 @@ export default {
 </script>
 
 <style scoped>
-
-
-.table th, .table td {
-  border: 1px solid #ccc;
-  padding: 2px;
-  text-align: center;
-}
-
-.table th {
-  background-color: var(--pickled-bluewood-300);
-  color: #000000;
-}
-
-
 
 </style>

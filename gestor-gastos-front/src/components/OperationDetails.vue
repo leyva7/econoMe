@@ -7,8 +7,8 @@
     </div>
 
     <!-- Filtros -->
-    <div class="mb-3">
-      <div class="row g-3 justify-content-center">
+    <div class="mb-4">
+      <div class="row g-3 justify-content-left">
         <!-- Selección de contabilidad -->
         <div class="col-md-auto">
           <div class="form-floating">
@@ -70,8 +70,8 @@
     </div>
 
     <!-- Tabla de operaciones y paginación -->
-    <div class="table-responsive">
-      <table class="table">
+    <div class="table-responsive mb-4">
+      <table class="table table-hover">
         <thead>
         <tr>
           <th>Usuario</th>
@@ -80,7 +80,7 @@
           <th>Categoría</th>
           <th>Cantidad</th>
           <th>Fecha</th>
-          <th>Acciones</th>
+          <th class="text-center">Acciones</th>
         </tr>
         </thead>
         <tbody>
@@ -101,7 +101,8 @@
         </tbody>
       </table>
     </div>
-    <div class="d-flex justify-content-center">
+
+    <div class="d-flex justify-content-center mb-4">
       <button @click="prevPage" class="btn btn-secondary me-2" :disabled="currentPage <= 1">Anterior</button>
       <span class="me-2">Página {{ currentPage }} de {{ totalPages }}</span>
       <button @click="nextPage" class="btn btn-secondary" :disabled="currentPage >= totalPages">Siguiente</button>
@@ -271,19 +272,6 @@ export default {
 button {
   margin-right: 5px;
   cursor: pointer; /* Mejora la indicación de que es clickeable */
-}
-
-.pagination-controls {
-  display: flex;
-  gap: 10px;
-  justify-content: center; /* Centra los controles de paginación */
-  margin-top: 20px;
-}
-
-.visualizer-img {
-  display: flex;
-  justify-content: center; /* Centra horizontalmente */
-  align-items: center; /* Centra verticalmente */
 }
 
 @media (max-width: 768px) { /* Ajusta según tus necesidades */
