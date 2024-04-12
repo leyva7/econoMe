@@ -9,8 +9,15 @@ export const createOperation = async (operationData) => {
 export const updateOperation = async (operationData) => {
     return axios.put(`${API_URL}operation`, operationData, { headers: getAuthHeaders() });
 };
-export const fetchOperations = async (accountingId) => {
-    return await axios.get(`${API_URL}${accountingId}/operation/all`, { headers: getAuthHeaders() });
+export const fetchOperations = async (accountingId, filterType, startDate = null, endDate = null) => {
+    let queryParams = `?filterType=${filterType}`;
+    if (startDate && endDate) {
+        queryParams += `&startDate=${startDate}&endDate=${endDate}`;
+    }
+
+    return await axios.get(`${API_URL}${accountingId}/operation/all${queryParams}`, {
+        headers: getAuthHeaders()
+    });
 };
 
 export const fetchAllOperations = async () => {
@@ -21,16 +28,30 @@ export const fetchSpents = async (accountingId) => {
     return await axios.get(`${API_URL}${accountingId}/operation/spent`, { headers: getAuthHeaders() });
 };
 
-export const fetchSpentsMonths = async (accountingId) => {
-    return await axios.get(`${API_URL}${accountingId}/operation/spentMonth`, { headers: getAuthHeaders() });
+export const fetchSpentsFiltered = async (accountingId, filterType, startDate = null, endDate = null) => {
+    let queryParams = `?filterType=${filterType}`;
+    if (startDate && endDate) {
+        queryParams += `&startDate=${startDate}&endDate=${endDate}`;
+    }
+
+    return await axios.get(`${API_URL}${accountingId}/operation/spentFiltered${queryParams}`, {
+        headers: getAuthHeaders()
+    });
 };
 
 export const fetchIncomes = async (accountingId) => {
     return await axios.get(`${API_URL}${accountingId}/operation/income`, { headers: getAuthHeaders() });
 };
 
-export const fetchIncomesMonths = async (accountingId) => {
-    return await axios.get(`${API_URL}${accountingId}/operation/incomeMonth`, { headers: getAuthHeaders() });
+export const fetchIncomesMonths = async (accountingId, filterType, startDate = null, endDate = null) => {
+    let queryParams = `?filterType=${filterType}`;
+    if (startDate && endDate) {
+        queryParams += `&startDate=${startDate}&endDate=${endDate}`;
+    }
+
+    return await axios.get(`${API_URL}${accountingId}/operation/incomeFiltered${queryParams}`, {
+        headers: getAuthHeaders()
+    });
 };
 
 export const fetchAllAccountingsUserOperations = async () => {

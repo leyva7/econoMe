@@ -18,11 +18,17 @@ import org.springframework.web.bind.annotation.RestController;
 
 @RestController
 @RequestMapping("/api/auth")
-@RequiredArgsConstructor
 public class AuthController {
+
     private final PasswordEncoder passwordEncoder;
     private final AuthService authService;
     private final RegistrationService registrationService;
+
+    AuthController(PasswordEncoder passwordEncoder, AuthService authService, RegistrationService registrationService) {
+        this.passwordEncoder = passwordEncoder;
+        this.authService = authService;
+        this.registrationService = registrationService;
+    }
 
     // Registro de usuario
     @PostMapping("/register")
@@ -32,6 +38,7 @@ public class AuthController {
         }
 
         registrationDto.getUser().setPassword(passwordEncoder.encode(registrationDto.getUser().getPassword()));
+
         UserDto savedUser = registrationService.registerUserAndAccounting(registrationDto);
         return ResponseEntity.ok(savedUser);
     }

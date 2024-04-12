@@ -40,13 +40,13 @@ export default {
   },
   setup() {
     const isModalOpen = ref(false);
-    const { accountings, sharedAccountings, fetchAccountingsAsync, userRole, fetchUserRoleAsync, categories, fetchCategories} = useAccountingStore();
+    const { accountings, sharedAccountings, loadAccountings, userRole, fetchUserRoleAsync, categories, fetchCategories} = useAccountingStore();
     const {accountingId} = globalStore();
     const modalContentType = ref('');
     const router = useRouter();
 
     onMounted(async () => {
-      await fetchAccountingsAsync();
+      await loadAccountings();
       await fetchUserRoleAsync(accountingId.value);
     });
 
@@ -121,15 +121,6 @@ export default {
   border-radius: 4px;
 }
 
-.content {
-  flex-grow: 1;
-  display: flex;
-  flex-direction: column;
-  overflow-y: auto; /* Permite desplazamiento vertical dentro del content si es necesario */
-  padding: 20px;
-  background-color: #2C3E50;
-}
-
 .dynamic-content {
   height: calc(95% - 40px);
   margin-top: 20px;
@@ -187,10 +178,6 @@ export default {
 
 .add-floating-button:active {
   transform: translateY(-1px);
-}
-
-.form-group, window.h2{
-  color: #ECF0F1;
 }
 
 </style>

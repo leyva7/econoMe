@@ -182,7 +182,7 @@ export default {
   },
   setup() {
     const accountingStore = useAccountingStore();
-    const {accountings, sharedAccountings, fetchAccountingsAsync, accountingId, fetchUsersAccountingAsync, usersAccounting, accountingSharedSelected, processedSpents,
+    const {accountings, sharedAccountings, loadAccountings, accountingId, fetchUsersAccountingAsync, usersAccounting, accountingSharedSelected, processedSpents,
       spentsMonths, fetchSpentsMonthsAsync, processedIncomes, incomesMonths, fetchIncomeMonthsAsync, processedSpentsUser, processedIncomesUser, latestOperations, fetchOperationsAsync} = accountingStore;
     const router = useRouter();
     const isUserCreator = ref(false);
@@ -195,7 +195,7 @@ export default {
     const isUserManagementModalOpen = ref(false);
 
     onMounted(async () => {
-      await fetchAccountingsAsync();
+      await loadAccountings();
       calculateIsUserCreator();
       await fetchUsersAccountingAsync(accountingId.value);
       await fetchSpentsMonthsAsync(accountingId.value);
@@ -237,7 +237,7 @@ export default {
           await deleteAccountingApi(accountingId.value, localStorage.getItem('username'));
           console.log("Eliminada la contabilidad");
           // Recargar las contabilidades para actualizar el sidebar
-          await fetchAccountingsAsync();
+          await loadAccountings();
           router.push({
             path: '/home-user', // Utiliza 'path' en lugar de 'name'
             query: { id: localStorage.getItem('personalAccountingId') }

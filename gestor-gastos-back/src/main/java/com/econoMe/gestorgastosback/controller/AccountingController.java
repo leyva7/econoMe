@@ -10,6 +10,10 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDate;
+import java.time.temporal.ChronoUnit;
+import org.springframework.format.annotation.DateTimeFormat;
+
 import java.time.YearMonth;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -148,9 +152,11 @@ public class AccountingController {
     }
 
     @GetMapping("/{id}/operation/all")
-    public ResponseEntity<?> getAllUserOperationByAccounting(HttpServletRequest request, @PathVariable Long id) {
+    public ResponseEntity<?> getAllUserOperationByAccounting(HttpServletRequest request, @PathVariable Long id, @RequestParam(required = false) String filterType,
+                                                             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+                                                             @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
 
-        return ResponseEntity.ok(mappingService.operationListToDto(operationsService.findAllUserOperationByAccounting(getUserFromRequest(request), accountingService.findAccountingById(id))));
+        return getFilteredOperations(id, filterType, getUserFromRequest(request), startDate, endDate, null);
     }
 
     @GetMapping("/operation/all")
@@ -165,16 +171,54 @@ public class AccountingController {
         return ResponseEntity.ok(mappingService.operationListToDto(operationsService.findAllOperationsAccountingUser(getUserFromRequest(request))));
     }
 
+    private ResponseEntity<?> getFilteredOperations(Long id, String filterType, User user, LocalDate startDate, LocalDate endDate, OperationType operationType) {
+        LocalDate start;
+        LocalDate end;
+
+        switch (filterType) {
+            case "last7days":
+                start = LocalDate.now().minus(7, ChronoUnit.DAYS);
+                end = LocalDate.now();
+                break;
+            case "last30days":
+                start = LocalDate.now().minus(30, ChronoUnit.DAYS);
+                end = LocalDate.now();
+                break;
+            case "custom":
+                if (startDate == null || endDate == null) {
+                    return ResponseEntity.badRequest().body("Custom date range requires startDate and endDate");
+                }
+                start = startDate;
+                end = endDate;
+                break;
+            default:
+                // Por defecto, usa el mes actual como rango
+                start = YearMonth.now().atDay(1);
+                end = YearMonth.now().atEndOfMonth();
+        }
+
+        return ResponseEntity.ok(mappingService.operationListToDto(
+                operationsService.findOperationsForDateRange(accountingService.findAccountingById(id),
+                        operationType,
+                        user,
+                        start,
+                        end)));
+    }
+
     @GetMapping("/{id}/operation/spent")
     public ResponseEntity<?> getAccountingSpent(@PathVariable Long id) {
 
         return ResponseEntity.ok(mappingService.operationListToDto(operationsService.findByAccountingAndType(accountingService.findAccountingById(id), OperationType.SPENT)));
     }
 
-    @GetMapping("/{id}/operation/spentMonth")
-    public ResponseEntity<?> getAccountingSpentMonth(@PathVariable Long id) {
+    @GetMapping("/{id}/operation/spentFiltered")
+    public ResponseEntity<?> getAccountingSpentFiltered(
+            @PathVariable Long id,
+            @RequestParam(required = false) String filterType,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
 
-        return ResponseEntity.ok(mappingService.operationListToDto(operationsService.findOperationsForMonth(accountingService.findAccountingById(id), OperationType.SPENT, YearMonth.now().atDay(1), YearMonth.now().atEndOfMonth())));
+        return getFilteredOperations(id, filterType, null, startDate, endDate, OperationType.SPENT);
     }
 
     @GetMapping("/{id}/operation/income")
@@ -183,23 +227,57 @@ public class AccountingController {
         return ResponseEntity.ok(mappingService.operationListToDto(operationsService.findByAccountingAndType(accountingService.findAccountingById(id), OperationType.INCOME)));
     }
 
+    @GetMapping("/{id}/operation/incomeFiltered")
+    public ResponseEntity<?> getAccountingIncomeFiltered(
+            @PathVariable Long id,
+            @RequestParam(required = false) String filterType,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
+
+        return getFilteredOperations(id, filterType, null, startDate, endDate, OperationType.INCOME);
+    }
+
+
     @GetMapping("/{id}/operation/incomeMonth")
     public ResponseEntity<?> getAccountingIncomeMonth(@PathVariable Long id) {
 
-        return ResponseEntity.ok(mappingService.operationListToDto(operationsService.findOperationsForMonth(accountingService.findAccountingById(id), OperationType.INCOME, YearMonth.now().atDay(1), YearMonth.now().atEndOfMonth())));
+        return ResponseEntity.ok(mappingService.operationListToDto(operationsService.findOperationsForDateRange(accountingService.findAccountingById(id), OperationType.INCOME, null, YearMonth.now().atDay(1), YearMonth.now().atEndOfMonth())));
     }
 
     @GetMapping("/{id}/categoryDifferences")
-    public ResponseEntity<?> getCategoryDifferences(@PathVariable Long id) {
+    public ResponseEntity<?> getCategoryDifferences(@PathVariable Long id, @RequestParam(required = false) String filterType,
+                                                    @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
+                                                    @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate endDate) {
         try {
             Accounting accounting = accountingService.findAccountingById(id);
-            if (accounting == null) {
-                return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Accounting not found with ID: " + id);
+
+            LocalDate start;
+            LocalDate end;
+
+            switch (filterType) {
+                case "last7days":
+                    start = LocalDate.now().minus(7, ChronoUnit.DAYS);
+                    end = LocalDate.now();
+                    break;
+                case "last30days":
+                    start = LocalDate.now().minus(30, ChronoUnit.DAYS);
+                    end = LocalDate.now();
+                    break;
+                case "custom":
+                    if (startDate == null || endDate == null) {
+                        return ResponseEntity.badRequest().body("Custom date range requires startDate and endDate");
+                    }
+                    start = startDate;
+                    end = endDate;
+                    break;
+                default:
+                    // Por defecto, usa el mes actual como rango
+                    start = YearMonth.now().atDay(1);
+                    end = YearMonth.now().atEndOfMonth();
             }
 
-            // Suponiendo que tienes un método en operationsService que calcula las diferencias
-            Map<String, Double> categoryDifferencesSpent = operationsService.calculateSignificantCategoryDifferences(accounting, OperationType.SPENT);
-            Map<String, Double> categoryDifferencesIncome = operationsService.calculateSignificantCategoryDifferences(accounting, OperationType.INCOME);
+            Map<String, Double> categoryDifferencesSpent = operationsService.calculateSignificantCategoryDifferences(accounting, OperationType.SPENT, null, start, end);
+            Map<String, Double> categoryDifferencesIncome = operationsService.calculateSignificantCategoryDifferences(accounting, OperationType.INCOME, null, start, end);
 
             // Crear un objeto de respuesta que combine ambas listas de diferencias
             Map<String, Object> response = new HashMap<>();

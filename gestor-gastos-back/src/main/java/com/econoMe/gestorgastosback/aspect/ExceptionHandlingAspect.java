@@ -23,7 +23,6 @@ public class ExceptionHandlingAspect {
         try {
             return joinPoint.proceed();
         } catch (DataAccessException e) {
-            System.out.println("aaaaaa");
             String className = joinPoint.getTarget().getClass().getSimpleName();
             switch(className) {
                 case "AccountingService":

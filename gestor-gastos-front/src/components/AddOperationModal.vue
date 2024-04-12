@@ -1,52 +1,56 @@
 <template>
   <ModalWindow :isVisible="isVisible" @update:isVisible="updateVisibility">
-    <h2>Nueva Operación</h2>
-    <form @submit.prevent="submitOperations">
-      <div class="form-group">
-        <label for="type">Tipo</label>
-        <select id="type" v-model="operation.type">
+    <div class="modal-header">
+      <h5 v-if=isEditMode class="modal-title">Editar operación</h5>
+      <h5 v-else class="modal-title">Nueva Operación</h5>
+      <button type="button" class="btn-close" @click="updateVisibility(false)"></button>
+    </div>
+    <form @submit.prevent="submitOperations" class="modal-body">
+      <div class="mb-3">
+        <label for="type" class="form-label">Tipo</label>
+        <select id="type" v-model="operation.type" class="form-select">
           <option value="ingreso">Ingreso</option>
           <option value="gasto">Gasto</option>
         </select>
       </div>
-      <div class="form-group">
-        <label for="optionSelect">Categoría</label>
-        <select id="optionSelect" v-model="selectedOption" @change="onSelectChange">
+      <div class="mb-3">
+        <label for="optionSelect" class="form-label">Categoría</label>
+        <select id="optionSelect" v-model="selectedOption" @change="onSelectChange" class="form-select">
           <option v-for="option in categories" :key="option" :value="option">
             {{ option }}
           </option>
           <option value="custom">Otra (Especificar)</option>
         </select>
       </div>
-      <div class="form-group" v-if="isCustomOptionSelected">
-        <label for="customOption">Especifique</label>
+      <div class="mb-3" v-if="isCustomOptionSelected">
+        <label for="customOption" class="form-label">Especifique</label>
         <input
             type="text"
             id="customOption"
             placeholder="Escriba su opción"
             v-model="customOption"
+            class="form-control"
         />
       </div>
-      <div class="form-group">
-        <label for="description">Descripción</label>
-        <textarea id="description" v-model="operation.description"></textarea>
+      <div class="mb-3">
+        <label for="description" class="form-label">Descripción</label>
+        <textarea id="description" v-model="operation.description" class="form-control"></textarea>
       </div>
-      <div class="form-group">
-        <label for="date">Fecha</label>
-        <input type="date" id="date" v-model="operation.date">
+      <div class="mb-3">
+        <label for="date" class="form-label">Fecha</label>
+        <input type="date" id="date" v-model="operation.date" class="form-control">
       </div>
-      <div class="form-group">
-        <label for="amount">Cantidad</label>
-        <input type="number" id="amount" v-model="operation.quantity" step="0.01">
+      <div class="mb-3">
+        <label for="amount" class="form-label">Cantidad</label>
+        <input type="number" id="amount" v-model="operation.quantity" step="0.01" class="form-control">
       </div>
-      <div class="modal-actions">
-        <button type="submit" class="btn-primary">Aceptar</button>
-        <button type="button" @click="updateVisibility(false)" class="btn-secondary">Cancelar</button>
+      <div class="modal-footer">
+        <button type="submit" class="btn btn-primary">Aceptar</button>
+        <button type="button" @click="updateVisibility(false)" class="btn btn-secondary">Cancelar</button>
       </div>
     </form>
   </ModalWindow>
 </template>
-
 <script>
 import ModalWindow from './ModalWindow.vue';
 import {ref, defineComponent, computed, watch, onMounted} from 'vue';
@@ -83,11 +87,10 @@ export default defineComponent({
     });
 
     function determineInitialType() {
-      // Esta función determina el valor inicial de "type"
       if (props.operationToEdit) {
         return props.operationToEdit.type === 'INCOME' ? 'ingreso' : 'gasto';
       }
-      return ''; // Valor por defecto si no es modo de edición
+      return '';
     }
 
     const initializeForm = () => {
@@ -207,7 +210,8 @@ export default defineComponent({
       onSelectChange,
       submitOperations,
       categories,
-      initializeForm
+      initializeForm,
+      isEditMode
     };
   }
 });

@@ -12,7 +12,7 @@ import {
     fetchOperations,
     fetchAllOperations,
     fetchSpents,
-    fetchSpentsMonths, fetchAllAccountingsUserOperations
+    fetchAllAccountingsUserOperations, fetchSpentsFiltered
 } from '@/service/operationService';
 
 export const useAccountingStore = () => {
@@ -60,7 +60,15 @@ export const useAccountingStore = () => {
         return [day, month, year].join('-');
     }
 
-    const fetchAccountingsAsync = async () => {
+    function formatAsYYYYMMDD (date) {
+        if (!date) return null;
+        const d = new Date(date);
+        const month = `${d.getMonth() + 1}`.padStart(2, '0'); // Meses son de 0-11
+        const day = `${d.getDate()}`.padStart(2, '0');
+        return `${d.getFullYear()}-${month}-${day}`;
+    }
+
+    const loadAccountings = async () => {
         try {
             const response = await fetchAccountings();
             accountings.value = response.data;
@@ -137,9 +145,9 @@ export const useAccountingStore = () => {
         }
     };
 
-    const fetchOperationsAsync = async (accountingId) => {
+    const fetchOperationsAsync = async (accountingId, filterType, startDate, endDate) => {
         try {
-            const response = await fetchOperations(accountingId)
+            const response = await fetchOperations(accountingId, filterType, startDate, endDate)
             operations.value = response.data;
         } catch (error) {
             console.error('Hubo un error al obtener las operaciones:', error);
@@ -174,9 +182,9 @@ export const useAccountingStore = () => {
         }
     };
 
-    const fetchSpentsMonthsAsync = async (accountingId) => {
+    const fetchSpentsInterval = async (accountingId, filterType, startDate, endDate) => {
         try {
-            const response = await fetchSpentsMonths(accountingId);
+            const response = await fetchSpentsFiltered(accountingId, filterType, startDate, endDate);
             spentsMonths.value = response.data;
             processWeeklySpentData();
         } catch (error) {
@@ -184,12 +192,6 @@ export const useAccountingStore = () => {
         }
     };
 
-    const latestOperations = computed(() => {
-        return operations.value
-            .slice()
-            .sort((a, b) => new Date(b.date.split('-').reverse().join('-')) - new Date(a.date.split('-').reverse().join('-')))
-            .slice(0, 5);
-    });
 
     const processedSpents = computed(() => {
         const sumsByCategory = spentsMonths.value.reduce((acc, { category, quantity }) => {
@@ -318,9 +320,9 @@ export const useAccountingStore = () => {
         }
     };
 
-    const fetchIncomeMonthsAsync = async (accountingId) => {
+    const fetchIncomeMonthsAsync = async (accountingId, filterType, startDate, endDate) => {
         try {
-            const response = await fetchIncomesMonths(accountingId);
+            const response = await fetchIncomesMonths(accountingId, filterType, startDate, endDate);
             incomesMonths.value = response.data;
         } catch (error) {
             console.error('Hubo un error al obtener los gastos:', error);
@@ -420,9 +422,9 @@ export const useAccountingStore = () => {
         return processedIncomes.value[0] || null;
     });
 
-    const categoryDifferencesAsync = async (accountingId) => {
+    const categoryDifferencesAsync = async (accountingId, filterType, startDate, endDate) => {
         try {
-            const response = await fetchCategoriesDifferences(accountingId);
+            const response = await fetchCategoriesDifferences(accountingId, filterType, startDate, endDate);
             categoriesDifferences.value = response.data;
         } catch (error) {
             console.error('Hubo un error al obtener los gastos:', error);
@@ -444,10 +446,10 @@ export const useAccountingStore = () => {
     };
 
     return {
-        accountings, fetchAccountingsAsync, userRole, fetchUserRoleAsync, fetchCategoriesSpentAsync, fetchCategoriesIncomeAsync, categories, fetchAccountingPersonalAsync, accountingPersonal, username, accountingName, logout, navigate:router.push, modifyUser, modifyPassword,
-        fetchOperationsAsync, operations, fetchSpentsAsync, spents, accountingId, processedSpents, fetchSpentsMonthsAsync, spentsMonths, totalSpentMonth, latestSpents, weeklySpentData, processMonthlySpentData, monthlySpentData ,fetchIncomeMonthsAsync,
+        accountings, loadAccountings: loadAccountings, userRole, fetchUserRoleAsync, fetchCategoriesSpentAsync, fetchCategoriesIncomeAsync, categories, fetchAccountingPersonalAsync, accountingPersonal, username, accountingName, logout, navigate:router.push, modifyUser, modifyPassword,
+        fetchOperationsAsync, operations, fetchSpentsAsync, spents, accountingId, processedSpents, fetchSpentsInterval, spentsMonths, totalSpentMonth, latestSpents, weeklySpentData, processMonthlySpentData, monthlySpentData ,fetchIncomeMonthsAsync,
         fetchIncomeAsync, incomesMonths, incomes,totalIncomeMonth, latestIncomes, monthlyIncomeData, processedIncomes, processMonthlyIncomeData, monthlySavingsData, topSpentCategory, topIncomeCategory, categoryDifferencesAsync,
-        categoriesDifferences, latestOperations, sharedAccountings, fetchUsersAccountingAsync, usersAccounting, accountingSharedSelected, processedSpentsUser, processedIncomesUser, fetchCategoriesAsync,
-        fetchAllOperationsAsync, allOperations, fetchAllAccountingsUserOperationsAsync, allAccountingUserOperations, formatDateToDDMMYYYY
+        categoriesDifferences, sharedAccountings, fetchUsersAccountingAsync, usersAccounting, accountingSharedSelected, processedSpentsUser, processedIncomesUser, fetchCategoriesAsync,
+        fetchAllOperationsAsync, allOperations, fetchAllAccountingsUserOperationsAsync, allAccountingUserOperations, formatDateToDDMMYYYY, formatAsYYYYMMDD
     };
 };

@@ -77,55 +77,74 @@ public class OperationsService {
         return operationsRepository.findByAccountingAndType(accounting, type);
     }
 
-    public List<Operations> findOperationsForMonth(Accounting accounting, OperationType type, LocalDate startOfMonth, LocalDate endOfMonth) {
-        return findByAccountingAndType(accounting, type).stream()
-                .filter(op -> !op.getDate().isBefore(startOfMonth) && !op.getDate().isAfter(endOfMonth))
+    public List<Operations> findOperationsForDateRange(Accounting accounting, OperationType type, User user, LocalDate start, LocalDate end) {
+        return findByAccounting(accounting).stream()
+                .filter(op -> (op.getDate().isEqual(start) || op.getDate().isAfter(start)) &&
+                        (op.getDate().isEqual(end) || op.getDate().isBefore(end)) &&
+                        (type == null || Objects.equals(type, op.getType())) &&
+                        (user == null || Objects.equals(user, op.getUser())))
+                .sorted((o1, o2) -> o2.getDate().compareTo(o1.getDate())) // Ordenar por fecha descendente
                 .collect(Collectors.toList());
     }
 
-    public Map<String, Double> calculateSignificantCategoryDifferences(Accounting accounting, OperationType type) {
-        // Obtener las operaciones del mes actual
-        List<Operations> currentMonthOperations = findOperationsForMonth(accounting, type, YearMonth.now().atDay(1), YearMonth.now().atEndOfMonth());
-        // Obtener las operaciones del mes anterior
-        LocalDate startOfLastMonth = YearMonth.now().minusMonths(1).atDay(1);
-        LocalDate endOfLastMonth = YearMonth.now().minusMonths(1).atEndOfMonth();
-        List<Operations> lastMonthOperations = findOperationsForMonth(accounting, type, startOfLastMonth, endOfLastMonth);
+    public Map<String, Double> calculateSignificantCategoryDifferences(Accounting accounting, OperationType type, User user, LocalDate startDate, LocalDate endDate) {
+        // Obtener las operaciones para el rango de fechas especificado
+        List<Operations> operationsCurrentPeriod = findOperationsForDateRange(accounting, type, user, startDate, endDate);
+        LocalDate startOfLastPeriod = startDate.minusMonths(1);
+        LocalDate endOfLastPeriod = endDate.minusMonths(1).withDayOfMonth(endDate.minusMonths(1).lengthOfMonth());
+        List<Operations> operationsLastPeriod = findOperationsForDateRange(accounting, type, user, startOfLastPeriod, endOfLastPeriod);
 
-        // Agrupar y sumar las cantidades por categoría para el mes actual
-        Map<String, Double> currentMonthSumByCategory = currentMonthOperations.stream()
+        // Agrupar y sumar cantidades por categoría para ambos períodos
+        Map<String, Double> currentPeriodSumByCategory = operationsCurrentPeriod.stream()
+                .collect(Collectors.groupingBy(Operations::getCategory, Collectors.summingDouble(Operations::getQuantity)));
+        Map<String, Double> lastPeriodSumByCategory = operationsLastPeriod.stream()
                 .collect(Collectors.groupingBy(Operations::getCategory, Collectors.summingDouble(Operations::getQuantity)));
 
-        // Agrupar y sumar las cantidades por categoría para el mes anterior
-        Map<String, Double> lastMonthSumByCategory = lastMonthOperations.stream()
-                .collect(Collectors.groupingBy(Operations::getCategory, Collectors.summingDouble(Operations::getQuantity)));
-
-        // Calculando diferencias
+        // Calcular diferencias por categoría
         Map<String, Double> categoryDifferences = new HashMap<>();
-        currentMonthSumByCategory.forEach((category, sum) -> {
-            double lastMonthSum = lastMonthSumByCategory.getOrDefault(category, 0.0);
-            double difference = sum - lastMonthSum;
+        currentPeriodSumByCategory.forEach((category, sum) -> {
+            double lastPeriodSum = lastPeriodSumByCategory.getOrDefault(category, 0.0);
+            double difference = sum - lastPeriodSum;
             categoryDifferences.put(category, difference);
         });
 
-        // Separar en positivos y negativos
-        Map<String, Double> positiveDifferences = categoryDifferences.entrySet().stream()
-                .filter(entry -> entry.getValue() > 0)
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        // Separar en diferencias positivas y negativas, y calcular las máximas
+        Map<String, Double> positiveDifferences = new HashMap<>();
+        Map<String, Double> negativeDifferences = new HashMap<>();
 
-        Map<String, Double> negativeDifferences = categoryDifferences.entrySet().stream()
-                .filter(entry -> entry.getValue() < 0)
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue));
+        categoryDifferences.forEach((category, difference) -> {
+            if (difference > 0) {
+                positiveDifferences.put(category, difference);
+            } else if (difference < 0) {
+                negativeDifferences.put(category, difference);
+            }
+        });
 
-        // Encontrar los valores más grandes positivos y negativos
-        Optional<Map.Entry<String, Double>> maxPositive = positiveDifferences.entrySet().stream()
-                .max(Map.Entry.comparingByValue());
+        // Encuentra la máxima diferencia positiva y negativa, o usa un valor predeterminado
+        double maxPositiveDifference = positiveDifferences.values().stream()
+                .max(Double::compare)
+                .orElse(0.0);  // Usa 0.0 si no hay diferencias positivas
 
-        Optional<Map.Entry<String, Double>> maxNegative = negativeDifferences.entrySet().stream()
-                .min(Map.Entry.comparingByValue());
+        double maxNegativeDifference = negativeDifferences.values().stream()
+                .min(Double::compare)
+                .orElse(0.0);  // Usa 0.0 si no hay diferencias negativas
+
+        // Seleccionar categorías correspondientes o usar un valor predeterminado
+        String maxPositiveCategory = positiveDifferences.entrySet().stream()
+                .filter(entry -> entry.getValue() == maxPositiveDifference)
+                .map(Map.Entry::getKey)
+                .findFirst()
+                .orElse("No hay diferencias");
+
+        String maxNegativeCategory = negativeDifferences.entrySet().stream()
+                .filter(entry -> entry.getValue() == maxNegativeDifference)
+                .map(Map.Entry::getKey)
+                .findFirst()
+                .orElse("No hay diferencias");
 
         Map<String, Double> result = new LinkedHashMap<>();
-        maxPositive.ifPresent(entry -> result.put(entry.getKey(), entry.getValue()));
-        maxNegative.ifPresent(entry -> result.put(entry.getKey(), entry.getValue()));
+        result.put(maxPositiveCategory, maxPositiveDifference);
+        result.put(maxNegativeCategory, maxNegativeDifference);
 
         return result;
     }

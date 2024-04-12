@@ -1,40 +1,53 @@
 <template>
-  <div class="main-container">
-    <div class="form-container">
-      <form @submit.prevent="submitForm" class="register-form">
-        <div class="form-group">
-          <label for="username">Nombre de usuario</label>
-          <input type="text" id="username" v-model.trim="user.username" required autocomplete="off">
-        </div>
-
-        <div class="form-group">
-          <label for="name">Nombre</label>
-          <input type="text" id="name" v-model.trim="user.name" required autocomplete="off">
-        </div>
-
-        <div class="form-group">
-          <label for="surname">Apellidos</label>
-          <input type="text" id="surname" v-model.trim="user.surname" required autocomplete="off">
-        </div>
-
-        <div class="form-group">
-          <label for="mail">Correo Electrónico</label>
-          <input type="email" id="mail" v-model.trim="user.mail" required autocomplete="off">
-        </div>
-
-        <div class="form-group">
-          <label for="password">Contraseña</label>
-          <input type="password" id="password" v-model.trim="user.password" required autocomplete="off">
-        </div>
-
-        <div class="form-group">
-          <button type="submit">Registrar</button>
-        </div>
-        <div class="form-group">
-          <button type="button" @click="home">Volver atrás</button>
-        </div>
-
-      </form>
+  <div class="container-fluid py-5 bg-custom-blue-900 d-flex align-items-center" style="min-height: 100vh;">
+    <div class="row justify-content-center w-100">
+      <div class="col-sm-12 col-md-6 col-lg-4">
+        <form @submit.prevent="submitForm($event)" class="bg-white shadow p-4 rounded needs-validation" novalidate ref="formRef">
+          <h2 class="text-black mb-4 text-center">Registro de usuario</h2>
+          <div class="mb-3">
+            <label for="username" class="form-label">Nombre de usuario</label>
+            <input type="text" class="form-control" id="username" v-model.trim="user.username" :class="{ 'is-invalid': usernameError || (submitted && !user.username) }" required autocomplete="off">
+            <div v-if="usernameError" class="invalid-feedback">
+              {{ usernameError }}
+            </div>
+            <div v-if="submitted && !user.username" class="invalid-feedback">
+              El usuario es obligatorio.
+            </div>
+          </div>
+          <div class="mb-3">
+            <label for="name" class="form-label">Nombre</label>
+            <input type="text" class="form-control" id="name" v-model.trim="user.name" :class="{ 'is-invalid': (submitted && !user.name) }" required autocomplete="off">
+            <div v-if="submitted && !user.name" class="invalid-feedback">
+              El nombre es obligatorio.
+            </div>
+          </div>
+          <div class="mb-3">
+            <label for="surname" class="form-label">Apellidos</label>
+            <input type="text" class="form-control" id="surname" v-model.trim="user.surname" :class="{ 'is-invalid': (submitted && !user.surname) }" required autocomplete="off">
+            <div v-if="submitted && !user.surname" class="invalid-feedback">
+              El apellido es obligatorio.
+            </div>
+          </div>
+          <div class="mb-3">
+            <label for="mail" class="form-label">Correo Electrónico</label>
+            <input type="email" class="form-control" id="mail" v-model.trim="user.mail" :class="{ 'is-invalid': (submitted && !user.mail) }" required autocomplete="off">
+            <div v-if="submitted && !user.mail" class="invalid-feedback">
+              El email es obligatorio.
+            </div>
+          </div>
+          <div class="mb-3">
+            <label for="password" class="form-label">Contraseña</label>
+            <input type="password" class="form-control" id="password" v-model.trim="user.password" :class="{ 'is-invalid': (submitted && !user.password) }" required autocomplete="off">
+            <div v-if="submitted && !user.password" class="invalid-feedback">
+              La contraseña es obligatoria.
+            </div>
+          </div>
+          <div class="d-flex justify-content-between">
+            <button type="button" class="btn btn-secondary" @click="home">Volver atrás</button>
+            <button type="submit" class="btn btn-primary">Registrar</button>
+          </div>
+        </form>
+      </div>
     </div>
   </div>
 </template>
@@ -55,32 +68,42 @@ export default {
       password: ''
     });
 
+    const submitted = ref(false);
+    const formRef = ref(null);
+    const usernameError = ref('');
+
     const home = () => {
       router.push({ name: 'login' });
     };
 
     const submitForm = async () => {
-      if (!user.value.username || !user.value.name || !user.value.surname || !user.value.mail || !user.value.password) {
-        alert('Por favor, completa todos los campos.');
-        return;
-      }
+      submitted.value = true;
+      if (!formRef.value) return;
 
-      try {
-        await registerUser({ user: user.value, accounting: {
-            name: 'Contabilidad personal',
-            description: `Contabilidad de uso personal del usuario ${user.value.username}`,
-            type: 'PERSONAL'
-          }});
+      formRef.value.classList.add('was-validated');
 
-        alert('Usuario y contabilidad registrados exitosamente.');
-        router.push('/');
-      } catch (error) {
-        console.error('Error al registrar usuario y contabilidad:', error.response.data.error);
-        alert('Error al registrar usuario y contabilidad: ' + error.response.data.error);
+      if(formRef.value.checkValidity()){
+        try {
+          await registerUser({ user: user.value, accounting: {
+              name: 'Contabilidad personal',
+              description: `Contabilidad de uso personal del usuario ${user.value.username}`,
+              type: 'PERSONAL'
+            }});
+
+          alert('Usuario y contabilidad registrados exitosamente.');
+          router.push('/');
+        } catch (error) {
+          if (error.response && error.response.data.error.includes('nombre de usuario')) {
+            usernameError.value = 'Este nombre de usuario ya está registrado.';
+            const usernameInput = formRef.value.querySelector('#username');
+            usernameInput.classList.remove('is-valid');
+            usernameInput.classList.add('is-invalid');
+          }
+        }
       }
     };
 
-  return { user, submitForm, home };
+  return { user, submitForm, home, formRef, submitted, usernameError };
 
 }
 };
@@ -88,64 +111,4 @@ export default {
 
 
 <style scoped>
-.main-container{
-  background-color: var(--blue-chill-300);
-}
-
-.form-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
-  background-color: rgba(255, 255, 255, 0.8);
-  backdrop-filter: blur(5px);
-}
-
-.register-form {
-  padding: 20px;
-  border-radius: 15px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  display: flex;
-  flex-direction: column;
-  gap: 15px;
-  max-width: 400px;
-  width: 100%;
-  background-color: white; /* Fondo sólido para el formulario para mejorar la legibilidad */
-}
-
-.form-group {
-  display: flex;
-  flex-direction: column;
-}
-
-input[type="text"],
-input[type="mail"],
-input[type="password"] {
-  padding: 10px 0;
-  border: none;
-  border-bottom: 2px solid #ccc;
-  background-color: transparent;
-  margin-bottom: 15px;
-}
-
-input[type="text"]:focus,
-input[type="mail"]:focus,
-input[type="password"]:focus {
-  outline: none;
-  border-bottom-color: #007bff;
-}
-
-button {
-  padding: 10px;
-  border: none;
-  border-radius: 5px;
-  background-color: #007bff;
-  color: white;
-  cursor: pointer;
-  align-self: center; /* Asegura que el botón esté centrado en el formulario */
-}
-
-button:hover {
-  background-color: #0056b3;
-}
 </style>

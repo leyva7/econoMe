@@ -25,11 +25,6 @@ public class RolesService {
     }
 
     public Roles createRole(Roles role) {
-        String userUsername = role.getUser().getUsername();
-        Long accountingId = role.getAccounting().getId();
-
-        System.out.println(rolesRepository.findByUserUsernameAndAccountingId(userUsername, accountingId));
-
         return rolesRepository.save(role);
     }
 

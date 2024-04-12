@@ -128,7 +128,7 @@ export default {
   },
   setup() {
     const accountingStore = useAccountingStore();
-    const { accountings, fetchAccountingsAsync, fetchAllAccountingsUserOperationsAsync, allAccountingUserOperations, fetchCategoriesSpentAsync, fetchCategoriesIncomeAsync, fetchCategoriesAsync, categories, fetchUserRoleAsync, userRole } = accountingStore;
+    const { accountings, loadAccountings, fetchAllAccountingsUserOperationsAsync, allAccountingUserOperations, fetchCategoriesSpentAsync, fetchCategoriesIncomeAsync, fetchCategoriesAsync, categories, fetchUserRoleAsync, userRole } = accountingStore;
 
     const selectedAccountingId = ref(null);
     const selectedType = ref('');
@@ -148,7 +148,7 @@ export default {
     const filteredOperations = ref([]); // Para las operaciones filtradas
 
     onMounted(async () => {
-      await fetchAccountingsAsync();
+      await loadAccountings();
       await fetchAllAccountingsUserOperationsAsync();
       await fetchRolesForAccountings();
       filteredOperations.value = allAccountingUserOperations.value;

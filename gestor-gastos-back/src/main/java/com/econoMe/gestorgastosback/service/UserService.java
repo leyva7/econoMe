@@ -27,10 +27,10 @@ public class UserService{
         this.accountingService = accountingService;
         this.passwordEncoder = passwordEncoder;
     }
+
     public User createUser(User user){
         // Verificar si el nombre de usuario ya está en uso
         if (userRepository.existsByUsername(user.getUsername())) {
-            System.out.println("aaaddd");
             throw new UserException("El nombre de usuario ya está en uso");
         }
 
@@ -39,7 +39,6 @@ public class UserService{
             throw new UserException("El correo electrónico ya está en uso");
         }
 
-        user.setPassword(passwordEncoder.encode(user.getPassword())); // Asegúrate de codificar la contraseña antes de guardarla.
         return userRepository.save(user);
     }
 
