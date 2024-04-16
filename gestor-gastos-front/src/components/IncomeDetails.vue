@@ -1,6 +1,8 @@
 <template>
   <div class="container mt-5">
-    <h2 class="text-center mb-4">{{ hasData ? 'Este mes has ingresado: ' + totalIncomeMonth.toFixed(2) + ' €' : 'No hay datos disponibles' }}</h2>
+    <h2 class="text-center mb-4">{{ hasData ? 'Ingresos totales: ' + totalIncomeMonth.toFixed(2) + ' €' : 'No hay datos disponibles' }}</h2>
+
+    <IntervalSelector :isVisible="showElement" @update-selection="updateData" />
 
     <div v-if="hasData" class="row g-4">
       <!-- Gráfico por Categorías y Últimos Gastos en pantallas grandes; se apilan en pantallas más pequeñas -->
@@ -21,7 +23,7 @@
             <tbody>
             <tr v-for="(income, index) in processedIncomes" :key="income.category">
               <td>
-                <span class="category-color" :style="{ backgroundColor: categoryColors[index] }"></span>
+                <span class="category-color" :style="{ backgroundColor: incomeCategoryColors[index] }"></span>
                 {{ income.category }}
               </td>
               <td>{{ income.total.toFixed(2) }}</td>
@@ -39,25 +41,35 @@
           </div>
         </div>
       </div>
-      <div class="col-12">
-        <div class="p-3 bg-white rounded shadow">
-          <h3 class="mb-3 text-center">Últimos ingresos</h3>
-          <table class="table">
-            <thead>
-            <tr>
-              <th>Categoría</th>
-              <th>Cantidad</th>
-              <th>Fecha</th>
-            </tr>
-            </thead>
-            <tbody>
-            <tr v-for="income in latestIncomes" :key="income.id">
-              <td>{{ income.category }}</td>
-              <td>{{ income.quantity.toFixed(2) }}</td>
-              <td>{{ income.date }}</td>
-            </tr>
-            </tbody>
-          </table>
+      <div v-if="hasData" class="mt-3 col-12">
+        <div class="bg-white rounded shadow p-3">
+          <h3 class="text-center mb-3">Últimas operaciones</h3>
+          <!-- Tabla de Últimas Operaciones -->
+          <div class="table-container table-responsive">
+            <table class="table">
+              <thead>
+              <tr>
+                <th>Tipo de operación</th>
+                <th>Categoría</th>
+                <th>Cantidad</th>
+                <th>Fecha</th>
+              </tr>
+              </thead>
+              <tbody>
+              <tr v-for="operation in paginatedOperations" :key="operation.id">
+                <td>{{ operation.type === 'INCOME' ? 'Ingreso' : 'Gasto' }}</td>
+                <td>{{ operation.category }}</td>
+                <td>{{ operation.quantity.toFixed(2) }}</td>
+                <td>{{ operation.date }}</td>
+              </tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="pagination-container d-flex justify-content-center mb-4">
+            <button @click="prevPage" class="btn btn-secondary me-2" :disabled="currentPage <= 1">Anterior</button>
+            <span class="me-2">Página {{ currentPage }} de {{ totalPages }}</span>
+            <button @click="nextPage" class="btn btn-secondary" :disabled="currentPage >= totalPages">Siguiente</button>
+          </div>
         </div>
       </div>
     </div>
@@ -68,139 +80,94 @@
 
 <script>
 import { Chart, registerables } from 'chart.js';
-import { onMounted, ref, nextTick } from 'vue';
+import {onMounted, ref, nextTick} from 'vue';
 import { useAccountingStore } from '../stores/accountingStore';
+import {commonOptions, incomeCategoryColors, pieOptions} from "@/utils/global";
+import {usePagination} from "@/utils/usePagination";
+import {processFilterSelection} from "@/utils/functions";
+import IntervalSelector from "@/components/IntervalSelector.vue";
+import {createChart} from "@/utils/chartService";
 
 Chart.register(...registerables);
 
 export default {
   name: "IncomeDetails",
+  components:{ IntervalSelector },
   setup() {
-    const { accountingId, processedIncomes, fetchIncomeAsync,fetchIncomeMonthsAsync, incomesMonths, totalIncomeMonth, latestIncomes, monthlyIncomeData} = useAccountingStore();
+    const { accountingId, processedIncomes, fetchIncomeAsync,fetchIncomeMonthsAsync, incomesMonths, latestIncomes, monthlyIncomeData, totalIncomeMonth, processDailyIncomeData} = useAccountingStore();
+    const { currentPage, totalPages, paginatedOperations, nextPage, prevPage } = usePagination(incomesMonths);
     const chart = ref(null);
     const linesChart = ref(null);
-    // Variable reactiva para determinar si hay datos
     const hasData = ref(false);
 
+    const showElement = ref(false);
+
     onMounted(async () => {
-      await fetchIncomeMonthsAsync(accountingId.value);
-      await fetchIncomeAsync(accountingId.value);
-      console.log(monthlyIncomeData.value);
-      // Revisa después de obtener los datos si hay gastos
-      hasData.value = incomesMonths.value.length > 0;
-      nextTick(() => {
-        if (hasData.value) {
-          initChart();
-          initLineChart();
-        }
-      });
+      updateData();
     });
 
-    const initChart = () => {
-      const ctx = document.getElementById('topCategoriesChart');
-      if (ctx && chart.value) {
-        chart.value.destroy(); // Destruye el gráfico anterior si existe
+    const updateData = async (selection) => {
+      if (!selection || !selection.interval) {
+        return;
       }
-      if (ctx) {
-        chart.value = new Chart(ctx, {
-          type: 'bar', // Cambia 'pie' por 'bar'
-          data: {
-            labels: processedIncomes.value.map(({ category }) => category), // Categorías
-            datasets: [{
-              label: 'Total por categoría',
-              data: processedIncomes.value.map(({ total }) => total), // Totales
-              backgroundColor: [
-                '#183c27', '#297243', '#5dac75', '#5dac75', '#5dac75', '#a4b0be'
-              ],
-              borderColor: [
-                '#183c27', '#297243', '#5dac75', '#5dac75', '#5dac75', '#a4b0be'
-              ],
-              borderWidth: 1
-            }]
-          },
-          options: {
-            scales: {
-              y: {
-                beginAtZero: true,
-                ticks: {
-                  color: 'black',
-                  font: {
-                    size: 16 // Tamaño de la letra en el eje Y
-                  }
-                }
-              },
-              x: {
-                display:false,
-                ticks: {
-                  color: 'black',
-                  font: {
-                    size: 16 // Tamaño de la letra en el eje X
-                  }
-                }
-              }
-            },
-            responsive: true,
-            plugins: {
-              legend: {
-                display: false // Puedes cambiarlo a true si deseas mostrar la leyenda
-              }
-            }
-          }
-        });
+
+      setTimeout(() => {
+        showElement.value = true;
+      }, 1000);
+
+      const { filterType, startDate, endDate } = processFilterSelection(selection);
+
+      console.log(`Fetching with accountingId: ${accountingId.value}, filterType: ${filterType}, startDate: ${startDate}, endDate: ${endDate}`);
+
+      await fetchIncomeMonthsAsync(accountingId.value, filterType, startDate, endDate);
+
+      hasData.value = (totalIncomeMonth.value > 0);
+
+      await nextTick();
+      initChart();
+      initLineChart();
+    };
+
+    const initChart = () => {
+      showElement.value = false;
+      const pieCtx = document.getElementById('topCategoriesChart');
+      if (pieCtx) {
+        if (pieCtx && chart.value) {
+          chart.value.destroy();
+        }
+        const pieData = {
+          labels: processedIncomes.value.map(s => s.category),
+          datasets: [{
+            data: processedIncomes.value.map(s => s.total),
+            backgroundColor: incomeCategoryColors,
+          }]
+        };
+        chart.value = createChart(pieCtx, 'pie', pieData, commonOptions, pieOptions);
       }
     };
 
     const initLineChart = () => {
-      const ctx = document.getElementById('lineChart');
-      if (ctx) {
-        if(linesChart.value) linesChart.value.destroy(); // Destruye el chart anterior si existe
-        linesChart.value = new Chart(ctx, {
-          type: 'line',
-          data: {
-            labels: monthlyIncomeData.value.map(data => `${data.month}`),
-            datasets: [{
-              label: 'Ingresos por mes',
-              data: monthlyIncomeData.value.map(data => data.total),
-              fill: false,
-              borderColor: '#297243',
-              tension: 0.1
-            }]
-          },
-          options: {
-            scales: {
-              y: {
-                beginAtZero: true,
-                ticks: {
-                  color: 'black',
-                  font: {
-                    size: 16 // Tamaño de la letra en el eje Y
-                  }
-                }
-              },
-              x: {
-                ticks: {
-                  color: 'black',
-                  font: {
-                    size: 16 // Tamaño de la letra en el eje X
-                  }
-                }
-              }
-            },
-            responsive: true,
-            plugins: {
-              legend: {
-                display: false // Esto desactivará la leyenda del gráfico
-              }
-            }
-          }
-        });
+      showElement.value = false;
+      const lineCtx = document.getElementById('lineChart');
+      if (lineCtx) {
+        if(linesChart.value) linesChart.value.destroy();
+        const lineData = {
+          labels: processDailyIncomeData.value.map(item => item.date),
+          datasets: [{
+            label: 'Ingresos totales',
+            data: processDailyIncomeData.value.map(item => item.total),
+            fill: false,
+            borderColor: '#297243',
+            tension: 0.1
+          }]
+        }
+        linesChart.value = createChart(lineCtx, 'line', lineData, commonOptions)
       }
     };
 
     return {
-      incomesMonths, fetchIncomeAsync, fetchIncomeMonthsAsync, accountingId, processedIncomes, hasData, totalIncomeMonth, latestIncomes, monthlyIncomeData, categoryColors: [
-        '#183c27', '#297243', '#5dac75', '#5dac75', '#5dac75', '#a4b0be'
-      ],
+      processDailyIncomeData, totalIncomeMonth, incomesMonths, fetchIncomeAsync, fetchIncomeMonthsAsync, processedIncomes, hasData, latestIncomes, monthlyIncomeData, incomeCategoryColors,
+      nextPage, prevPage, paginatedOperations, currentPage, showElement, totalPages, updateData
     };
   },
 };

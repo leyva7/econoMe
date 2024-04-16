@@ -20,7 +20,7 @@
 </template>
 
 <script>
-import { provide, ref, onMounted, watch} from 'vue';
+import {provide, ref, onMounted} from 'vue';
 import { computed } from 'vue';
 import { useRouter } from 'vue-router';
 import SidebarPage from "@/components/AppSidebar.vue";
@@ -28,7 +28,6 @@ import AddAccountingModal from "@/components/AddAccountingModal.vue";
 import AddOperationModal from "@/components/AddOperationModal.vue";
 import TopBar from "@/components/TopBar.vue";
 import { useAccountingStore } from '@/stores/accountingStore.js';
-import { globalStore } from '@/stores/globalStore';
 
 export default {
   name: 'UserHome',
@@ -40,20 +39,13 @@ export default {
   },
   setup() {
     const isModalOpen = ref(false);
-    const { accountings, sharedAccountings, loadAccountings, userRole, fetchUserRoleAsync, categories, fetchCategories} = useAccountingStore();
-    const {accountingId} = globalStore();
+    const { accountingId, accountings, sharedAccountings, loadAccountings, userRole, fetchUserRoleAsync, categories, fetchCategories} = useAccountingStore();
     const modalContentType = ref('');
     const router = useRouter();
 
     onMounted(async () => {
       await loadAccountings();
       await fetchUserRoleAsync(accountingId.value);
-    });
-
-    watch(accountingId, async (newId, oldId) => {
-      if (newId !== oldId) {
-        await fetchUserRoleAsync(newId);
-      }
     });
 
     const handleOpenModal = (type) => {

@@ -18,6 +18,7 @@
     </div>
 
     <div class="row g-4">
+      <IntervalSelector :isVisible="showElement" @update-selection="updateData" />
       <!-- Gráficos de Categorías y Últimas Operaciones -->
       <div class="col-12 col-lg-4 mb-2">
         <div class="card h-100">
@@ -46,24 +47,31 @@
           <h4 class="card-header">Últimas Operaciones</h4>
           <div class="card-body">
             <!-- Tabla de Últimas Operaciones -->
-            <table class="table">
-              <thead>
-              <tr>
-                <th>Categoría</th>
-                <th>Cantidad</th>
-                <th>Tipo</th>
-                <th>Fecha</th>
-              </tr>
-              </thead>
-              <tbody>
-              <tr v-for="operation in latestOperations" :key="operation.id">
-                <td>{{ operation.category }}</td>
-                <td>{{ operation.quantity.toFixed(2) }}</td>
-                <td>{{ operation.type === 'INCOME' ? 'Ingreso' : 'Gasto' }}</td>
-                <td>{{ operation.date }}</td>
-              </tr>
-              </tbody>
-            </table>
+            <div class="table-container table-responsive">
+              <table class="table">
+                <thead>
+                <tr>
+                  <th>Tipo de operación</th>
+                  <th>Categoría</th>
+                  <th>Cantidad</th>
+                  <th>Fecha</th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr v-for="operation in paginatedOperations" :key="operation.id">
+                  <td>{{ operation.type === 'INCOME' ? 'Ingreso' : 'Gasto' }}</td>
+                  <td>{{ operation.category }}</td>
+                  <td>{{ operation.quantity.toFixed(2) }}</td>
+                  <td>{{ operation.date }}</td>
+                </tr>
+                </tbody>
+              </table>
+            </div>
+            <div class="pagination-container d-flex justify-content-center mb-4">
+              <button @click="prevPage" class="btn btn-secondary me-2" :disabled="currentPage <= 1">Anterior</button>
+              <span class="me-2">Página {{ currentPage }} de {{ totalPages }}</span>
+              <button @click="nextPage" class="btn btn-secondary" :disabled="currentPage >= totalPages">Siguiente</button>
+            </div>
           </div>
         </div>
       </div>
@@ -86,7 +94,7 @@
               <tbody>
               <tr v-for="(spent, index) in processedSpents" :key="spent.category">
                 <td>
-                  <span class="category-color" :style="{ backgroundColor: categorySpentColors[index] }"></span>
+                  <span class="category-color" :style="{ backgroundColor: spentCategoryColors[index] }"></span>
                   {{ spent.category }}
                 </td>
                 <td>{{ spent.total.toFixed(2) }}</td>
@@ -126,7 +134,7 @@
               <tbody>
               <tr v-for="(income, index) in processedIncomes" :key="income.category">
                 <td>
-                  <span class="category-color" :style="{ backgroundColor: categoryIncomeColors[index] }"></span>
+                  <span class="category-color" :style="{ backgroundColor: incomeCategoryColors[index] }"></span>
                   {{ income.category }}
                 </td>
                 <td>{{ income.total.toFixed(2) }}</td>
@@ -169,23 +177,32 @@
 </template>
 
 <script>
+import {spentCategoryColors, incomeCategoryColors} from "@/utils/global";
+import {usePagination} from "@/utils/usePagination";
 import { useAccountingStore } from '@/stores/accountingStore.js';
 import {deleteUserAccounting as deleteAccountingApi} from "@/service/accountingService"
 import {ref, onMounted, nextTick} from "vue";
 import { useRouter } from 'vue-router';
 import {Chart} from "chart.js";
 import UserManagementModal from "@/components/UserManagementModal.vue";
+import IntervalSelector from "@/components/IntervalSelector.vue";
+import {processFilterSelection} from "@/utils/functions";
 export default {
   name: "SharedAccountings",
   components: {
     UserManagementModal,
+    IntervalSelector
   },
   setup() {
     const accountingStore = useAccountingStore();
     const {accountings, sharedAccountings, loadAccountings, accountingId, fetchUsersAccountingAsync, usersAccounting, accountingSharedSelected, processedSpents,
-      spentsMonths, fetchSpentsMonthsAsync, processedIncomes, incomesMonths, fetchIncomeMonthsAsync, processedSpentsUser, processedIncomesUser, latestOperations, fetchOperationsAsync} = accountingStore;
+      spentsMonths, fetchSpentsInterval, processedIncomes, incomesMonths, fetchIncomeMonthsAsync, processedSpentsUser, processedIncomesUser, fetchOperationsAsync, operations,
+      totalSpentMonth, totalIncomeMonth} = accountingStore;
+    const { currentPage, totalPages, paginatedOperations, nextPage, prevPage } = usePagination(operations, true);
+
     const router = useRouter();
     const isUserCreator = ref(false);
+
     const chart = ref(null);
     const chartIncomes = ref(null);
     const hasDataSpent = ref(false);
@@ -194,25 +211,44 @@ export default {
 
     const isUserManagementModalOpen = ref(false);
 
+    const showElement = ref(false);
+
+
     onMounted(async () => {
       await loadAccountings();
       calculateIsUserCreator();
       await fetchUsersAccountingAsync(accountingId.value);
-      await fetchSpentsMonthsAsync(accountingId.value);
-      await fetchIncomeMonthsAsync(accountingId.value);
-      await fetchOperationsAsync(accountingId.value);
       hasDataSpent.value = spentsMonths.value.length > 0;
       hasDataIncome.value = incomesMonths.value.length > 0;
-      hasDataOperations.value = latestOperations.value.length > 0;
-      nextTick(() => {
-        if (hasDataSpent.value) {
-          initChart();
-        }
-        if (hasDataIncome.value){
-          initIncomeChart();
-        }
-      });
+      hasDataOperations.value = operations.value.length > 0;
+      updateData();
     });
+
+    const updateData = async (selection) => {
+      if (!selection || !selection.interval) {
+        return;
+      }
+
+      setTimeout(() => {
+        showElement.value = true;
+      }, 1000);
+
+      const { filterType, startDate, endDate } = processFilterSelection(selection);
+
+      console.log(`Fetching with accountingId: ${accountingId.value}, filterType: ${filterType}, startDate: ${startDate}, endDate: ${endDate}`);
+
+      await fetchSpentsInterval(accountingId.value, filterType, startDate, endDate);
+      await fetchIncomeMonthsAsync(accountingId.value, filterType, startDate, endDate);
+      await fetchOperationsAsync(accountingId.value, filterType, startDate, endDate);
+      console.log(operations.value);
+
+      hasDataSpent.value = (totalSpentMonth.value > 0);
+      hasDataIncome.value = (totalIncomeMonth.value > 0);
+
+      await nextTick();
+      initChart();
+      initIncomeChart()
+    };
 
     const openUserManagementModal = () => {
       isUserManagementModalOpen.value = true;
@@ -261,7 +297,7 @@ export default {
             labels: processedSpents.value.map(({ category }) => category),
             datasets: [{
               data: processedSpents.value.map(({ total }) => total),
-              backgroundColor: ['#480707', '#a01414', '#e61c1c', '#ff6a6a', '#ffc7c7', '#a4b0be'],
+              backgroundColor: spentCategoryColors,
             }]
           },
           options: {
@@ -277,7 +313,7 @@ export default {
             maintainAspectRatio: false,
             plugins: {
               legend: {
-                display: false,
+                display: true,
                 position: 'top',
                 align: 'center',
                 padding: '100',
@@ -307,9 +343,7 @@ export default {
             datasets: [{
               label: 'Total por categoría',
               data: processedIncomes.value.map(({ total }) => total), // Totales
-              backgroundColor: [
-                '#183c27', '#297243', '#5dac75', '#5dac75', '#5dac75', '#a4b0be'
-              ]
+              backgroundColor: incomeCategoryColors
             }]
           },
           options: {
@@ -338,7 +372,7 @@ export default {
             maintainAspectRatio: false,
             plugins: {
               legend: {
-                display: false,
+                display: true,
                 position: 'top',
                 align: 'center',
                 padding: '100',
@@ -368,10 +402,10 @@ export default {
       hasDataSpent, hasDataIncome, hasDataOperations,
       processedSpentsUser,
       processedIncomesUser,
-      latestOperations,
       isUserManagementModalOpen, openUserManagementModal, closeModal,
-      categorySpentColors: ['#480707', '#a01414', '#e61c1c', '#ff6a6a', '#ffc7c7', '#a4b0be'],
-      categoryIncomeColors: ['#183c27', '#297243', '#5dac75', '#5dac75', '#5dac75', '#a4b0be']
+      incomeCategoryColors, spentCategoryColors,
+      paginatedOperations, nextPage, prevPage, totalPages, currentPage, updateData,
+      showElement
     };
   }
 }

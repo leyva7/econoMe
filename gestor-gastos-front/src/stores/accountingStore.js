@@ -15,6 +15,8 @@ import {
     fetchAllAccountingsUserOperations, fetchSpentsFiltered
 } from '@/service/operationService';
 
+import { processLinearGraphData } from '@/utils/functions';
+
 export const useAccountingStore = () => {
     const router = useRouter();
     const accountings = ref([]);
@@ -38,35 +40,13 @@ export const useAccountingStore = () => {
     const allAccountingUserOperations = ref([]);
     const spents = ref([]);
     const spentsMonths = ref([]);
-    const weeklySpentData = ref([]);
+    const dailySpentData = ref([]);
     const incomes = ref([]);
     const incomesMonths = ref([]);
     const monthlyIncomeData = ref([]);
     const monthlySpentData = ref([]);
     const categoriesDifferences = ref([]);
     const usersAccounting = ref([]);
-
-    function formatDateToDDMMYYYY(date) {
-        const d = new Date(date);
-        let day = '' + d.getDate();
-        let month = '' + (d.getMonth() + 1);
-        const year = d.getFullYear();
-
-        if (day.length < 2)
-            day = '0' + day;
-        if (month.length < 2)
-            month = '0' + month;
-
-        return [day, month, year].join('-');
-    }
-
-    function formatAsYYYYMMDD (date) {
-        if (!date) return null;
-        const d = new Date(date);
-        const month = `${d.getMonth() + 1}`.padStart(2, '0'); // Meses son de 0-11
-        const day = `${d.getDate()}`.padStart(2, '0');
-        return `${d.getFullYear()}-${month}-${day}`;
-    }
 
     const loadAccountings = async () => {
         try {
@@ -176,7 +156,6 @@ export const useAccountingStore = () => {
         try {
             const response = await fetchSpents(accountingId);
             spents.value = response.data;
-            processMonthlySpentData();
         } catch (error) {
             console.error('Hubo un error al obtener los gastos:', error);
         }
@@ -186,7 +165,6 @@ export const useAccountingStore = () => {
         try {
             const response = await fetchSpentsFiltered(accountingId, filterType, startDate, endDate);
             spentsMonths.value = response.data;
-            processWeeklySpentData();
         } catch (error) {
             console.error('Hubo un error al obtener los gastos:', error);
         }
@@ -229,92 +207,18 @@ export const useAccountingStore = () => {
         return spentsMonths.value.reduce((total, { quantity }) => total + quantity, 0);
     });
 
-    const processWeeklySpentData = () => {
-        const weeks = {};
-        spentsMonths.value.forEach(spent => {
-            // Convierte la fecha de dd-mm-yyyy a yyyy-mm-dd
-            const [day, month, year] = spent.date.split('-');
-            const spentDate = new Date(`${year}-${month}-${day}`);
-
-            const dayOfMonth = spentDate.getDate();
-
-            // Determina la semana del mes basada en el día
-            let weekOfMonth;
-            if (dayOfMonth <= 7) {
-                weekOfMonth = 1;
-            } else if (dayOfMonth <= 14) {
-                weekOfMonth = 2;
-            } else if (dayOfMonth <= 21) {
-                weekOfMonth = 3;
-            } else if (dayOfMonth <= 28) {
-                weekOfMonth = 4;
-            } else {
-                weekOfMonth = 5;
-            }
-
-            if (!weeks[weekOfMonth]) {
-                weeks[weekOfMonth] = 0;
-            }
-            weeks[weekOfMonth] += spent.quantity;
-        });
-
-        // Prepara los datos para el gráfico
-        weeklySpentData.value = Object.entries(weeks).map(([week, total]) => {
-            return { week: `Semana ${week}`, total };
-        });
-    };
-
-
-    const processMonthlySpentData = () => {
-        const now = new Date();
-        let monthCounts = Array.from({ length: 6 }, (_, i) => {
-            let date = new Date(now.getFullYear(), now.getMonth() - i, 1);
-            let month = date.toLocaleString('default', { month: 'short' }).substring(0, 3); // Abreviación del mes
-            let year = date.getFullYear().toString().substring(2); // Últimos dos dígitos del año
-            return `${month} ${year}`;
-        }).reverse();
-
-        let spentSums = monthCounts.map(month => {
-            return {
-                month: month,
-                total: 0
-            };
-        });
-
-        spents.value.forEach(spent => {
-            let spentDate = new Date(spent.date);
-            let spentMonth = spentDate.toLocaleString('default', { month: 'short' }).substring(0, 3); // Abreviación del mes
-            let spentYear = spentDate.getFullYear().toString().substring(2); // Últimos dos dígitos del año
-            let spentMonthYear = `${spentMonth} ${spentYear}`;
-            let index = spentSums.findIndex(sum => sum.month === spentMonthYear);
-            if (index !== -1) {
-                spentSums[index].total += spent.quantity;
-            }
-        });
-
-        monthlySpentData.value = spentSums;
-    };
-
-
-
-    const latestSpents = computed(() => {
-        return spentsMonths.value
-            .slice()
-            .sort((a, b) => new Date(b.date.split('-').reverse().join('-')) - new Date(a.date.split('-').reverse().join('-')))
-            .slice(0, 5);
+    const processDailySpentData = computed(() => {
+        return processLinearGraphData(spentsMonths.value);
     });
 
     const topSpentCategory = computed(() => {
-        // Asumiendo que processedSpents está ordenado, toma la primera categoría como la principal
         return processedSpents.value[0] || null;
     });
-
 
     const fetchIncomeAsync = async (accountingId) => {
         try {
             const response = await fetchIncomes(accountingId);
             incomes.value = response.data;
-            processMonthlyIncomeData();
         } catch (error) {
             console.error('Hubo un error al obtener los gastos:', error);
         }
@@ -365,33 +269,9 @@ export const useAccountingStore = () => {
         return incomesMonths.value.reduce((total, { quantity }) => total + quantity, 0);
     });
 
-    const processMonthlyIncomeData = () => {
-        const now = new Date();
-        let monthCounts = Array.from({ length: 6 }, (_, i) => {
-            let date = new Date(now.getFullYear(), now.getMonth() - i, 1);
-            let month = date.toLocaleString('default', { month: 'short' }); // Obtiene la abreviatura del mes
-            let year = date.getFullYear().toString().slice(-2); // Últimos dos dígitos del año
-            return `${month} ${year}`; // Combina mes y año
-        }).reverse(); // Asegura el orden correcto
-
-        let incomeSums = monthCounts.map(month => ({
-            month,
-            total: 0,
-        }));
-
-        incomes.value.forEach(income => {
-            let incomeDate = new Date(income.date.split('-').reverse().join('/')); // Convierte a formato adecuado para JS
-            let incomeMonth = incomeDate.toLocaleString('default', { month: 'short' }); // Obtiene la abreviatura del mes
-            let incomeYear = incomeDate.getFullYear().toString().slice(-2); // Últimos dos dígitos del año
-            let incomeMonthYear = `${incomeMonth} ${incomeYear}`;
-            let index = incomeSums.findIndex(sum => sum.month === incomeMonthYear);
-            if (index !== -1) {
-                incomeSums[index].total += income.quantity;
-            }
-        });
-
-        monthlyIncomeData.value = incomeSums;
-    };
+    const processDailyIncomeData = computed(() => {
+        return processLinearGraphData(incomesMonths.value);
+    });
 
 
     const latestIncomes = computed(() => {
@@ -402,14 +282,11 @@ export const useAccountingStore = () => {
     });
 
     const monthlySavingsData = computed(() => {
-        // Asumimos que monthlySpentData y monthlyIncomeData están alineados por mes.
-        const savings = monthlyIncomeData.value.map((income, index) => {
-            // Encuentra el gasto correspondiente al mismo mes.
-            const expense = monthlySpentData.value[index];
-            // Calcula el ahorro como la diferencia entre ingresos y gastos.
-            const totalSavings = income.total - (expense ? expense.total : 0);
+        const savings = processedIncomes.value.map(income => {
+            const expense = processedSpents.value.find(e => e.date === income.date) || { total: 0 };
+            const totalSavings = income.total - expense.total;
             return {
-                month: income.month,
+                date: income.date,
                 totalSavings
             };
         });
@@ -447,9 +324,9 @@ export const useAccountingStore = () => {
 
     return {
         accountings, loadAccountings: loadAccountings, userRole, fetchUserRoleAsync, fetchCategoriesSpentAsync, fetchCategoriesIncomeAsync, categories, fetchAccountingPersonalAsync, accountingPersonal, username, accountingName, logout, navigate:router.push, modifyUser, modifyPassword,
-        fetchOperationsAsync, operations, fetchSpentsAsync, spents, accountingId, processedSpents, fetchSpentsInterval, spentsMonths, totalSpentMonth, latestSpents, weeklySpentData, processMonthlySpentData, monthlySpentData ,fetchIncomeMonthsAsync,
-        fetchIncomeAsync, incomesMonths, incomes,totalIncomeMonth, latestIncomes, monthlyIncomeData, processedIncomes, processMonthlyIncomeData, monthlySavingsData, topSpentCategory, topIncomeCategory, categoryDifferencesAsync,
+        fetchOperationsAsync, operations, fetchSpentsAsync, spents, accountingId, processedSpents, fetchSpentsInterval, spentsMonths, totalSpentMonth, monthlySpentData ,fetchIncomeMonthsAsync,
+        fetchIncomeAsync, incomesMonths, incomes,totalIncomeMonth, latestIncomes, monthlyIncomeData, processedIncomes, processDailyIncomeData, monthlySavingsData, topSpentCategory, topIncomeCategory, categoryDifferencesAsync,
         categoriesDifferences, sharedAccountings, fetchUsersAccountingAsync, usersAccounting, accountingSharedSelected, processedSpentsUser, processedIncomesUser, fetchCategoriesAsync,
-        fetchAllOperationsAsync, allOperations, fetchAllAccountingsUserOperationsAsync, allAccountingUserOperations, formatDateToDDMMYYYY, formatAsYYYYMMDD
+        fetchAllOperationsAsync, allOperations, fetchAllAccountingsUserOperationsAsync, allAccountingUserOperations, processDailySpentData, dailySpentData
     };
 };

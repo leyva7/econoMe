@@ -3,19 +3,7 @@
     <h2 v-if="hasData" class="text-center mb-4">Resumen</h2>
     <h2 v-else class="text-center mb-4">No hay datos disponibles</h2>
 
-    <div class="filters-container pb-4">
-      <select v-if="showElement" v-model="selectedInterval" @change="updateData" class="interval-select">
-        <option value="last7days">Últimos 7 días</option>
-        <option value="last30days">Últimos 30 días</option>
-        <option value="custom">Personalizado</option>
-      </select>
-      <div v-if="selectedInterval === 'custom'" class="custom-interval-container me-2">
-        <input type="date" v-model="customStart" class="date-input" />
-        <input type="date" v-model="customEnd" class="date-input" />
-        <button @click="updateData" class="update-button">Actualizar</button>
-      </div>
-    </div>
-
+    <IntervalSelector :isVisible="showElement" @update-selection="updateData" />
 
     <!-- Contenedor para Gastos VS Ingresos y Detalles -->
     <div v-if="hasData" class="row">
@@ -136,53 +124,42 @@
 <script>
 
 import { Chart, registerables } from 'chart.js';
-import { onMounted, ref, nextTick, computed, inject} from 'vue';
+import { onMounted, ref, nextTick} from 'vue';
 import { useAccountingStore } from '../stores/accountingStore';
+import {usePagination} from "@/utils/usePagination";
+import {processFilterSelection} from "@/utils/functions";
+import IntervalSelector from "./IntervalSelector.vue";
+import {commonOptions, pieOptions} from "@/utils/global";
+import {createChart} from "@/utils/chartService";
 
 Chart.register(...registerables);
 export default {
   name: "HomeDetails",
+  components:{ IntervalSelector },
   setup() {
-    const { accountingId, fetchSpentsInterval, totalSpentMonth, fetchIncomeMonthsAsync, totalIncomeMonth, topSpentCategory, topIncomeCategory, categoriesDifferences, categoryDifferencesAsync, operations, fetchOperationsAsync, formatAsYYYYMMDD } = useAccountingStore();
+    const { accountingId, fetchSpentsInterval, totalSpentMonth, fetchIncomeMonthsAsync, totalIncomeMonth, topSpentCategory, topIncomeCategory, categoriesDifferences, categoryDifferencesAsync, operations, fetchOperationsAsync } = useAccountingStore();
+    const { currentPage, totalPages, paginatedOperations, nextPage, prevPage } = usePagination(operations);
+
     const chart = ref(null);
-    // Variable reactiva para determinar si hay datos
+
     const hasData = ref(false);
 
     const showElement = ref(false);
 
-    const selectedInterval = ref('last7days'); // Valor predeterminado
-    const customStart = ref('');
-    const customEnd = ref('');
-
-    const currentPage = ref(1);
-    const operationsPerPage = 7;
-
-    const accountingIID = inject('accountingId');
-
     onMounted(async () => {
       updateData();
-      hasData.value = totalSpentMonth.value > 0;
     });
 
-    const updateData = async () => {
-      console.log(accountingIID);
-      setTimeout(() => {
-        showElement.value = true; // Mostramos el componente después del retraso
-      }, 1000);
-      let filterType;
-      let startDate = formatAsYYYYMMDD(customStart.value);
-      let endDate = formatAsYYYYMMDD(customEnd.value);
-
-      if (selectedInterval.value === 'custom') {
-        if (!customStart.value || !customEnd.value) {
-          return;
-        }
-        startDate = formatAsYYYYMMDD(customStart.value);
-        endDate = formatAsYYYYMMDD(customEnd.value);
-        filterType = 'custom';
-      } else {
-        filterType = selectedInterval.value;
+    const updateData = async (selection) => {
+      if (!selection || !selection.interval) {
+        return;
       }
+
+      setTimeout(() => {
+        showElement.value = true;
+      }, 1000);
+
+      const { filterType, startDate, endDate } = processFilterSelection(selection);
 
       console.log(`Fetching with accountingId: ${accountingId.value}, filterType: ${filterType}, startDate: ${startDate}, endDate: ${endDate}`);
 
@@ -199,22 +176,6 @@ export default {
       initChart();
     };
 
-    const totalPages = computed(() => Math.ceil(operations.value.length / operationsPerPage));
-
-    const paginatedOperations = computed(() => {
-      const start = (currentPage.value - 1) * operationsPerPage;
-      const end = start + operationsPerPage;
-      return operations.value.slice(start, end);
-    });
-
-    const nextPage = () => {
-      if (currentPage.value < totalPages.value) currentPage.value++;
-    };
-
-    const prevPage = () => {
-      if (currentPage.value > 1) currentPage.value--;
-    };
-
     const initChart = () => {
       showElement.value = false;
       const ctx = document.getElementById('comparativeChart');
@@ -222,43 +183,21 @@ export default {
         if (chart.value) {
           chart.value.destroy();
         }
-        const spentTotal = totalSpentMonth.value;
-        const incomeTotal = totalIncomeMonth.value;
+        const summary = {
+          labels: ['Ingresos', 'Gastos'],
+          datasets: [{
+            data: [totalSpentMonth.value, totalIncomeMonth.value],
+            backgroundColor: ['#a01414', '#297243'],
+          }]
+        };
 
-        chart.value = new Chart(ctx, {
-          type: 'pie',
-          data: {
-            labels: ['Ingresos', 'Gastos'],
-            datasets: [{
-              data: [incomeTotal, spentTotal],
-              backgroundColor: ['#297243', '#a01414'],
-            }]
-          },
-          options: {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-              legend: {
-                position: 'top',
-                labels: {
-                  color: 'black',
-                  font: {
-                    size: 16
-                  }
-                }
-              },
-            }
-          },
-        });
+        chart.value = createChart(ctx, 'pie', summary, commonOptions, pieOptions);
       }
     };
 
 
     return {
       accountingId, hasData, totalSpentMonth, fetchIncomeMonthsAsync, totalIncomeMonth, topSpentCategory, topIncomeCategory, categoriesDifferences, categoryDifferencesAsync, fetchOperationsAsync, operations,
-      selectedInterval,
-      customStart,
-      customEnd,
       updateData,
       showElement,
       paginatedOperations, totalPages, currentPage, nextPage, prevPage
@@ -269,17 +208,5 @@ export default {
 </script>
 
 <style scoped>
-
-.pagination-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 50px; /* Ajusta según necesites */
-  margin-top: 20px; /* Asegura un margen consistente desde la tabla */
-}
-
-.table-container {
-  min-height: 250px; /* Ajusta a la altura mínima que prefieras para la tabla */
-}
 
 </style>

@@ -167,4 +167,16 @@
 .date-input {
     max-width: 140px;
 }
+
+.pagination-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 50px; /* Ajusta según necesites */
+    margin-top: 20px; /* Asegura un margen consistente desde la tabla */
+}
+
+.table-container {
+    min-height: 250px; /* Ajusta a la altura mínima que prefieras para la tabla */
+}
   
