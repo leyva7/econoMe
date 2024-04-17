@@ -21,61 +21,146 @@ export function formatAsYYYYMMDD (date) {
     return `${d.getFullYear()}-${month}-${day}`;
 }
 
+function convertDate(date) {
+    return typeof date === 'string' ? new Date(date.split('-').reverse().join('-')) : new Date(date);
+}
 
-export function processLinearGraphData(data) {
-    // Create a copy of the data with new Date objects to avoid modifying the original data
-    const dataCopy = data.map(item => ({
-        ...item,
-        date: typeof item.date === 'string' ? new Date(item.date.split('-').reverse().join('-')) : new Date(item.date)
-    }));
-
+function formatDate(date, interval) {
+    let key;
     let firstDayOfWeek;
+    switch (interval) {
+        case 'days':
+            key = `${String(date.getDate()).padStart(2, '0')}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+            break;
+        case 'weeks':
+            firstDayOfWeek = new Date(date);
+            firstDayOfWeek.setDate(date.getDate() - date.getDay());
+            key = `${String(firstDayOfWeek.getDate()).padStart(2, '0')}-${String(firstDayOfWeek.getMonth() + 1).padStart(2, '0')}`;
+            break;
+        case 'months':
+            key = `${String(date.getMonth() + 1).padStart(2, '0')}-${date.getFullYear()}`;
+            break;
+        case 'years':
+            key = `${date.getFullYear()}`;
+            break;
+    }
+    return key;
+}
 
-    // Sort by date
-    dataCopy.sort((a, b) => a.date - b.date);
 
-    const minDate = dataCopy[0].date;
-    const maxDate = dataCopy[dataCopy.length - 1].date;
+function determineInterval(dataWithDates) {
+    const minDate = dataWithDates[0].date;
+    const maxDate = dataWithDates[dataWithDates.length - 1].date;
     const diffTime = Math.abs(maxDate - minDate);
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 
-    let interval;
     if (diffDays <= 7) {
-        interval = 'days';
+        return 'days';
     } else if (diffDays <= 30) {
-        interval = 'weeks';
+        return 'weeks';
     } else if (diffDays <= 365) {
-        interval = 'months';
+        return 'months';
     } else {
-        interval = 'years';
+        return 'years';
     }
+}
 
+
+export function processLinearGraphData(data, valueKey = 'quantity') {
+    const dataWithDates = data.map(item => ({
+        ...item,
+        date: convertDate(item.date)
+    }));
+
+    dataWithDates.sort((a, b) => a.date - b.date);  // Ordenar por fecha
+
+    const interval = determineInterval(dataWithDates);
     const mappedData = {};
-    dataCopy.forEach(item => {
-        let key;
-        switch (interval) {
-            case 'days':
-                key = `${String(item.date.getDate()).padStart(2, '0')}-${String(item.date.getMonth() + 1).padStart(2, '0')}`;
-                break;
-            case 'weeks':
-                firstDayOfWeek = new Date(item.date);
-                firstDayOfWeek.setDate(item.date.getDate() - item.date.getDay());
-                key = `${String(firstDayOfWeek.getDate()).padStart(2, '0')}-${String(firstDayOfWeek.getMonth() + 1).padStart(2, '0')}`;
-                break;
-            case 'months':
-                key = `${String(item.date.getMonth() + 1).padStart(2, '0')}-${item.date.getFullYear()}`;
-                break;
-            case 'years':
-                key = `${item.date.getFullYear()}`;
-                break;
-        }
-        mappedData[key] = (mappedData[key] || 0) + item.quantity;
+
+    dataWithDates.forEach(item => {
+        const key = formatDate(item.date, interval);
+        mappedData[key] = (mappedData[key] || 0) + item[valueKey];
     });
 
     return Object.keys(mappedData).map(key => ({
         date: key,
         total: mappedData[key]
     }));
+}
+
+function generateDateKeys(startDate, endDate, interval) {
+    let currentDate = new Date(startDate.getTime());
+    const keys = {};
+
+    while (currentDate <= endDate) {
+        const key = formatDate(currentDate, interval);
+        keys[key] = { income: 0, spent: 0 };
+        if (interval === 'days') {
+            currentDate.setDate(currentDate.getDate() + 1);
+        } else if (interval === 'weeks') {
+            currentDate.setDate(currentDate.getDate() + 7);
+        } else if (interval === 'months') {
+            currentDate.setMonth(currentDate.getMonth() + 1);
+        } else if (interval === 'years') {
+            currentDate.setFullYear(currentDate.getFullYear() + 1);
+        }
+    }
+
+    return keys;
+}
+
+export function processFinancialData(data) {
+    if (!data || data.length === 0) {
+        console.log("No data provided or data is empty");
+        return [];
+    }
+
+    const dataWithDates = data.map(item => ({
+        ...item,
+        date: convertDate(item.date)
+    }));
+
+    dataWithDates.sort((a, b) => a.date - b.date);
+
+    const interval = determineInterval(dataWithDates);
+    const startDate = dataWithDates[0].date;
+    const endDate = dataWithDates[dataWithDates.length - 1].date;
+    const financialData = generateDateKeys(startDate, endDate, interval);
+
+    dataWithDates.forEach(item => {
+        const key = formatDate(item.date, interval);
+        if (item.type === "INCOME") {
+            financialData[key].income += item.quantity;
+        } else if (item.type === "SPENT") {
+            financialData[key].spent += item.quantity;
+        }
+    });
+
+    return Object.keys(financialData).map(key => ({
+        date: key,
+        income: financialData[key].income,
+        spent: financialData[key].spent
+    }));
+}
+
+export function proccessCategories(data, key) {
+    const sumsByKey = data.reduce((acc, { [key]: keyValue, quantity }) => {
+        acc[keyValue] = (acc[keyValue] || 0) + parseFloat(quantity);
+        return acc;
+    }, {});
+
+    const sortedItems = Object.entries(sumsByKey)
+        .sort((a, b) => b[1] - a[1])
+        .map(([categoryOrUser, total]) => ({ [key]: categoryOrUser, total }));
+
+    const topItems = sortedItems.slice(0, 5);
+    const otherTotal = sortedItems.slice(5).reduce((acc, { total }) => acc + total, 0);
+
+    if (otherTotal > 0) {
+        topItems.push({ [key]: 'Otros', total: otherTotal });
+    }
+
+    return topItems;
 }
 
 export function processFilterSelection(selection) {

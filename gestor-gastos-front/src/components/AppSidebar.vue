@@ -36,8 +36,8 @@
 
 <script>
 import {defineComponent, ref, watch, watchEffect} from 'vue';
-import { useRouter } from 'vue-router';
 import { useRoute } from 'vue-router';
+import {navigate, navigateHome, navigateToAccounting} from "@/utils/global";
 
 export default defineComponent({
   name: 'AppSidebar',
@@ -46,7 +46,6 @@ export default defineComponent({
   },
   emits: ['openModal'],
   setup(props, { emit }) {
-    const router = useRouter();
     const route = useRoute(); // Obtiene la ruta actual
     const activePath = ref(route.path); // Almacena la ruta activa
 
@@ -55,27 +54,6 @@ export default defineComponent({
     watch(route, (newRoute) => {
       activePath.value = newRoute.path;
     });
-
-    const navigate = (path) => {
-      router.push({
-        path: path
-      });
-    };
-
-    const navigateHome = (path) => {
-      router.push({
-        path: path,
-        query: { id: localStorage.getItem('personalAccountingId') },
-      });
-    };
-
-    const navigateToAccounting = (accounting) => {
-      router.push({
-        name: 'shared',
-        params: { accountingName: accounting.name },
-        query: { id: accounting.id },
-      });
-    };
 
     const emitOpenModal = (type) => {
       emit('openModal', type);

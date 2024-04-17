@@ -20,16 +20,11 @@
 </template>
 
 <script setup>
-import {useRouter} from 'vue-router';
 import {useAccountingStore} from '@/stores/accountingStore';
+import {logout, navigate} from "@/utils/global";
 
-const router = useRouter();
-const {username, accountingName, navigate} = useAccountingStore();
+const {username, accountingName} = useAccountingStore();
 
-const logout = () => {
-  localStorage.clear();
-  router.push('/');
-};
 </script>
 
 <style scoped>

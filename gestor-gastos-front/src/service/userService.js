@@ -1,4 +1,4 @@
-import axios from 'axios';
+import axios from '@/utils/axios';
 import {getAuthHeaders} from "@/service/auth";
 
 const AUTH_API_URL = 'http://localhost:8081/api/auth';

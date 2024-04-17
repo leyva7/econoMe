@@ -81,7 +81,7 @@
 <script>
 import { Chart, registerables } from 'chart.js';
 import {onMounted, ref, nextTick} from 'vue';
-import { useAccountingStore } from '../stores/accountingStore';
+import { useAccountingStore } from '@/stores/accountingStore';
 import {commonOptions, incomeCategoryColors, pieOptions} from "@/utils/global";
 import {usePagination} from "@/utils/usePagination";
 import {processFilterSelection} from "@/utils/functions";
@@ -94,8 +94,8 @@ export default {
   name: "IncomeDetails",
   components:{ IntervalSelector },
   setup() {
-    const { accountingId, processedIncomes, fetchIncomeAsync,fetchIncomeMonthsAsync, incomesMonths, latestIncomes, monthlyIncomeData, totalIncomeMonth, processDailyIncomeData} = useAccountingStore();
-    const { currentPage, totalPages, paginatedOperations, nextPage, prevPage } = usePagination(incomesMonths);
+    const { accountingId, processedIncomes, fetchIncomeAsync,fetchIncomeMonthsAsync, incomesFiltered, latestIncomes, monthlyIncomeData, totalIncomeMonth, processDailyIncomeData} = useAccountingStore();
+    const { currentPage, totalPages, paginatedOperations, nextPage, prevPage } = usePagination(incomesFiltered);
     const chart = ref(null);
     const linesChart = ref(null);
     const hasData = ref(false);
@@ -166,7 +166,7 @@ export default {
     };
 
     return {
-      processDailyIncomeData, totalIncomeMonth, incomesMonths, fetchIncomeAsync, fetchIncomeMonthsAsync, processedIncomes, hasData, latestIncomes, monthlyIncomeData, incomeCategoryColors,
+      processDailyIncomeData, totalIncomeMonth, incomesFiltered, fetchIncomeAsync, fetchIncomeMonthsAsync, processedIncomes, hasData, latestIncomes, monthlyIncomeData, incomeCategoryColors,
       nextPage, prevPage, paginatedOperations, currentPage, showElement, totalPages, updateData
     };
   },

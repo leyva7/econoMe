@@ -1,4 +1,3 @@
-// src/router/index.js
 import { createRouter, createWebHistory } from 'vue-router';
 import FirstView from '@/views/First-view.vue';
 import UserRegister from '@/views/UserRegister.vue';

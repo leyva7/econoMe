@@ -35,7 +35,7 @@
       <div class="col-12 col-lg-6">
         <!-- Evolución de los Gastos -->
         <div class="p-3 bg-white rounded shadow">
-          <h3 class="mb-3 text-center">Evolución de gastos por semanas</h3>
+          <h3 class="mb-3 text-center">Evolución de gastos</h3>
           <div class="chart-container">
             <canvas id="lineChart"></canvas>
           </div>
@@ -81,7 +81,7 @@
 <script>
 import { Chart, registerables } from 'chart.js';
 import {onMounted, ref, nextTick} from 'vue';
-import { useAccountingStore } from '../stores/accountingStore';
+import { useAccountingStore } from '@/stores/accountingStore';
 import { spentCategoryColors, hasDataSpents, commonOptions, pieOptions } from "@/utils/global";
 import {createChart} from "@/utils/chartService";
 import {processFilterSelection} from "@/utils/functions";
@@ -95,8 +95,8 @@ export default {
   name: "SpentDetails",
   components:{ IntervalSelector },
   setup() {
-    const { accountingId, processedSpents, fetchSpentsInterval, spentsMonths, totalSpentMonth, latestSpents, dailySpentData, processDailySpentData} = useAccountingStore();
-    const { currentPage, totalPages, paginatedOperations, nextPage, prevPage } = usePagination(spentsMonths);
+    const { accountingId, processedSpents, fetchSpentsInterval, spentsFiltered, totalSpentMonth, latestSpents, dailySpentData, processDailySpentData} = useAccountingStore();
+    const { currentPage, totalPages, paginatedOperations, nextPage, prevPage } = usePagination(spentsFiltered);
     const chart = ref(null);
     const linesChart = ref(null);
 
@@ -166,7 +166,7 @@ export default {
     };
 
     return {
-      spentsMonths, accountingId, processedSpents, hasDataSpents, totalSpentMonth, latestSpents, dailySpentData, spentCategoryColors,
+      spentsFiltered, accountingId, processedSpents, hasDataSpents, totalSpentMonth, latestSpents, dailySpentData, spentCategoryColors,
       paginatedOperations, nextPage, prevPage, showElement, totalPages, currentPage, updateData, processDailySpentData
     };
   },

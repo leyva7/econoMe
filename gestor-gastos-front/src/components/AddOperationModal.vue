@@ -54,9 +54,10 @@
 <script>
 import ModalWindow from './ModalWindow.vue';
 import {ref, defineComponent, computed, watch, onMounted} from 'vue';
-import { useAccountingStore } from '../stores/accountingStore';
+import { useAccountingStore } from '@/stores/accountingStore';
 import { globalStore} from "@/stores/globalStore";
 import { createOperation, updateOperation } from "@/service/operationService";
+import {formatDateToDDMMYYYY} from "@/utils/functions";
 
 export default defineComponent({
   components: {
@@ -70,7 +71,7 @@ export default defineComponent({
     },
   },
   setup(props, { emit }) {
-    const { fetchCategoriesSpentAsync, fetchCategoriesIncomeAsync, categories, formatDateToDDMMYYYY } = useAccountingStore();
+    const { fetchCategoriesSpentAsync, fetchCategoriesIncomeAsync, categories } = useAccountingStore();
     const { accountingId } = globalStore();
 
     const isEditMode = computed(() => props.operationToEdit !== null);

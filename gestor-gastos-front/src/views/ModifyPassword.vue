@@ -3,7 +3,7 @@
     <div class="row justify-content-center w-100">
       <div class="col-sm-12 col-md-6 col-lg-4">
         <form @submit.prevent="submitForm" class="bg-white shadow p-4 rounded">
-          <h2 class="text-white mb-4 text-center">Cambiar Contraseña</h2>
+          <h2 class="text-black mb-4 text-center">Cambiar Contraseña</h2>
 
           <div class="mb-3">
             <label for="currentPassword" class="form-label">Contraseña actual</label>
@@ -29,6 +29,7 @@
 import { reactive } from 'vue';
 import axios from 'axios';
 import router from "@/router";
+import {home} from "@/utils/global";
 
 export default {
   name: 'UserPassword',
@@ -37,14 +38,6 @@ export default {
       currentPassword: '',
       newPassword: '',
     });
-
-    const home = () => {
-      const personalAccountingId = localStorage.getItem('personalAccountingId');
-      router.push({
-        name: 'home',
-        query: { id: personalAccountingId }
-      });
-    };
 
     const submitForm = async () => {
       try {
@@ -65,7 +58,7 @@ export default {
     return {
       userPassword,
       submitForm,
-      home,
+      home
     };
   },
 };

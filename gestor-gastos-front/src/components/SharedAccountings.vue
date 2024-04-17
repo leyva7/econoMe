@@ -83,24 +83,6 @@
         <div class="card h-100">
           <h4 class="card-header">Detalle de Gastos</h4>
           <div class="card-body">
-            <!-- Tabla de Detalles de Gastos -->
-            <table class="table">
-              <thead>
-              <tr>
-                <th>Categoría</th>
-                <th>Total</th>
-              </tr>
-              </thead>
-              <tbody>
-              <tr v-for="(spent, index) in processedSpents" :key="spent.category">
-                <td>
-                  <span class="category-color" :style="{ backgroundColor: spentCategoryColors[index] }"></span>
-                  {{ spent.category }}
-                </td>
-                <td>{{ spent.total.toFixed(2) }}</td>
-              </tr>
-              </tbody>
-            </table>
             <table class="table">
               <thead>
               <tr>
@@ -123,24 +105,6 @@
         <div class="card h-100">
           <h4 class="card-header">Detalle de Ingresos</h4>
           <div class="card-body">
-            <!-- Tabla de Detalles de Ingresos -->
-            <table class="table">
-              <thead>
-              <tr>
-                <th>Categoría</th>
-                <th>Total</th>
-              </tr>
-              </thead>
-              <tbody>
-              <tr v-for="(income, index) in processedIncomes" :key="income.category">
-                <td>
-                  <span class="category-color" :style="{ backgroundColor: incomeCategoryColors[index] }"></span>
-                  {{ income.category }}
-                </td>
-                <td>{{ income.total.toFixed(2) }}</td>
-              </tr>
-              </tbody>
-            </table>
             <table class="table">
               <thead>
               <tr>
@@ -196,8 +160,9 @@ export default {
   setup() {
     const accountingStore = useAccountingStore();
     const {accountings, sharedAccountings, loadAccountings, accountingId, fetchUsersAccountingAsync, usersAccounting, accountingSharedSelected, processedSpents,
-      spentsMonths, fetchSpentsInterval, processedIncomes, incomesMonths, fetchIncomeMonthsAsync, processedSpentsUser, processedIncomesUser, fetchOperationsAsync, operations,
+      spentsFiltered, fetchSpentsInterval, processedIncomes, incomesFiltered, fetchIncomeMonthsAsync, processedSpentsUser, processedIncomesUser, fetchOperationsAsync, operations,
       totalSpentMonth, totalIncomeMonth} = accountingStore;
+
     const { currentPage, totalPages, paginatedOperations, nextPage, prevPage } = usePagination(operations, true);
 
     const router = useRouter();
@@ -218,8 +183,8 @@ export default {
       await loadAccountings();
       calculateIsUserCreator();
       await fetchUsersAccountingAsync(accountingId.value);
-      hasDataSpent.value = spentsMonths.value.length > 0;
-      hasDataIncome.value = incomesMonths.value.length > 0;
+      hasDataSpent.value = spentsFiltered.value.length > 0;
+      hasDataIncome.value = incomesFiltered.value.length > 0;
       hasDataOperations.value = operations.value.length > 0;
       updateData();
     });
@@ -396,9 +361,9 @@ export default {
       usersAccounting,
       accountingSharedSelected,
       processedSpents,
-      spentsMonths,
+      spentsFiltered,
       processedIncomes,
-      incomesMonths,
+      incomesFiltered,
       hasDataSpent, hasDataIncome, hasDataOperations,
       processedSpentsUser,
       processedIncomesUser,
