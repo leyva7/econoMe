@@ -73,8 +73,7 @@
         </div>
       </div>
     </div>
-    <!-- Mensaje si no hay datos -->
-    <p v-else class="text-center">No hay datos disponibles</p>
+    <NoDataMessage v-else/>
   </div>
 </template>
 
@@ -87,15 +86,16 @@ import {createChart} from "@/utils/chartService";
 import {processFilterSelection} from "@/utils/functions";
 import {usePagination} from "@/utils/usePagination";
 import IntervalSelector from "./IntervalSelector.vue";
+import NoDataMessage from "@/components/NoDataMessage.vue";
 
 
 Chart.register(...registerables);
 
 export default {
   name: "SpentDetails",
-  components:{ IntervalSelector },
+  components:{ IntervalSelector, NoDataMessage },
   setup() {
-    const { accountingId, processedSpents, fetchSpentsInterval, spentsFiltered, totalSpentMonth, latestSpents, dailySpentData, processDailySpentData} = useAccountingStore();
+    const { accountingId, processedSpents, fetchSpentsInterval, spentsFiltered, totalSpentMonth, processDailySpentData} = useAccountingStore();
     const { currentPage, totalPages, paginatedOperations, nextPage, prevPage } = usePagination(spentsFiltered);
     const chart = ref(null);
     const linesChart = ref(null);
@@ -122,7 +122,7 @@ export default {
 
       await fetchSpentsInterval(accountingId.value, filterType, startDate, endDate);
 
-      hasDataSpents.value = (totalSpentMonth.value > 0);
+      hasDataSpents.value = totalSpentMonth.value > 0;
 
       await nextTick();
       initChart();
@@ -166,7 +166,7 @@ export default {
     };
 
     return {
-      spentsFiltered, accountingId, processedSpents, hasDataSpents, totalSpentMonth, latestSpents, dailySpentData, spentCategoryColors,
+      spentsFiltered, accountingId, processedSpents, hasDataSpents, totalSpentMonth, spentCategoryColors,
       paginatedOperations, nextPage, prevPage, showElement, totalPages, currentPage, updateData, processDailySpentData
     };
   },

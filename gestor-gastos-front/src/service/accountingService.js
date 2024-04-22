@@ -23,10 +23,12 @@ export const fetchCategoriesIncome = async (accountingId) => {
     return await axios.get(`${API_URL}${accountingId}/categoriesIncome`, { headers: getAuthHeaders() });
 };
 
-export const fetchCategoriesDifferences = async (accountingId, filterType, startDate = null, endDate = null) => {
-    let queryParams = `?filterType=${filterType}`;
+export const fetchCategoriesDifferences = async (params) => {
+    const { accountingId, filterType, startDate = null, endDate = null } = params;
+
+    let queryParams = `?filterType=${encodeURIComponent(filterType)}`;
     if (startDate && endDate) {
-        queryParams += `&startDate=${startDate}&endDate=${endDate}`;
+        queryParams += `&startDate=${encodeURIComponent(startDate)}&endDate=${encodeURIComponent(endDate)}`;
     }
 
     return await axios.get(`${API_URL}${accountingId}/categoryDifferences${queryParams}`, {

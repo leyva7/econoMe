@@ -4,7 +4,6 @@ import router from './router';
 
 import './assets/styles/global.css';
 
-// Crea una instancia de la aplicación Vue
 const app = createApp(App);
 
 // Usa Vue Router

@@ -23,39 +23,41 @@
       <div class="col-12 col-lg-4 mb-2">
         <div class="card h-100">
           <h4 class="card-header">Gastos por Categorías</h4>
-          <div class="card-body">
+          <div v-if="hasDataSpents" class="card-body">
             <div class="chart-container">
               <canvas id="topCategoriesChart"></canvas>
             </div>
           </div>
+          <NoDataMessage v-else/>
         </div>
       </div>
 
       <div class="col-12 col-lg-4 mb-2">
         <div class="card h-100">
           <h4 class="card-header">Ingresos por Categorías</h4>
-          <div class="card-body">
+          <div v-if="hasDataIncome" class="card-body">
             <div class="chart-container">
               <canvas id="topCategoriesIncomeChart"></canvas>
             </div>
           </div>
+          <NoDataMessage v-else/>
         </div>
       </div>
 
       <div class="col-12 col-lg-4 mb-2">
         <div class="card h-100">
           <h4 class="card-header">Últimas Operaciones</h4>
-          <div class="card-body">
+          <div v-if="hasData" class="card-body">
             <!-- Tabla de Últimas Operaciones -->
             <div class="table-container table-responsive">
-              <table class="table">
+              <table class="table text-center align-middle">
                 <thead>
-                <tr>
-                  <th>Tipo de operación</th>
-                  <th>Categoría</th>
-                  <th>Cantidad</th>
-                  <th>Fecha</th>
-                </tr>
+                  <tr class="text-center align-middle">
+                    <th>Tipo de operación</th>
+                    <th>Categoría</th>
+                    <th>Cantidad</th>
+                    <th>Fecha</th>
+                  </tr>
                 </thead>
                 <tbody>
                 <tr v-for="operation in paginatedOperations" :key="operation.id">
@@ -73,6 +75,7 @@
               <button @click="nextPage" class="btn btn-secondary" :disabled="currentPage >= totalPages">Siguiente</button>
             </div>
           </div>
+          <NoDataMessage v-else/>
         </div>
       </div>
     </div>
@@ -82,7 +85,7 @@
       <div class="col-12 col-lg-4">
         <div class="card h-100">
           <h4 class="card-header">Detalle de Gastos</h4>
-          <div class="card-body">
+          <div v-if="hasDataSpents" class="card-body">
             <table class="table">
               <thead>
               <tr>
@@ -98,13 +101,14 @@
               </tbody>
             </table>
           </div>
+          <NoDataMessage v-else/>
         </div>
       </div>
 
       <div class="col-12 col-lg-4">
         <div class="card h-100">
           <h4 class="card-header">Detalle de Ingresos</h4>
-          <div class="card-body">
+          <div v-if="hasDataIncome" class="card-body">
             <table class="table">
               <thead>
               <tr>
@@ -120,6 +124,7 @@
               </tbody>
             </table>
           </div>
+          <NoDataMessage v-else/>
         </div>
       </div>
 
@@ -141,7 +146,7 @@
 </template>
 
 <script>
-import {spentCategoryColors, incomeCategoryColors} from "@/utils/global";
+import {spentCategoryColors, incomeCategoryColors, hasData, hasDataIncome, hasDataSpents} from "@/utils/global";
 import {usePagination} from "@/utils/usePagination";
 import { useAccountingStore } from '@/stores/accountingStore.js';
 import {deleteUserAccounting as deleteAccountingApi} from "@/service/accountingService"
@@ -150,17 +155,19 @@ import { useRouter } from 'vue-router';
 import {Chart} from "chart.js";
 import UserManagementModal from "@/components/UserManagementModal.vue";
 import IntervalSelector from "@/components/IntervalSelector.vue";
+import NoDataMessage from "@/components/NoDataMessage.vue";
 import {processFilterSelection} from "@/utils/functions";
 export default {
   name: "SharedAccountings",
   components: {
     UserManagementModal,
-    IntervalSelector
+    IntervalSelector,
+    NoDataMessage
   },
   setup() {
     const accountingStore = useAccountingStore();
     const {accountings, sharedAccountings, loadAccountings, accountingId, fetchUsersAccountingAsync, usersAccounting, accountingSharedSelected, processedSpents,
-      spentsFiltered, fetchSpentsInterval, processedIncomes, incomesFiltered, fetchIncomeMonthsAsync, processedSpentsUser, processedIncomesUser, fetchOperationsAsync, operations,
+      spentsFiltered, fetchSpentsInterval, processedIncomes, incomesFiltered, fetchIncomeInterval, processedSpentsUser, processedIncomesUser, fetchOperationsAsync, operations,
       totalSpentMonth, totalIncomeMonth} = accountingStore;
 
     const { currentPage, totalPages, paginatedOperations, nextPage, prevPage } = usePagination(operations, true);
@@ -170,9 +177,6 @@ export default {
 
     const chart = ref(null);
     const chartIncomes = ref(null);
-    const hasDataSpent = ref(false);
-    const hasDataIncome = ref(false);
-    const hasDataOperations = ref(false);
 
     const isUserManagementModalOpen = ref(false);
 
@@ -183,9 +187,6 @@ export default {
       await loadAccountings();
       calculateIsUserCreator();
       await fetchUsersAccountingAsync(accountingId.value);
-      hasDataSpent.value = spentsFiltered.value.length > 0;
-      hasDataIncome.value = incomesFiltered.value.length > 0;
-      hasDataOperations.value = operations.value.length > 0;
       updateData();
     });
 
@@ -203,12 +204,13 @@ export default {
       console.log(`Fetching with accountingId: ${accountingId.value}, filterType: ${filterType}, startDate: ${startDate}, endDate: ${endDate}`);
 
       await fetchSpentsInterval(accountingId.value, filterType, startDate, endDate);
-      await fetchIncomeMonthsAsync(accountingId.value, filterType, startDate, endDate);
+      await fetchIncomeInterval(accountingId.value, filterType, startDate, endDate);
       await fetchOperationsAsync(accountingId.value, filterType, startDate, endDate);
       console.log(operations.value);
 
-      hasDataSpent.value = (totalSpentMonth.value > 0);
+      hasDataSpents.value = (totalSpentMonth.value > 0);
       hasDataIncome.value = (totalIncomeMonth.value > 0);
+      hasData.value = totalSpentMonth.value > 0 || totalIncomeMonth.value > 0;
 
       await nextTick();
       initChart();
@@ -243,7 +245,6 @@ export default {
             path: '/home-user', // Utiliza 'path' en lugar de 'name'
             query: { id: localStorage.getItem('personalAccountingId') }
           });
-          window.location.reload();
         } catch (error) {
           console.error("Error al eliminar la contabilidad:", error);
         }
@@ -364,7 +365,7 @@ export default {
       spentsFiltered,
       processedIncomes,
       incomesFiltered,
-      hasDataSpent, hasDataIncome, hasDataOperations,
+      hasDataSpents, hasDataIncome, hasData,
       processedSpentsUser,
       processedIncomesUser,
       isUserManagementModalOpen, openUserManagementModal, closeModal,

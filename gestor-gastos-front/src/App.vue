@@ -1,6 +1,5 @@
 <template>
   <div id="app">
-    <!-- El componente de la vista actual se renderizará aquí -->
     <router-view/>
   </div>
 </template>
@@ -11,6 +10,3 @@ export default {
 };
 </script>
 
-<style>
-/* Estilos globales pueden ir aquí */
-</style>

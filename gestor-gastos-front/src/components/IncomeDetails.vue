@@ -1,10 +1,10 @@
 <template>
   <div class="container mt-5">
-    <h2 class="text-center mb-4">{{ hasData ? 'Ingresos totales: ' + totalIncomeMonth.toFixed(2) + ' €' : 'No hay datos disponibles' }}</h2>
+    <h2 class="text-center mb-4" v-if="hasDataIncome">Ingresos totales: {{ totalIncomeMonth.toFixed(2) }} €</h2>
 
     <IntervalSelector :isVisible="showElement" @update-selection="updateData" />
 
-    <div v-if="hasData" class="row g-4">
+    <div v-if="hasDataIncome" class="row g-4">
       <!-- Gráfico por Categorías y Últimos Gastos en pantallas grandes; se apilan en pantallas más pequeñas -->
       <div class="col-12 col-lg-6">
         <div class="p-3 bg-white rounded shadow">
@@ -41,7 +41,7 @@
           </div>
         </div>
       </div>
-      <div v-if="hasData" class="mt-3 col-12">
+      <div v-if="hasDataIncome" class="mt-3 col-12">
         <div class="bg-white rounded shadow p-3">
           <h3 class="text-center mb-3">Últimas operaciones</h3>
           <!-- Tabla de Últimas Operaciones -->
@@ -73,8 +73,7 @@
         </div>
       </div>
     </div>
-    <!-- Mensaje si no hay datos -->
-    <p v-else class="text-center">No hay datos disponibles</p>
+    <NoDataMessage v-else/>
   </div>
 </template>
 
@@ -82,23 +81,23 @@
 import { Chart, registerables } from 'chart.js';
 import {onMounted, ref, nextTick} from 'vue';
 import { useAccountingStore } from '@/stores/accountingStore';
-import {commonOptions, incomeCategoryColors, pieOptions} from "@/utils/global";
+import {commonOptions, incomeCategoryColors, pieOptions, hasDataIncome} from "@/utils/global";
 import {usePagination} from "@/utils/usePagination";
 import {processFilterSelection} from "@/utils/functions";
 import IntervalSelector from "@/components/IntervalSelector.vue";
+import NoDataMessage from "@/components/NoDataMessage.vue";
 import {createChart} from "@/utils/chartService";
 
 Chart.register(...registerables);
 
 export default {
   name: "IncomeDetails",
-  components:{ IntervalSelector },
+  components:{ IntervalSelector, NoDataMessage },
   setup() {
-    const { accountingId, processedIncomes, fetchIncomeAsync,fetchIncomeMonthsAsync, incomesFiltered, latestIncomes, monthlyIncomeData, totalIncomeMonth, processDailyIncomeData} = useAccountingStore();
+    const { accountingId, processedIncomes, fetchIncomeAsync,fetchIncomeInterval, incomesFiltered, latestIncomes, monthlyIncomeData, totalIncomeMonth, processDailyIncomeData} = useAccountingStore();
     const { currentPage, totalPages, paginatedOperations, nextPage, prevPage } = usePagination(incomesFiltered);
     const chart = ref(null);
     const linesChart = ref(null);
-    const hasData = ref(false);
 
     const showElement = ref(false);
 
@@ -119,9 +118,9 @@ export default {
 
       console.log(`Fetching with accountingId: ${accountingId.value}, filterType: ${filterType}, startDate: ${startDate}, endDate: ${endDate}`);
 
-      await fetchIncomeMonthsAsync(accountingId.value, filterType, startDate, endDate);
+      await fetchIncomeInterval(accountingId.value, filterType, startDate, endDate);
 
-      hasData.value = (totalIncomeMonth.value > 0);
+      hasDataIncome.value = totalIncomeMonth.value > 0;
 
       await nextTick();
       initChart();
@@ -166,7 +165,7 @@ export default {
     };
 
     return {
-      processDailyIncomeData, totalIncomeMonth, incomesFiltered, fetchIncomeAsync, fetchIncomeMonthsAsync, processedIncomes, hasData, latestIncomes, monthlyIncomeData, incomeCategoryColors,
+      processDailyIncomeData, totalIncomeMonth, incomesFiltered, fetchIncomeAsync, fetchIncomeInterval, processedIncomes, hasDataIncome, latestIncomes, monthlyIncomeData, incomeCategoryColors,
       nextPage, prevPage, paginatedOperations, currentPage, showElement, totalPages, updateData
     };
   },

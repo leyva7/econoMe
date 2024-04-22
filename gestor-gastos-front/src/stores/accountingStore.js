@@ -49,154 +49,87 @@ export const useAccountingStore = () => {
     });
     const usersAccounting = ref([]);
 
-    const loadAccountings = async () => {
+    async function fetchData(endpointFunction, params = undefined, targetRef = undefined, errorHandler = null) {
         try {
-            const response = await fetchAccountings();
-            accountings.value = response.data;
+            const response = await endpointFunction(params);
+            if (targetRef) {
+                targetRef.value = response.data;
+            }
+            return response.data;
         } catch (error) {
-            console.error('Hubo un error al obtener las contabilidades:', error);
+            console.error(errorHandler || `Hubo un error al obtener los datos de: ${endpointFunction.name}`, error);
+            if (targetRef) {
+                targetRef.value = [];
+            }
         }
-    };
+    }
 
-    const fetchAccountingPersonalAsync = async () => {
-        try {
-            const response = await fetchAccountingPersonal();
-            accountingPersonal.value = response.data;
-        } catch (error) {
-            console.error('Hubo un error al obtener la contabilidad personal:', error);
-        }
-    };
+    const loadAccountings = async () => await fetchData(fetchAccountings, undefined, accountings, 'Hubo un error al obtener las contabilidades');
+
+    const fetchAccountingPersonalAsync = async () => await fetchData(fetchAccountingPersonal, undefined, accountingPersonal, 'Hubo un error al obtener la contabilidad personal');
 
     const fetchUserRoleAsync = async (accountingId) => {
-        try {
-            const response = await fetchUserRole(accountingId);
-            userRole.value = response.data.role;
-        } catch (error) {
-            console.error('Error al obtener el rol del usuario:', error);
-            userRole.value = null;
+        const role = await fetchData(fetchUserRole, accountingId, userRole, 'Error al obtener el rol del usuario');
+        if (role) {
+            userRole.value = role.role;
         }
     };
 
-    const fetchUsersAccountingAsync = async (accountingId) => {
-        try {
-            const response = await fetchUsersAccounting(accountingId);
-            usersAccounting.value = response.data;
-        } catch (error) {
-            console.error('Hubo un error al obtener los usuarios de la contabilidad:', error);
-        }
-    };
+    const fetchUsersAccountingAsync = async (accountingId) => await fetchData(fetchUsersAccounting, accountingId, usersAccounting, 'Hubo un error al obtener los usuarios de la contabilidad');
 
-    const fetchCategoriesSpentAsync = async (accountingId) => {
-        try {
-            const response = await fetchCategoriesSpent(accountingId);
-            categories.value = response.data;
-        } catch (error) {
-            console.error('Hubo un error al obtener las categorías:', error);
-        }
-    };
+    const fetchCategoriesSpentAsync = async (accountingId) => await fetchData(fetchCategoriesSpent, accountingId, categories, 'Hubo un error al obtener las categorías de gastos');
 
-    const fetchCategoriesIncomeAsync = async (accountingId) => {
-        try {
-            const response = await fetchCategoriesIncome(accountingId);
-            categories.value = response.data;
-        } catch (error) {
-            console.error('Hubo un error al obtener las categorías:', error);
-        }
-    };
+    const fetchCategoriesIncomeAsync = async (accountingId) => await fetchData(fetchCategoriesIncome, accountingId, categories, 'Hubo un error al obtener las categorías de ingresos');
 
     const fetchCategoriesAsync = async (accountingId) => {
         try {
-            const [spentResponse, incomeResponse] = await Promise.all([
-                fetchCategoriesSpent(accountingId),
-                fetchCategoriesIncome(accountingId)
-            ]);
-            categories.value = [...new Set([...spentResponse.data, ...incomeResponse.data])];
+            const spentResponse = await fetchData(() => fetchCategoriesSpent(accountingId));
+            const incomeResponse = await fetchData(() => fetchCategoriesIncome(accountingId));
+            categories.value = [...new Set([...spentResponse, ...incomeResponse])]; // Combinando y eliminando duplicados
         } catch (error) {
             console.error('Hubo un error al obtener las categorías combinadas:', error);
         }
     };
 
     const fetchOperationsAsync = async (accountingId, filterType, startDate, endDate) => {
-        try {
-            const response = await fetchOperations(accountingId, filterType, startDate, endDate)
-            operations.value = response.data;
-        } catch (error) {
-            console.error('Hubo un error al obtener las operaciones:', error);
-        }
+        const params = {accountingId, filterType, startDate, endDate};
+        await fetchData(fetchOperations, params, operations, 'Hubo un error al obtener las operaciones');
     };
 
-    const fetchAllAccountingsUserOperationsAsync = async () => {
-        try {
-            const response = await fetchAllAccountingsUserOperations(accountingId)
-            allAccountingUserOperations.value = response.data;
-        } catch (error) {
-            console.error('Hubo un error al obtener las operaciones:', error);
-        }
-    };
+    const fetchAllAccountingsUserOperationsAsync = async () => await fetchData(fetchAllAccountingsUserOperations, undefined, allAccountingUserOperations, 'Hubo un error al obtener todas las operaciones de la contabilidad del usuario');
 
     const fetchSpentsInterval = async (accountingId, filterType, startDate, endDate) => {
-        try {
-            const response = await fetchSpentsFiltered(accountingId, filterType, startDate, endDate);
-            spentsFiltered.value = response.data;
-        } catch (error) {
-            console.error('Hubo un error al obtener los gastos:', error);
-        }
+        const params = {accountingId, filterType, startDate, endDate};
+        await fetchData(fetchSpentsFiltered, params, spentsFiltered, 'Hubo un error al obtener los gastos en el intervalo especificado');
     };
 
-    const sharedAccountings = computed(() => {
-        return accountings.value.filter(accounting => accounting.type === 'SHARED');
-    });
+    const fetchIncomeInterval = async (accountingId, filterType, startDate, endDate) => {
+        const params = {accountingId, filterType, startDate, endDate};
+        await fetchData(fetchIncomesFiltered, params, incomesFiltered, 'Hubo un error al obtener los ingresos en el intervalo especificado');
+    };
 
+    const categoryDifferencesAsync = async (accountingId, filterType, startDate, endDate) => {
+        const params = {accountingId, filterType, startDate, endDate};
+        await fetchData(fetchCategoriesDifferences, params, categoriesDifferences, 'Hubo un error al obtener las diferencias de categorías');
+    };
+
+    const sharedAccountings = computed(() => { return accountings.value.filter(accounting => accounting.type === 'SHARED') });
     const accountingSharedSelected = computed(() => {
         return sharedAccountings.value.filter(accounting => accounting.id === Number(accountingId.value));
     });
 
+    const processedSpents = computed(() => proccessCategories(spentsFiltered.value, 'category'));
+    const totalSpentMonth = computed(() => spentsFiltered.value.reduce((total, { quantity }) => total + quantity, 0));
+    const processDailySpentData = computed(() => processLinearGraphData(spentsFiltered.value));
+    const processedSpentsUser = computed(() => { return proccessCategories(spentsFiltered.value, 'username'); });
 
-    const processedSpents = computed(() => {
-        return proccessCategories(spentsFiltered.value, 'category');
-    });
 
-    const processedSpentsUser = computed(() => {
-        return proccessCategories(spentsFiltered.value, 'username');
-    });
+    const processedIncomes = computed(() => { return proccessCategories(incomesFiltered.value, 'category'); });
+    const totalIncomeMonth = computed(() => { return incomesFiltered.value.reduce((total, { quantity }) => total + quantity, 0); });
+    const processDailyIncomeData = computed(() => {return processLinearGraphData(incomesFiltered.value); });
+    const processedIncomesUser = computed(() => { return proccessCategories(incomesFiltered.value, 'username'); });
 
-    const totalSpentMonth = computed(() => {
-        return spentsFiltered.value.reduce((total, { quantity }) => total + quantity, 0);
-    });
-
-    const processDailySpentData = computed(() => {
-        return processLinearGraphData(spentsFiltered.value);
-    });
-
-    const fetchIncomeMonthsAsync = async (accountingId, filterType, startDate, endDate) => {
-        try {
-            const response = await fetchIncomesFiltered(accountingId, filterType, startDate, endDate);
-            incomesFiltered.value = response.data;
-        } catch (error) {
-            console.error('Hubo un error al obtener los gastos:', error);
-        }
-    };
-
-    const processedIncomes = computed(() => {
-        return proccessCategories(incomesFiltered.value, 'category');
-    });
-
-    const processedIncomesUser = computed(() => {
-        return proccessCategories(incomesFiltered.value, 'username');
-    });
-
-    const totalIncomeMonth = computed(() => {
-        return incomesFiltered.value.reduce((total, { quantity }) => total + quantity, 0);
-    });
-
-    const processDailyIncomeData = computed(() => {
-        return processLinearGraphData(incomesFiltered.value);
-    });
-
-    const combinedDataProcessed = computed(() => {
-        return processFinancialData(operations.value);
-    });
-
+    const combinedDataProcessed = computed(() => { return processFinancialData(operations.value); });
     const savingsData = computed(() => {
         return combinedDataProcessed.value.map(item => ({
             date: item.date,
@@ -204,18 +137,9 @@ export const useAccountingStore = () => {
         }));
     });
 
-    const categoryDifferencesAsync = async (accountingId, filterType, startDate, endDate) => {
-        try {
-            const response = await fetchCategoriesDifferences(accountingId, filterType, startDate, endDate);
-            categoriesDifferences.value = response.data;
-        } catch (error) {
-            console.error('Hubo un error al obtener los gastos:', error);
-        }
-    };
-
     return {
         accountings, loadAccountings: loadAccountings, userRole, fetchUserRoleAsync, fetchCategoriesSpentAsync, fetchCategoriesIncomeAsync, categories, fetchAccountingPersonalAsync, accountingPersonal, username, accountingName,
-        fetchOperationsAsync, operations, accountingId, processedSpents, fetchSpentsInterval, spentsFiltered, totalSpentMonth, fetchIncomeMonthsAsync,
+        fetchOperationsAsync, operations, accountingId, processedSpents, fetchSpentsInterval, spentsFiltered, totalSpentMonth, fetchIncomeInterval,
         incomesFiltered, totalIncomeMonth, processedIncomes, processDailyIncomeData, combinedDataProcessed, categoryDifferencesAsync,
         categoriesDifferences, sharedAccountings, fetchUsersAccountingAsync, usersAccounting, accountingSharedSelected, processedSpentsUser, processedIncomesUser, fetchCategoriesAsync,
         allOperations, fetchAllAccountingsUserOperationsAsync, allAccountingUserOperations, processDailySpentData, dailySpentData, savingsData

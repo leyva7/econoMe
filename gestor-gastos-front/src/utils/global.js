@@ -35,6 +35,10 @@ export const logout = () => {
     router.push('/');
 };
 
+export const hasDataIncome = ref(false);
+export const hasDataSpent = ref(false);
+export const hasData = ref(false);
+
 export const spentCategoryColors = ['#480707', '#a01414', '#e61c1c', '#ff6a6a', '#ffc7c7', '#a4b0be'];
 export const incomeCategoryColors = ['#183c27', '#257042', '#3aad66', '#96dfb1', '#e1f7e8', '#a4b0be'];
 

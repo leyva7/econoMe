@@ -50,9 +50,8 @@
         </div>
       </div>
 
-    <!-- Mensaje si no hay datos -->
     </div>
-    <p v-else class="text-center">No hay datos disponibles</p>
+    <NoDataMessage v-else/>
   </div>
 </template>
 
@@ -62,22 +61,21 @@ import { Chart, registerables } from 'chart.js';
 import { onMounted, ref, nextTick } from 'vue';
 import { useAccountingStore } from '@/stores/accountingStore';
 import IntervalSelector from "@/components/IntervalSelector.vue";
+import NoDataMessage from "@/components/NoDataMessage.vue";
 import {processFilterSelection} from "@/utils/functions";
-import {commonOptions} from "@/utils/global";
+import {commonOptions, hasData} from "@/utils/global";
 import {createChart} from "@/utils/chartService";
 import {usePagination} from "@/utils/usePagination";
 
 Chart.register(...registerables);
 export default {
   name: "EvolutionDetails",
-  components: {IntervalSelector},
+  components: {IntervalSelector, NoDataMessage},
   setup() {
-    const { accountingId, fetchSpentsInterval, fetchIncomeMonthsAsync, totalIncomeMonth, totalSpentMonth, combinedDataProcessed, fetchOperationsAsync, processDailySpentData, savingsData} = useAccountingStore();
+    const { accountingId, fetchSpentsInterval, fetchIncomeInterval, totalIncomeMonth, totalSpentMonth, combinedDataProcessed, fetchOperationsAsync, processDailySpentData, savingsData} = useAccountingStore();
     const { currentPage, totalPages, paginatedOperations, nextPage, prevPage } = usePagination(savingsData);
     const evolution = ref(null);
     const savings = ref(null);
-    // Variable reactiva para determinar si hay datos
-    const hasData = ref(false);
 
     const showElement = ref(false);
 
@@ -99,10 +97,10 @@ export default {
       console.log(`Fetching with accountingId: ${accountingId.value}, filterType: ${filterType}, startDate: ${startDate}, endDate: ${endDate}`);
 
       await fetchSpentsInterval(accountingId.value, filterType, startDate, endDate);
-      await fetchIncomeMonthsAsync(accountingId.value, filterType, startDate, endDate);
+      await fetchIncomeInterval(accountingId.value, filterType, startDate, endDate);
       await fetchOperationsAsync(accountingId.value, filterType, startDate, endDate);
 
-      hasData.value = (totalSpentMonth.value > 0 || totalIncomeMonth.value > 0);
+      hasData.value = totalSpentMonth.value > 0 || totalIncomeMonth.value > 0;
 
       await nextTick();
       initLineChart();
@@ -163,7 +161,7 @@ export default {
 
 
     return {
-      hasData, fetchSpentsInterval, fetchIncomeMonthsAsync, processDailySpentData, accountingId, showElement, updateData, combinedDataProcessed, savingsData,
+      hasData, fetchSpentsInterval, fetchIncomeInterval, processDailySpentData, accountingId, showElement, updateData, combinedDataProcessed, savingsData,
       currentPage, totalPages, paginatedOperations, nextPage, prevPage
     };
   },
