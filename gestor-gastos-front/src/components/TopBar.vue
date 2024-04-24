@@ -22,8 +22,13 @@
 <script setup>
 import {useAccountingStore} from '@/stores/accountingStore';
 import {logout, navigate} from "@/utils/global";
+import {onMounted} from "vue";
 
-const {username, accountingName} = useAccountingStore();
+const {username, accountingName, loadAccountings} = useAccountingStore();
+
+onMounted(async () => {
+  await loadAccountings();
+});
 
 </script>
 

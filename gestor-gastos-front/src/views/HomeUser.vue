@@ -6,10 +6,14 @@
     </div>
     <AddAccountingModal :isVisible="isModalOpen && modalContentType === 'addAccounting'" @update:isVisible="toggleModal" />
     <AddOperationModal :isVisible="isModalOpen && modalContentType === 'addOperations'" @update:isVisible="toggleModal" />
+    <AccountingInfoModal :isVisible="isModalOpen && modalContentType === 'infoAccounting'" @update:isVisible="toggleModal"/>
 
     <div style="flex: 0 0 85%; overflow-y: auto;">
       <TopBar/>
-      <div class="dynamic-content p-3 overflow-auto">
+      <div class="dynamic-content p-3 overflow-auto position-relative">
+        <button @click="openAccountingInfoModal" class="btn button-custom position-absolute top-0 end-0 mt-3 me-3">
+          <i class="fa-solid fa-circle-info me-2"></i>Información
+        </button>
         <router-view @openModal="handleOpenModal"></router-view>
         <button v-if="shouldShowAddButton" @click="openOperationsModal" class="add-floating-button position-fixed" style="right: 25px; bottom: 30px;">
           <i class="fa-solid fa-plus "></i>
@@ -28,10 +32,12 @@ import AddAccountingModal from "@/components/AddAccountingModal.vue";
 import AddOperationModal from "@/components/AddOperationModal.vue";
 import TopBar from "@/components/TopBar.vue";
 import { useAccountingStore } from '@/stores/accountingStore.js';
+import AccountingInfoModal from "@/components/AccountingInfoModal.vue";
 
 export default {
   name: 'UserHome',
   components:{
+    AccountingInfoModal,
     SidebarPage,
     AddAccountingModal,
     AddOperationModal,
@@ -39,7 +45,7 @@ export default {
   },
   setup() {
     const isModalOpen = ref(false);
-    const { accountingId, accountings, sharedAccountings, loadAccountings, userRole, fetchUserRoleAsync, categories, fetchCategories} = useAccountingStore();
+    const { accountingId, sharedAccountings, loadAccountings, accountings, userRole, fetchUserRoleAsync, categories, fetchCategories} = useAccountingStore();
     const modalContentType = ref('');
     const router = useRouter();
 
@@ -55,6 +61,11 @@ export default {
 
     const openOperationsModal = () => {
       modalContentType.value = 'addOperations';
+      isModalOpen.value = true;
+    };
+
+    const openAccountingInfoModal = () => {
+      modalContentType.value = 'infoAccounting';
       isModalOpen.value = true;
     };
 
@@ -82,7 +93,6 @@ export default {
     return {
       isModalOpen,
       toggleModal,
-      accountings,
       userRole,
       shouldShowAddButton,
       fetchUserRoleAsync,
@@ -91,7 +101,9 @@ export default {
       categories,
       fetchCategories,
       sharedAccountings,
-      handleOpenModal
+      handleOpenModal,
+      openAccountingInfoModal,
+      accountings
     };
   },
 };

@@ -36,6 +36,15 @@ export const fetchCategoriesDifferences = async (params) => {
     });
 };
 
+export const updateAccounting = async (id, accountingRegistration) => {
+    return await axios.put(`${API_URL}${id}`, accountingRegistration, {
+        headers: {
+            ...getAuthHeaders(),
+            'Content-Type': 'application/json'
+        }
+    });
+}
+
 export const deleteUserAccounting = async (accountingId, username) => {
     return await axios.delete(`${API_URL}${accountingId}/${username}`, {
         headers: getAuthHeaders()

@@ -35,6 +35,13 @@ export const logout = () => {
     router.push('/');
 };
 
+export const tableColumnsOperations = [
+    { key: "type", label: "Tipo de operación" },
+    { key: "category", label: "Categoría" },
+    { key: "quantity", label: "Cantidad" },
+    { key: "date", label: "Fecha" }
+];
+
 export const hasDataIncome = ref(false);
 export const hasDataSpent = ref(false);
 export const hasData = ref(false);

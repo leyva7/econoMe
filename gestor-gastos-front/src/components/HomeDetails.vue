@@ -96,31 +96,11 @@
         <h3 class="text-center mb-3">Últimas operaciones</h3>
         <!-- Tabla de Últimas Operaciones -->
         <div v-if="hasData">
-          <div class="table-container table-responsive">
-            <table class="table">
-              <thead>
-              <tr>
-                <th>Tipo de operación</th>
-                <th>Categoría</th>
-                <th>Cantidad</th>
-                <th>Fecha</th>
-              </tr>
-              </thead>
-              <tbody>
-              <tr v-for="operation in paginatedOperations" :key="operation.id">
-                <td>{{ operation.type === 'INCOME' ? 'Ingreso' : 'Gasto' }}</td>
-                <td>{{ operation.category }}</td>
-                <td>{{ operation.quantity.toFixed(2) }}</td>
-                <td>{{ operation.date }}</td>
-              </tr>
-              </tbody>
-            </table>
-          </div>
-          <div class="pagination-container d-flex justify-content-center mb-4">
-            <button @click="prevPage" class="btn btn-secondary me-2" :disabled="currentPage <= 1">Anterior</button>
-            <span class="me-2">Página {{ currentPage }} de {{ totalPages }}</span>
-            <button @click="nextPage" class="btn btn-secondary" :disabled="currentPage >= totalPages">Siguiente</button>
-          </div>
+          <DataTable :data="paginations[0].paginatedData.value" :columns="tableColumnsOperations"
+                     :currentPage="paginations[0].currentPage.value"
+                     :totalPages="paginations[0].totalPages.value"
+                     @prev-page="paginations[0].prevPage"
+                     @next-page="paginations[0].nextPage" />
         </div>
         <div v-else>
           <NoDataMessage message="No hay operaciones recientes disponibles."/>
@@ -135,20 +115,25 @@
 import { Chart, registerables } from 'chart.js';
 import { onMounted, ref, nextTick} from 'vue';
 import { useAccountingStore } from '@/stores/accountingStore';
-import {usePagination} from "@/utils/usePagination";
+import {useMultiplePagination} from "@/utils/usePagination";
 import {processFilterSelection} from "@/utils/functions";
 import IntervalSelector from "./IntervalSelector.vue";
 import NoDataMessage from "@/components/NoDataMessage.vue";
-import {commonOptions, pieOptions, hasData, hasDataSpents, hasDataIncome} from "@/utils/global";
+import {commonOptions, pieOptions, hasData, hasDataSpents, hasDataIncome, tableColumnsOperations} from "@/utils/global";
 import {createChart} from "@/utils/chartService";
+import DataTable from "@/components/DataTable.vue";
 
 Chart.register(...registerables);
 export default {
   name: "HomeDetails",
-  components:{ IntervalSelector, NoDataMessage },
+  components:{ IntervalSelector, NoDataMessage, DataTable },
   setup() {
     const { accountingId, fetchSpentsInterval, totalSpentMonth, fetchIncomeInterval, totalIncomeMonth, topSpentCategory, topIncomeCategory, categoriesDifferences, categoryDifferencesAsync, operations, fetchOperationsAsync } = useAccountingStore();
-    const { currentPage, totalPages, paginatedOperations, nextPage, prevPage } = usePagination(operations);
+
+    const paginationConfigs = [
+      { data: operations, reduced: false },
+    ];
+    const paginations = useMultiplePagination(paginationConfigs);
 
     const chart = ref(null);
 
@@ -209,13 +194,10 @@ export default {
       updateData,
       showElement,
       hasData, hasDataIncome, hasDataSpents,
-      paginatedOperations, totalPages, currentPage, nextPage, prevPage
+      paginations,
+      tableColumnsOperations
     };
   },
 };
 
 </script>
-
-<style scoped>
-
-</style>

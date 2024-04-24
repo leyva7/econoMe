@@ -24,14 +24,12 @@ import java.util.stream.Collectors;
 public class AccountingService {
     private final AccountingRepository accountingRepository;
     private final OperationsService operationsService;
-    private final RolesRepository rolesRepository;
     private final RolesService rolesService;
 
     @Autowired
-    public AccountingService(AccountingRepository accountingRepository, OperationsService operationsService, RolesRepository rolesRepository, RolesService rolesService){
+    public AccountingService(AccountingRepository accountingRepository, OperationsService operationsService, RolesService rolesService){
         this.accountingRepository = accountingRepository;
         this.operationsService = operationsService;
-        this.rolesRepository = rolesRepository;
         this.rolesService = rolesService;
     }
     @Transactional
@@ -91,16 +89,20 @@ public class AccountingService {
     }
 
 
-    public Accounting updateAccounting(String username, Accounting accounting){
-        if(accounting.getId() == null || !accountingRepository.existsById(accounting.getId())){
-            throw new AccountingException("La contabilidad con el ID " + accounting.getId() + " no existe.");
+    public Accounting updateAccounting(Long id, User userCreator, String newName, String newDescription){
+        if(id == null || !accountingRepository.existsById(id)){
+            throw new AccountingException("La contabilidad con el ID " + id+ " no existe.");
         }
 
-        if(rolesService.findByUserUsernameAndAccountingId(username, accounting.getId()).getRole().equals(Role.EDITOR)){
+        Accounting accounting = findAccountingById(id);
+
+        if(userCreator.equals(accounting.getUserCreator())){
+            accounting.setName(newName);
+            accounting.setDescription(newDescription);
             return accountingRepository.save(accounting);
         }
         else{
-            throw new RoleException("El usuario " + username + " no tiene rol de editor en la contabilidad " + accounting.getId());
+            throw new AccountingException("El usuario " + userCreator.getUsername() + " no es el creador de la contabilidad " + accounting.getId());
         }
 
     }

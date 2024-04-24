@@ -53,8 +53,11 @@ public class AccountingController {
 
     // Actualización de datos de la contabilidad
     @PutMapping("/{id}")
-    public ResponseEntity<Accounting> updateAccounting(@PathVariable String username, @RequestBody Accounting accounting) {
-        Accounting updatedAccounting = accountingService.updateAccounting(username, accounting);
+    public ResponseEntity<Accounting> updateAccounting(
+            @PathVariable Long id,
+            @RequestBody AccountingRegistration accountingRegistration) {
+
+        Accounting updatedAccounting = accountingService.updateAccounting(id, userService.getUserByUsername(accountingRegistration.getUserCreator()), accountingRegistration.getName(), accountingRegistration.getDescription());
         return ResponseEntity.ok(updatedAccounting);
     }
 

@@ -177,3 +177,15 @@ export function processFilterSelection(selection) {
     return { filterType, startDate, endDate };
 }
 
+export function getTypeRepresentation(type) {
+    return type === 'INCOME' ? 'Ingreso' : 'Gasto';
+}
+
+export function addEuroSymbol(value) {
+    if (!isNaN(value)) {
+        return value.toFixed(2) + " €";
+    } else {
+        return value;
+    }
+}
+

@@ -1,4 +1,4 @@
-import {computed, ref} from 'vue';
+import {computed, ref, watch} from 'vue';
 import {useRouter} from 'vue-router';
 import {
     fetchAccountingPersonal,
@@ -25,14 +25,7 @@ export const useAccountingStore = () => {
     const username = ref(localStorage.getItem('username') || '');
     const accountingPersonal = ref({});
 
-    const accountingName = computed(() => {
-        if (router.currentRoute.value.name === 'shared') {
-            return router.currentRoute.value.params.accountingName;
-        }
-        else{
-            return 'Contabilidad personal';
-        }
-    });
+    const accountingName = ref('');
     const accountingId = computed(() => {
         return router.currentRoute.value.query.id;
     });
@@ -117,16 +110,31 @@ export const useAccountingStore = () => {
     const accountingSharedSelected = computed(() => {
         return sharedAccountings.value.filter(accounting => accounting.id === Number(accountingId.value));
     });
+    const currentAccounting = computed(() => {
+        return accountings.value.find(account => account.id === Number(accountingId.value));
+    });
 
     const processedSpents = computed(() => proccessCategories(spentsFiltered.value, 'category'));
     const totalSpentMonth = computed(() => spentsFiltered.value.reduce((total, { quantity }) => total + quantity, 0));
-    const processDailySpentData = computed(() => processLinearGraphData(spentsFiltered.value));
+    const processDailySpentData = computed(() => {
+        if (!spentsFiltered.value || spentsFiltered.value.length === 0 || !spentsFiltered.value.some(item => item && item.date)) {
+            console.warn("Datos no disponibles o incompletos para procesar en processDailySpentData");
+            return [];
+        }
+        return processLinearGraphData(spentsFiltered.value);
+    });
     const processedSpentsUser = computed(() => { return proccessCategories(spentsFiltered.value, 'username'); });
 
 
     const processedIncomes = computed(() => { return proccessCategories(incomesFiltered.value, 'category'); });
     const totalIncomeMonth = computed(() => { return incomesFiltered.value.reduce((total, { quantity }) => total + quantity, 0); });
-    const processDailyIncomeData = computed(() => {return processLinearGraphData(incomesFiltered.value); });
+    const processDailyIncomeData = computed(() => {
+        if (!incomesFiltered.value || incomesFiltered.value.length === 0 || !incomesFiltered.value.some(item => item && item.date)) {
+            console.warn("Datos no disponibles o incompletos para procesar en processDailyIncomeData");
+            return [];
+        }
+        return processLinearGraphData(incomesFiltered.value);
+    });
     const processedIncomesUser = computed(() => { return proccessCategories(incomesFiltered.value, 'username'); });
 
     const combinedDataProcessed = computed(() => { return processFinancialData(operations.value); });
@@ -137,11 +145,17 @@ export const useAccountingStore = () => {
         }));
     });
 
+    watch(currentAccounting, (newData) => {
+        if (newData) {
+            accountingName.value = newData.name;
+        }
+    });
+
     return {
         accountings, loadAccountings: loadAccountings, userRole, fetchUserRoleAsync, fetchCategoriesSpentAsync, fetchCategoriesIncomeAsync, categories, fetchAccountingPersonalAsync, accountingPersonal, username, accountingName,
         fetchOperationsAsync, operations, accountingId, processedSpents, fetchSpentsInterval, spentsFiltered, totalSpentMonth, fetchIncomeInterval,
         incomesFiltered, totalIncomeMonth, processedIncomes, processDailyIncomeData, combinedDataProcessed, categoryDifferencesAsync,
         categoriesDifferences, sharedAccountings, fetchUsersAccountingAsync, usersAccounting, accountingSharedSelected, processedSpentsUser, processedIncomesUser, fetchCategoriesAsync,
-        allOperations, fetchAllAccountingsUserOperationsAsync, allAccountingUserOperations, processDailySpentData, dailySpentData, savingsData
+        allOperations, fetchAllAccountingsUserOperationsAsync, allAccountingUserOperations, processDailySpentData, dailySpentData, savingsData, currentAccounting
     };
 };

@@ -57,7 +57,7 @@ import {ref, defineComponent, computed, watch, onMounted} from 'vue';
 import { useAccountingStore } from '@/stores/accountingStore';
 import { globalStore} from "@/stores/globalStore";
 import { createOperation, updateOperation } from "@/service/operationService";
-import {formatDateToDDMMYYYY} from "@/utils/functions";
+import { formatDateToDDMMYYYY } from "@/utils/functions";
 
 export default defineComponent({
   components: {
@@ -120,8 +120,8 @@ export default defineComponent({
       operation.value.category = '';
       operation.value.date = '';
       operation.value.quantity = '';
-      customOption.value = ''; // Limpia también la opción personalizada si está seleccionada
-      selectedOption.value = ''; // Limpia la opción seleccionada en el select
+      customOption.value = '';
+      selectedOption.value = '';
     };
 
     const updateCategories = () => {
@@ -162,7 +162,7 @@ export default defineComponent({
     const submitOperations = async () => {
 
       let categoryValid = isCustomOptionSelected.value ? customOption.value.trim() !== '' : selectedOption.value !== '';
-      if (!categoryValid || !operation.value.type || !operation.value.date || !operation.value.description || operation.value.quantity <= 0) {
+      if (!categoryValid || !operation.value.type || !operation.value.date || operation.value.quantity <= 0) {
         alert('Por favor, completa todos los campos.');
         return;
       }

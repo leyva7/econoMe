@@ -138,6 +138,11 @@
     border-radius: 5px;
 }
 
+.button-custom{
+    background-color: var(--pickled-bluewood-400);
+    border-color: var(--pickled-bluewood-400);
+}
+
 .update-button {
     background-color: #007bff;
     color: white;

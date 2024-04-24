@@ -2,10 +2,7 @@
   <div class="container mt-5 text-center">
     <div class="row mb-4">
       <div class="col-12 d-flex justify-content-between align-items-center">
-        <h3 v-if="accountingSharedSelected.length > 0">
-          {{ accountingSharedSelected[0].description }}
-        </h3>
-        <h3 v-else>No hay datos</h3>
+        <h3>{{ accountingSharedSelected.length > 0 ? accountingSharedSelected[0].description : 'No hay datos' }}</h3>
 
         <div v-if="isUserCreator" class="my-3 button-group">
           <button @click="openUserManagementModal" class="btn btn-primary me-2">Gestionar usuarios</button>
@@ -20,111 +17,50 @@
     <div class="row g-4">
       <IntervalSelector :isVisible="showElement" @update-selection="updateData" />
       <!-- Gráficos de Categorías y Últimas Operaciones -->
-      <div class="col-12 col-lg-4 mb-2">
-        <div class="card h-100">
-          <h4 class="card-header">Gastos por Categorías</h4>
-          <div v-if="hasDataSpents" class="card-body">
-            <div class="chart-container">
-              <canvas id="topCategoriesChart"></canvas>
+      <template v-for="(chart, index) in charts" :key="index">
+        <div class="col-12 col-lg-4 mb-2">
+          <div class="card h-100">
+            <h4 class="card-header">{{ chart.title }}</h4>
+            <div v-if="chart.hasData" class="card-body">
+              <div class="chart-container">
+                <canvas :id="chart.id"></canvas>
+              </div>
             </div>
+            <NoDataMessage v-else/>
           </div>
-          <NoDataMessage v-else/>
         </div>
-      </div>
-
-      <div class="col-12 col-lg-4 mb-2">
-        <div class="card h-100">
-          <h4 class="card-header">Ingresos por Categorías</h4>
-          <div v-if="hasDataIncome" class="card-body">
-            <div class="chart-container">
-              <canvas id="topCategoriesIncomeChart"></canvas>
-            </div>
-          </div>
-          <NoDataMessage v-else/>
-        </div>
-      </div>
+      </template>
 
       <div class="col-12 col-lg-4 mb-2">
         <div class="card h-100">
           <h4 class="card-header">Últimas Operaciones</h4>
           <div v-if="hasData" class="card-body">
             <!-- Tabla de Últimas Operaciones -->
-            <div class="table-container table-responsive">
-              <table class="table text-center align-middle">
-                <thead>
-                  <tr class="text-center align-middle">
-                    <th>Tipo de operación</th>
-                    <th>Categoría</th>
-                    <th>Cantidad</th>
-                    <th>Fecha</th>
-                  </tr>
-                </thead>
-                <tbody>
-                <tr v-for="operation in paginatedOperations" :key="operation.id">
-                  <td>{{ operation.type === 'INCOME' ? 'Ingreso' : 'Gasto' }}</td>
-                  <td>{{ operation.category }}</td>
-                  <td>{{ operation.quantity.toFixed(2) }}</td>
-                  <td>{{ operation.date }}</td>
-                </tr>
-                </tbody>
-              </table>
-            </div>
-            <div class="pagination-container d-flex justify-content-center mb-4">
-              <button @click="prevPage" class="btn btn-secondary me-2" :disabled="currentPage <= 1">Anterior</button>
-              <span class="me-2">Página {{ currentPage }} de {{ totalPages }}</span>
-              <button @click="nextPage" class="btn btn-secondary" :disabled="currentPage >= totalPages">Siguiente</button>
-            </div>
+            <DataTable :data="paginations[0].paginatedData.value" :columns="tableColumnsOperations"
+                       :currentPage="paginations[0].currentPage.value"
+                       :totalPages="paginations[0].totalPages.value"
+                       @prev-page="paginations[0].prevPage"
+                       @next-page="paginations[0].nextPage" />
           </div>
           <NoDataMessage v-else/>
         </div>
       </div>
+
     </div>
 
     <div class="row g-4">
-      <!-- Detalles de Gastos, Detalles de Ingresos, Lista de Usuarios -->
-      <div class="col-12 col-lg-4">
+      <!-- Detalles de Gastos, Detalles de Ingresos-->
+      <div class="col-12 col-lg-4" v-for="(table, index) in tables" :key="index">
         <div class="card h-100">
-          <h4 class="card-header">Detalle de Gastos</h4>
-          <div v-if="hasDataSpents" class="card-body">
-            <table class="table">
-              <thead>
-              <tr>
-                <th>Usuario</th>
-                <th>Cantidad</th>
-              </tr>
-              </thead>
-              <tbody>
-              <tr v-for="spent in processedSpentsUser" :key="spent.id">
-                <td>{{ spent.username }}</td>
-                <td>{{ spent.total }}</td>
-              </tr>
-              </tbody>
-            </table>
+          <h4 class="card-header">{{ table.title }}</h4>
+          <div v-if="table.hasData" class="card-body">
+            <DataTable :data="paginations[index+1].paginatedData.value" :columns="tableSpentUser"
+                       :currentPage="paginations[index+1].currentPage.value"
+                       :totalPages="paginations[index+1].totalPages.value"
+                       @prev-page="paginations[index+1].prevPage"
+                       @next-page="paginations[index+1].nextPage" />
           </div>
-          <NoDataMessage v-else/>
-        </div>
-      </div>
-
-      <div class="col-12 col-lg-4">
-        <div class="card h-100">
-          <h4 class="card-header">Detalle de Ingresos</h4>
-          <div v-if="hasDataIncome" class="card-body">
-            <table class="table">
-              <thead>
-              <tr>
-                <th>Usuario</th>
-                <th>Cantidad</th>
-              </tr>
-              </thead>
-              <tbody>
-              <tr v-for="income in processedIncomesUser" :key="income.id">
-                <td>{{ income.username }}</td>
-                <td>{{ income.total }}</td>
-              </tr>
-              </tbody>
-            </table>
-          </div>
-          <NoDataMessage v-else/>
+          <NoDataMessage v-else />
         </div>
       </div>
 
@@ -146,42 +82,56 @@
 </template>
 
 <script>
-import {spentCategoryColors, incomeCategoryColors, hasData, hasDataIncome, hasDataSpents} from "@/utils/global";
-import {usePagination} from "@/utils/usePagination";
+import { spentCategoryColors, incomeCategoryColors, hasData, hasDataIncome, hasDataSpents, commonOptions, pieOptions, tableColumnsOperations } from "@/utils/global";
+import { useMultiplePagination } from "@/utils/usePagination";
 import { useAccountingStore } from '@/stores/accountingStore.js';
-import {deleteUserAccounting as deleteAccountingApi} from "@/service/accountingService"
-import {ref, onMounted, nextTick} from "vue";
+import { deleteUserAccounting as deleteAccountingApi } from "@/service/accountingService";
+import { ref, onMounted, nextTick, computed } from "vue";
 import { useRouter } from 'vue-router';
-import {Chart} from "chart.js";
 import UserManagementModal from "@/components/UserManagementModal.vue";
 import IntervalSelector from "@/components/IntervalSelector.vue";
+import DataTable from "@/components/DataTable.vue";
 import NoDataMessage from "@/components/NoDataMessage.vue";
-import {processFilterSelection} from "@/utils/functions";
+import { processFilterSelection } from "@/utils/functions";
+import { createChart } from "@/utils/chartService";
+
 export default {
   name: "SharedAccountings",
-  components: {
-    UserManagementModal,
-    IntervalSelector,
-    NoDataMessage
-  },
+  components: { UserManagementModal, IntervalSelector, DataTable, NoDataMessage },
   setup() {
     const accountingStore = useAccountingStore();
-    const {accountings, sharedAccountings, loadAccountings, accountingId, fetchUsersAccountingAsync, usersAccounting, accountingSharedSelected, processedSpents,
-      spentsFiltered, fetchSpentsInterval, processedIncomes, incomesFiltered, fetchIncomeInterval, processedSpentsUser, processedIncomesUser, fetchOperationsAsync, operations,
-      totalSpentMonth, totalIncomeMonth} = accountingStore;
+    const {
+      accountings, sharedAccountings, loadAccountings, accountingId, fetchUsersAccountingAsync, usersAccounting, accountingSharedSelected, processedSpents,
+      fetchSpentsInterval, processedIncomes, fetchIncomeInterval, processedSpentsUser, processedIncomesUser, fetchOperationsAsync, operations,
+      totalSpentMonth, totalIncomeMonth
+    } = accountingStore;
 
-    const { currentPage, totalPages, paginatedOperations, nextPage, prevPage } = usePagination(operations, true);
+    const paginationConfigs = [
+      { data: operations, reduced: true },
+      { data: processedSpentsUser, reduced: true },
+      { data: processedIncomesUser, reduced: true }
+    ];
+
+    const paginations = useMultiplePagination(paginationConfigs);
 
     const router = useRouter();
     const isUserCreator = ref(false);
 
-    const chart = ref(null);
+    const chartSpents = ref(null);
     const chartIncomes = ref(null);
 
     const isUserManagementModalOpen = ref(false);
-
     const showElement = ref(false);
 
+    const charts = ref([
+      { title: "Gastos por Categorías", id: "topCategoriesChart", hasData: computed(() => hasDataSpents.value) },
+      { title: "Ingresos por Categorías", id: "topCategoriesIncomeChart", hasData: computed(() => hasDataIncome.value) }
+    ]);
+
+    const tables = ref([
+      { title: "Detalle de Gastos", headers: ["Usuario", "Cantidad"], data: computed(() => processedSpentsUser.value), hasData: computed(() => hasDataSpents.value) },
+      { title: "Detalle de Ingresos", headers: ["Usuario", "Cantidad"], data: computed(() => processedIncomesUser.value), hasData: computed(() => hasDataIncome.value) }
+    ]);
 
     onMounted(async () => {
       await loadAccountings();
@@ -201,12 +151,9 @@ export default {
 
       const { filterType, startDate, endDate } = processFilterSelection(selection);
 
-      console.log(`Fetching with accountingId: ${accountingId.value}, filterType: ${filterType}, startDate: ${startDate}, endDate: ${endDate}`);
-
       await fetchSpentsInterval(accountingId.value, filterType, startDate, endDate);
       await fetchIncomeInterval(accountingId.value, filterType, startDate, endDate);
       await fetchOperationsAsync(accountingId.value, filterType, startDate, endDate);
-      console.log(operations.value);
 
       hasDataSpents.value = (totalSpentMonth.value > 0);
       hasDataIncome.value = (totalIncomeMonth.value > 0);
@@ -214,7 +161,7 @@ export default {
 
       await nextTick();
       initChart();
-      initIncomeChart()
+      initIncomeChart();
     };
 
     const openUserManagementModal = () => {
@@ -227,11 +174,7 @@ export default {
 
     const calculateIsUserCreator = () => {
       const sharedAccounting = sharedAccountings.value.find(accounting => accounting.id === Number(accountingId.value));
-      if (sharedAccounting) {
-        isUserCreator.value = sharedAccounting.userCreator === localStorage.getItem('username');
-      } else {
-        isUserCreator.value = false;
-      }
+      isUserCreator.value = sharedAccounting ? sharedAccounting.userCreator === localStorage.getItem('username') : false;
     };
 
     const deleteAccounting = async () => {
@@ -239,10 +182,9 @@ export default {
         try {
           await deleteAccountingApi(accountingId.value, localStorage.getItem('username'));
           console.log("Eliminada la contabilidad");
-          // Recargar las contabilidades para actualizar el sidebar
           await loadAccountings();
           router.push({
-            path: '/home-user', // Utiliza 'path' en lugar de 'name'
+            path: '/home-user',
             query: { id: localStorage.getItem('personalAccountingId') }
           });
         } catch (error) {
@@ -252,126 +194,39 @@ export default {
     };
 
     const initChart = () => {
-      const ctx = document.getElementById('topCategoriesChart');
-      if (ctx && chart.value) {
-        chart.value.destroy();
-      }
-      if (ctx) {
-        chart.value = new Chart(ctx, {
-          type: 'pie',
-          data: {
-            labels: processedSpents.value.map(({ category }) => category),
-            datasets: [{
-              data: processedSpents.value.map(({ total }) => total),
-              backgroundColor: spentCategoryColors,
-            }]
-          },
-          options: {
-            scales: {
-              y: {
-                display: false,
-              },
-              x: {
-                display: false,
-              }
-            },
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-              legend: {
-                display: true,
-                position: 'top',
-                align: 'center',
-                padding: '100',
-                labels: {
-                  color: 'black',
-                  font: {
-                    size: 16 // Tamaño de la letra en la leyenda
-                  }
-                }
-              },
-            }
-          },
-        });
+      showElement.value = false;
+      const spentCtx = document.getElementById('topCategoriesChart');
+      if (spentCtx) {
+        if (chartSpents.value) chartSpents.value.destroy();
+        const pieData = {
+          labels: processedSpents.value.map(s => s.category),
+          datasets: [{
+            data: processedSpents.value.map(s => s.total),
+            backgroundColor: spentCategoryColors,
+          }]
+        };
+        chartSpents.value = createChart(spentCtx, 'pie', pieData, commonOptions, pieOptions);
       }
     };
 
     const initIncomeChart = () => {
-      const ctx = document.getElementById('topCategoriesIncomeChart');
-      if (ctx && chartIncomes.value) {
-        chartIncomes.value.destroy(); // Destruye el gráfico anterior si existe
-      }
-      if (ctx) {
-        chartIncomes.value = new Chart(ctx, {
-          type: 'pie', // Cambia 'pie' por 'bar'
-          data: {
-            labels: processedIncomes.value.map(({ category }) => category), // Categorías
-            datasets: [{
-              label: 'Total por categoría',
-              data: processedIncomes.value.map(({ total }) => total), // Totales
-              backgroundColor: incomeCategoryColors
-            }]
-          },
-          options: {
-            scales: {
-              y: {
-                display: false,
-                beginAtZero: true,
-                ticks: {
-                  color: 'black',
-                  font: {
-                    size: 16 // Tamaño de la letra en el eje Y
-                  }
-                }
-              },
-              x: {
-                display:false,
-                ticks: {
-                  color: 'black',
-                  font: {
-                    size: 16 // Tamaño de la letra en el eje X
-                  }
-                }
-              }
-            },
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-              legend: {
-                display: true,
-                position: 'top',
-                align: 'center',
-                padding: '100',
-                labels: {
-                  color: 'black',
-                  font: {
-                    size: 16 // Tamaño de la letra en la leyenda
-                  }
-                }
-              },
-            }
-          }
-        });
+      showElement.value = false;
+      const incomeCtx = document.getElementById('topCategoriesIncomeChart');
+      if (incomeCtx) {
+        if (chartIncomes.value) chartIncomes.value.destroy();
+        const pieData = {
+          labels: processedIncomes.value.map(s => s.category),
+          datasets: [{
+            data: processedIncomes.value.map(s => s.total),
+            backgroundColor: incomeCategoryColors,
+          }]
+        };
+        chartIncomes.value = createChart(incomeCtx, 'pie', pieData, commonOptions, pieOptions);
       }
     };
 
     return {
-      accountings,
-      sharedAccountings,
-      isUserCreator, deleteAccounting,
-      usersAccounting,
-      accountingSharedSelected,
-      processedSpents,
-      spentsFiltered,
-      processedIncomes,
-      incomesFiltered,
-      hasDataSpents, hasDataIncome, hasData,
-      processedSpentsUser,
-      processedIncomesUser,
-      isUserManagementModalOpen, openUserManagementModal, closeModal,
-      incomeCategoryColors, spentCategoryColors,
-      paginatedOperations, nextPage, prevPage, totalPages, currentPage, updateData,
-      showElement
+      accountings, sharedAccountings, isUserCreator, deleteAccounting, usersAccounting, accountingSharedSelected, processedSpents, processedIncomes, hasDataSpents, hasDataIncome, hasData, processedSpentsUser, processedIncomesUser, isUserManagementModalOpen, openUserManagementModal, closeModal, incomeCategoryColors, spentCategoryColors, paginations, showElement, charts, tables, updateData, operations, tableColumnsOperations, tableSpentUser: [{ key: "username", label: "Usuario" }, { key: "total", label: "Cantidad" }]
     };
   }
 }

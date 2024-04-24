@@ -45,31 +45,11 @@
         <div class="bg-white rounded shadow p-3">
           <h3 class="text-center mb-3">Últimas operaciones</h3>
           <!-- Tabla de Últimas Operaciones -->
-          <div class="table-container table-responsive">
-            <table class="table">
-              <thead>
-              <tr>
-                <th>Tipo de operación</th>
-                <th>Categoría</th>
-                <th>Cantidad</th>
-                <th>Fecha</th>
-              </tr>
-              </thead>
-              <tbody>
-              <tr v-for="operation in paginatedOperations" :key="operation.id">
-                <td>{{ operation.type === 'INCOME' ? 'Ingreso' : 'Gasto' }}</td>
-                <td>{{ operation.category }}</td>
-                <td>{{ operation.quantity.toFixed(2) }}</td>
-                <td>{{ operation.date }}</td>
-              </tr>
-              </tbody>
-            </table>
-          </div>
-          <div class="pagination-container d-flex justify-content-center mb-4">
-            <button @click="prevPage" class="btn btn-secondary me-2" :disabled="currentPage <= 1">Anterior</button>
-            <span class="me-2">Página {{ currentPage }} de {{ totalPages }}</span>
-            <button @click="nextPage" class="btn btn-secondary" :disabled="currentPage >= totalPages">Siguiente</button>
-          </div>
+          <DataTable :data="paginations[0].paginatedData.value" :columns="tableColumnsOperations"
+                     :currentPage="paginations[0].currentPage.value"
+                     :totalPages="paginations[0].totalPages.value"
+                     @prev-page="paginations[0].prevPage"
+                     @next-page="paginations[0].nextPage" />
         </div>
       </div>
     </div>
@@ -81,21 +61,25 @@
 import { Chart, registerables } from 'chart.js';
 import {onMounted, ref, nextTick} from 'vue';
 import { useAccountingStore } from '@/stores/accountingStore';
-import {commonOptions, incomeCategoryColors, pieOptions, hasDataIncome} from "@/utils/global";
-import {usePagination} from "@/utils/usePagination";
+import {commonOptions, incomeCategoryColors, pieOptions, hasDataIncome, tableColumnsOperations} from "@/utils/global";
+import {useMultiplePagination} from "@/utils/usePagination";
 import {processFilterSelection} from "@/utils/functions";
 import IntervalSelector from "@/components/IntervalSelector.vue";
 import NoDataMessage from "@/components/NoDataMessage.vue";
 import {createChart} from "@/utils/chartService";
+import DataTable from "@/components/DataTable.vue";
 
 Chart.register(...registerables);
 
 export default {
   name: "IncomeDetails",
-  components:{ IntervalSelector, NoDataMessage },
+  components:{ IntervalSelector, NoDataMessage, DataTable },
   setup() {
     const { accountingId, processedIncomes, fetchIncomeAsync,fetchIncomeInterval, incomesFiltered, latestIncomes, monthlyIncomeData, totalIncomeMonth, processDailyIncomeData} = useAccountingStore();
-    const { currentPage, totalPages, paginatedOperations, nextPage, prevPage } = usePagination(incomesFiltered);
+    const paginationConfigs = [
+      { data: incomesFiltered, reduced: false },
+    ];
+    const paginations = useMultiplePagination(paginationConfigs);
     const chart = ref(null);
     const linesChart = ref(null);
 
@@ -166,7 +150,7 @@ export default {
 
     return {
       processDailyIncomeData, totalIncomeMonth, incomesFiltered, fetchIncomeAsync, fetchIncomeInterval, processedIncomes, hasDataIncome, latestIncomes, monthlyIncomeData, incomeCategoryColors,
-      nextPage, prevPage, paginatedOperations, currentPage, showElement, totalPages, updateData
+      paginations, showElement, updateData, tableColumnsOperations
     };
   },
 };

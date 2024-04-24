@@ -26,27 +26,11 @@
 
       <div class="col-12 col-lg-6 mb-3">
         <div class="p-3 bg-white rounded shadow">
-          <div class="table-container table-responsive">
-            <table class="table">
-              <thead>
-              <tr>
-                <th>Fecha</th>
-                <th>Ahorro</th>
-              </tr>
-              </thead>
-              <tbody>
-              <tr v-for="data in paginatedOperations" :key="data.date">
-                <td>{{ data.date }}</td>
-                <td>{{ data.savings.toFixed(2) }} €</td>
-              </tr>
-              </tbody>
-            </table>
-          </div>
-          <div class="pagination-container d-flex justify-content-center mb-4">
-            <button @click="prevPage" class="btn btn-secondary me-2" :disabled="currentPage <= 1">Anterior</button>
-            <span class="me-2">Página {{ currentPage }} de {{ totalPages }}</span>
-            <button @click="nextPage" class="btn btn-secondary" :disabled="currentPage >= totalPages">Siguiente</button>
-          </div>
+          <DataTable :data="paginations[0].paginatedData.value" :columns="tableColumnEvolution"
+                     :currentPage="paginations[0].currentPage.value"
+                     :totalPages="paginations[0].totalPages.value"
+                     @prev-page="paginations[0].prevPage"
+                     @next-page="paginations[0].nextPage" />
         </div>
       </div>
 
@@ -65,15 +49,19 @@ import NoDataMessage from "@/components/NoDataMessage.vue";
 import {processFilterSelection} from "@/utils/functions";
 import {commonOptions, hasData} from "@/utils/global";
 import {createChart} from "@/utils/chartService";
-import {usePagination} from "@/utils/usePagination";
+import {useMultiplePagination} from "@/utils/usePagination";
+import DataTable from "@/components/DataTable.vue";
 
 Chart.register(...registerables);
 export default {
   name: "EvolutionDetails",
-  components: {IntervalSelector, NoDataMessage},
+  components: {IntervalSelector, NoDataMessage, DataTable},
   setup() {
     const { accountingId, fetchSpentsInterval, fetchIncomeInterval, totalIncomeMonth, totalSpentMonth, combinedDataProcessed, fetchOperationsAsync, processDailySpentData, savingsData} = useAccountingStore();
-    const { currentPage, totalPages, paginatedOperations, nextPage, prevPage } = usePagination(savingsData);
+    const paginationConfigs = [
+      { data: savingsData, reduced: false },
+    ];
+    const paginations = useMultiplePagination(paginationConfigs);
     const evolution = ref(null);
     const savings = ref(null);
 
@@ -162,7 +150,10 @@ export default {
 
     return {
       hasData, fetchSpentsInterval, fetchIncomeInterval, processDailySpentData, accountingId, showElement, updateData, combinedDataProcessed, savingsData,
-      currentPage, totalPages, paginatedOperations, nextPage, prevPage
+      paginations, tableColumnEvolution : [
+        { key: "date", label: "Fecha" },
+        { key: "savings", label: "Ahorro" }
+      ]
     };
   },
 };
