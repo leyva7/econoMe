@@ -1,24 +1,12 @@
 import {computed, ref, watch} from 'vue';
-import {useRouter} from 'vue-router';
-import {
-    fetchAccountingPersonal,
-    fetchAccountings,
-    fetchCategoriesDifferences,
-    fetchCategoriesIncome,
-    fetchCategoriesSpent
-} from '@/service/accountingService';
-import {fetchUserRole, fetchUsersAccounting} from '@/service/userRoleService';
-import {
-    fetchAllAccountingsUserOperations,
-    fetchIncomesFiltered,
-    fetchOperations,
-    fetchSpentsFiltered
-} from '@/service/operationService';
+import router from "@/router";
+import { fetchAccountingPersonal, fetchAccountings, fetchCategoriesDifferences, fetchCategoriesIncome, fetchCategoriesSpent } from '@/api/accountingAPI';
+import { fetchUserRole, fetchUsersAccounting} from '@/api/userRoleAPI';
+import { fetchAllAccountingsUserOperations, fetchIncomesFiltered, fetchOperations, fetchSpentsFiltered } from '@/api/operationAPI';
 
 import {proccessCategories, processFinancialData, processLinearGraphData} from '@/utils/functions';
 
 export const useAccountingStore = () => {
-    const router = useRouter();
     const accountings = ref([]);
     const userRole = ref([]);
     const categories = ref([]);
@@ -85,8 +73,17 @@ export const useAccountingStore = () => {
     };
 
     const fetchOperationsAsync = async (accountingId, filterType, startDate, endDate) => {
-        const params = {accountingId, filterType, startDate, endDate};
-        await fetchData(fetchOperations, params, operations, 'Hubo un error al obtener las operaciones');
+        const params = { accountingId, filterType, startDate, endDate };
+
+        try {
+            await Promise.all([
+                fetchData(fetchOperations, params, operations, 'Hubo un error al obtener las operaciones'),
+                fetchData(fetchSpentsFiltered, params, spentsFiltered, 'Hubo un error al obtener los gastos filtrados'),
+                fetchData(fetchIncomesFiltered, params, incomesFiltered, 'Hubo un error al obtener los ingresos filtrados')
+            ]);
+        } catch (error) {
+            console.error('Error al actualizar los datos:', error);
+        }
     };
 
     const fetchAllAccountingsUserOperationsAsync = async () => await fetchData(fetchAllAccountingsUserOperations, undefined, allAccountingUserOperations, 'Hubo un error al obtener todas las operaciones de la contabilidad del usuario');

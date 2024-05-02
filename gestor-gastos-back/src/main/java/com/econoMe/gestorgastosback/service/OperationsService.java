@@ -211,12 +211,24 @@ public class OperationsService {
         return operations;
     }
 
-    public Operations updateOperation(Long id, Operations operation) {
+    public Operations updateOperation(Long id, Operations updatedOperation) {
         if (id == null || !operationsRepository.existsById(id)) {
-            throw new OperationException("La operación con el ID " + operation.getId() + " no existe.");
+            throw new OperationException("La operación con el ID " + updatedOperation.getId() + " no existe.");
         }
-        return operationsRepository.save(operation);
+
+        Operations existingOperation = operationsRepository.findById(id)
+                .orElseThrow(() -> new OperationException("La operación con el ID " + id + " no fue encontrada."));
+
+        // Actualizar sólo los campos que se supone deben cambiar
+        existingOperation.setDescription(updatedOperation.getDescription());
+        existingOperation.setQuantity(updatedOperation.getQuantity());
+        existingOperation.setCategory(updatedOperation.getCategory());
+        existingOperation.setDate(updatedOperation.getDate());
+        existingOperation.setType(updatedOperation.getType());
+
+        return operationsRepository.save(existingOperation);
     }
+
 
     public void deleteOperation(Long id) {
         if (!operationsRepository.existsById(id)) {

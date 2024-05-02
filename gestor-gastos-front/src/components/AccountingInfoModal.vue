@@ -25,7 +25,7 @@
 import ModalWindow from './ModalWindow.vue';
 import {defineComponent, onMounted, ref, watch} from 'vue';
 import {useAccountingStore} from '@/stores/accountingStore';
-import {updateAccounting} from "@/service/accountingService";
+import {updateAccounting} from "@/api/accountingAPI";
 
 export default defineComponent({
   components: {

@@ -5,7 +5,7 @@
       <h5 v-else class="modal-title">Nueva Operación</h5>
       <button type="button" class="btn-close" @click="updateVisibility(false)"></button>
     </div>
-    <form @submit.prevent="submitOperations" class="modal-body">
+    <form @submit.prevent="submitOperations" class="modal-body" v-if="operation">
       <div class="mb-3">
         <label for="type" class="form-label">Tipo</label>
         <select id="type" v-model="operation.type" class="form-select">
@@ -39,6 +39,7 @@
       <div class="mb-3">
         <label for="date" class="form-label">Fecha</label>
         <input type="date" id="date" v-model="operation.date" class="form-control">
+        <button class="btn btn-outline-secondary mt-2" type="button" @click="setToday(operation)">Hoy</button>
       </div>
       <div class="mb-3">
         <label for="amount" class="form-label">Cantidad</label>
@@ -56,8 +57,10 @@ import ModalWindow from './ModalWindow.vue';
 import {ref, defineComponent, computed, watch, onMounted} from 'vue';
 import { useAccountingStore } from '@/stores/accountingStore';
 import { globalStore} from "@/stores/globalStore";
-import { createOperation, updateOperation } from "@/service/operationService";
+import { createOperation, updateOperation } from "@/api/operationAPI";
 import { formatDateToDDMMYYYY } from "@/utils/functions";
+import {saveToastMessage} from "@/utils/toastService";
+import { setToday } from "@/utils/global"
 
 export default defineComponent({
   components: {
@@ -95,7 +98,6 @@ export default defineComponent({
     }
 
     const initializeForm = () => {
-      console.log(isEditMode.value);
       if (isEditMode.value) {
         // Convertir el valor de type de INCOME/SPENT a ingreso/gasto para el formulario
         operation.value.type = props.operationToEdit.type === 'INCOME' ? 'ingreso' : 'gasto';
@@ -159,6 +161,7 @@ export default defineComponent({
       emit('update:isVisible', value);
       clearForm();
     };
+
     const submitOperations = async () => {
 
       let categoryValid = isCustomOptionSelected.value ? customOption.value.trim() !== '' : selectedOption.value !== '';
@@ -184,21 +187,19 @@ export default defineComponent({
           // Suponiendo que tienes una función updateOperation disponible para actualizar la operación
           operation.value.id = props.operationToEdit.id;
           operation.value.accountingId = props.operationToEdit.accountingId;
-          console.log(operation.value);
           await updateOperation(operation.value);
-          alert('Operación actualizada exitosamente.');
+          saveToastMessage('success', 'Operación modificada exitosamente');
         } else {
           await createOperation(operation.value);
-          alert('Operación registrada exitosamente.');
+          saveToastMessage('success', 'Operación añadida exitosamente');
         }
 
-        await fetchCategoriesSpentAsync(accountingId);
         await clearForm();
         updateVisibility(false);
         location.reload();
       } catch (error) {
         console.error('Error al registrar operación:', error);
-        alert('Ocurrió un error al registrar la operación. Por favor, inténtalo de nuevo.');
+        saveToastMessage('error', 'Algo falló en la operación. Por favor inténtelo de nuevo');
       }
     };
 
@@ -212,7 +213,8 @@ export default defineComponent({
       submitOperations,
       categories,
       initializeForm,
-      isEditMode
+      isEditMode,
+      setToday
     };
   }
 });

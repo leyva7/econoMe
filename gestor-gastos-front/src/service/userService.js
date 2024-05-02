@@ -1,25 +1,66 @@
-import axios from '@/utils/axios';
-import {getAuthHeaders} from "@/service/auth";
+import router from "@/router";
+import {changePassword, fetchUserDetails, registerUser, updateUserDetails} from "@/api/userAPI";
+import {navigate, navigateHome} from "@/utils/global";
+import {callAPI} from "@/service/service";
 
-const AUTH_API_URL = 'http://localhost:8081/api/auth';
-const USER_API_URL = 'http://localhost:8081/api/users';
-export const login = async (userCredentials) => {
-    const response = await axios.post(`${AUTH_API_URL}/login`, userCredentials);
-    return response.data;
-};
+// Función para cargar los datos del usuario
+export async function loadUserData(user) {
+    await callAPI(null, fetchUserDetails, 'Error al obtener datos del usuario', null, null, user);
+}
 
-export const registerUser = async (userData) => {
-    return await axios.post(`${AUTH_API_URL}/register`, userData);
-};
+// Función para enviar cambios en los datos del usuario
+export async function submitUserDataChanges(user) {
+    const successMessage = 'Usuario modificado exitosamente.';
+    const errorMessage = 'Ocurrió un error al modificar los datos del usuario. Por favor, inténtalo de nuevo.';
 
-export const changePassword = async (passwordData) => {
-    return await axios.put(`${USER_API_URL}/modifyPassword`, passwordData, getAuthHeaders());
-};
+    const successCallback = () => {
+        localStorage.setItem('username', user.username);
+        navigateHome('/home-user');
+    };
 
-export const updateUserDetails = async (userDetails) => {
-    return await axios.put(`${USER_API_URL}/modifyDetails`, userDetails, getAuthHeaders());
-};
+    await callAPI(user, updateUserDetails, errorMessage, successMessage, successCallback, null);
+}
 
-export const fetchUserDetails = async () => {
-    return await axios.get(`${USER_API_URL}/details`, getAuthHeaders());
-};
+export async function submitPasswordChange(userPassword) {
+    const successMessage = 'Contraseña modificada exitosamente.';
+    const errorMessage = 'Ocurrió un error al modificar la contraseña. Por favor, inténtalo de nuevo.';
+
+    const successCallback = () => {
+        router.push({ name: 'login' });
+    };
+
+    await callAPI(userPassword, changePassword, errorMessage, successMessage, successCallback);
+}
+
+export async function submitRegisterUser(user, submitted, formRef, usernameError) {
+    if(formRef.value.checkValidity()){
+        const registrationData = {
+            user: user,
+            accounting: {
+                name: 'Contabilidad personal',
+                description: `Contabilidad de uso personal del usuario ${user.username}`,
+                type: 'PERSONAL'
+            }
+        };
+
+        await callAPI(
+            registrationData,
+            registerUser,
+            'Hubo un error al registrar el usuario.',
+            'Usuario y contabilidad registrados exitosamente.',
+            () => navigate('/'),
+            null
+        ).catch(error => {
+            submitted.value = false;
+            if (error.response.data && error.response.data.error.includes('nombre de usuario')) {
+                console.log('aaaaaaaa');
+                usernameError.value = 'Este nombre de usuario ya está registrado.';
+                const usernameInput = formRef.value.querySelector('#username');
+                usernameInput.classList.remove('is-valid');
+                usernameInput.classList.add('is-invalid');
+            }
+        });
+    } else {
+        submitted.value = true;
+    }
+}

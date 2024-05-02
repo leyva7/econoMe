@@ -1,5 +1,5 @@
 import axios from "@/utils/axios";
-import {getAuthHeaders} from "@/service/auth";
+import {getAuthHeaders} from "@/api/authAPI";
 
 const API_URL = "http://localhost:8081/api/accounting/";
 

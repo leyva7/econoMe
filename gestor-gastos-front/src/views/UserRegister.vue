@@ -43,7 +43,7 @@
             </div>
           </div>
           <div class="d-flex justify-content-between">
-            <button type="button" class="btn btn-secondary" @click="home">Volver atrás</button>
+            <button type="button" class="btn btn-secondary" @click="navigate('/')">Volver atrás</button>
             <button type="submit" class="btn btn-primary">Registrar</button>
           </div>
         </form>
@@ -54,8 +54,8 @@
 
 <script>
 import { ref } from 'vue';
-import { registerUser } from '@/service/userService';
-import router from "@/router";
+import { submitRegisterUser } from "@/service/userService";
+import {navigate} from "@/utils/global";
 
 export default {
   name: 'UserRegister',
@@ -72,40 +72,21 @@ export default {
     const formRef = ref(null);
     const usernameError = ref('');
 
-    const home = () => {
-      router.push({ name: 'login' });
-    };
 
     const submitForm = async () => {
       submitted.value = true;
-      if (!formRef.value) return;
+      if (formRef.value && !formRef.value.checkValidity()) {
 
-      formRef.value.classList.add('was-validated');
-
-      if(formRef.value.checkValidity()){
-        try {
-          await registerUser({ user: user.value, accounting: {
-              name: 'Contabilidad personal',
-              description: `Contabilidad de uso personal del usuario ${user.value.username}`,
-              type: 'PERSONAL'
-            }});
-
-          alert('Usuario y contabilidad registrados exitosamente.');
-          router.push('/');
-        } catch (error) {
-          if (error.response && error.response.data.error.includes('nombre de usuario')) {
-            usernameError.value = 'Este nombre de usuario ya está registrado.';
-            const usernameInput = formRef.value.querySelector('#username');
-            usernameInput.classList.remove('is-valid');
-            usernameInput.classList.add('is-invalid');
-          }
-        }
+        formRef.value.classList.add('was-validated');
+        return;
       }
+
+      await submitRegisterUser(user.value, submitted, formRef, usernameError);
+
     };
 
-  return { user, submitForm, home, formRef, submitted, usernameError };
-
-}
+    return { user, submitForm, navigate, formRef, submitted, usernameError };
+  }
 };
 </script>
 

@@ -1,5 +1,6 @@
 <template>
   <AddOperationModal :isVisible="isModalOpen" :operationToEdit="operationToEdit" @update:isVisible="toggleModal" />
+  <OperationInfoModal :isVisible="isNewModalOpen" :operationToShow="operationToShow" @update:isVisible="toggleModal" />
 
   <div class="container mt-5">
     <div class="text-center mb-4">
@@ -84,7 +85,7 @@
         </tr>
         </thead>
         <tbody>
-        <tr v-for="operation in paginatedOperations" :key="operation.id">
+        <tr v-for="operation in paginations[0].paginatedData.value" :key="operation.id">
           <td>{{ operation.username }}</td>
           <td>{{ accountings.find(accounting => accounting.id === operation.accountingId)?.name }}</td>
           <td>{{ operation.type === 'INCOME' ? 'Ingreso' : 'Gasto' }}</td>
@@ -93,6 +94,7 @@
           <td>{{ operation.date }}</td>
           <td>
             <div class="d-flex justify-content-around">
+              <button class="btn btn-primary btn-sm" @click="showOperation(operation)">Ver</button>
               <button class="btn btn-primary btn-sm" v-if="accountingsRoles[operation.accountingId] === 'EDITOR'" @click="editOperation(operation)">Editar</button>
               <button class="btn btn-danger btn-sm" v-if="accountingsRoles[operation.accountingId] === 'EDITOR'" @click="deleteOperation(operation.id)">Eliminar</button>
             </div>
@@ -103,28 +105,29 @@
     </div>
 
     <div class="d-flex justify-content-center mb-4">
-      <button @click="prevPage" class="btn btn-secondary me-2" :disabled="currentPage <= 1">Anterior</button>
-      <span class="me-2">Página {{ currentPage }} de {{ totalPages }}</span>
-      <button @click="nextPage" class="btn btn-secondary" :disabled="currentPage >= totalPages">Siguiente</button>
+      <div v-if="paginations[0].totalPages.value > 1" class="pagination-container d-flex justify-content-center mb-4">
+        <button @click=paginations[0].prevPage() class="btn btn-secondary me-2" :disabled="paginations[0].currentPage.value <= 1">Anterior</button>
+        <span class="me-2">Página {{ paginations[0].currentPage }} de {{ paginations[0].totalPages.value }}</span>
+        <button @click=paginations[0].nextPage() class="btn btn-secondary" :disabled="paginations[0].currentPage >= paginations[0].totalPages.value">Siguiente</button>
+      </div>
     </div>
   </div>
 </template>
 
 <script>
 import AddOperationModal from "@/components/AddOperationModal.vue";
+import OperationInfoModal from "@/components/OperationInfoModal.vue";
 
-
-import { ref, watch, reactive, onMounted, computed, inject } from 'vue';
+import { ref, watch, reactive, onMounted } from 'vue';
 import { useAccountingStore } from '@/stores/accountingStore.js';
-import {
-  fetchFilteredOperations,
-  deleteOperation as deleteOperationApi
-} from '@/service/operationService'
+import { fetchFilteredOperations, deleteOperation as deleteOperationApi } from '@/api/operationAPI'
+import { isModalOpen, isNewModalOpen, toggleModal, operationToEdit, operationToShow, editOperation, showOperation} from "@/utils/modal";
+import { useMultiplePagination } from "@/utils/usePagination";
 
 export default {
   name: 'OperationDetails',
   components:{
-    AddOperationModal
+    AddOperationModal, OperationInfoModal
   },
   setup() {
     const accountingStore = useAccountingStore();
@@ -139,13 +142,14 @@ export default {
     const dateEnd = ref('');
 
     const accountingsRoles = reactive({});
-    const { isModalOpen, toggleModal } = inject('modalData');
-    const operationToEdit = ref(null);
 
-    const currentPage = ref(1);
-    const operationsPerPage = 10;
+    const filteredOperations = ref([]);
 
-    const filteredOperations = ref([]); // Para las operaciones filtradas
+    const paginationConfigs = [
+      { data: filteredOperations, reduced: false },
+    ];
+
+    const paginations = useMultiplePagination(paginationConfigs);
 
     onMounted(async () => {
       await loadAccountings();
@@ -214,27 +218,6 @@ export default {
       }
     };
 
-
-    const totalPages = computed(() => Math.ceil(filteredOperations.value.length / operationsPerPage));
-
-    const paginatedOperations = computed(() => {
-      const start = (currentPage.value - 1) * operationsPerPage;
-      const end = start + operationsPerPage;
-      return filteredOperations.value.slice(start, end);
-    });
-
-    const nextPage = () => {
-      if (currentPage.value < totalPages.value) currentPage.value++;
-    };
-
-    const prevPage = () => {
-      if (currentPage.value > 1) currentPage.value--;
-    };
-
-    const editOperation = (operation) => {
-      operationToEdit.value = operation;
-      isModalOpen.value = true; // Asegúrate de que esta variable controle la visibilidad del modal.
-    };
     const deleteOperation = async (id) => {
       try {
         const response = await deleteOperationApi(id);
@@ -259,9 +242,9 @@ export default {
       dateEnd,
       accountingsRoles,
       applyFilters,
-      paginatedOperations, nextPage, prevPage, currentPage, totalPages,
-      isModalOpen, toggleModal, operationToEdit,
-      editOperation, deleteOperation
+      paginations,
+      isModalOpen, isNewModalOpen, toggleModal, operationToEdit, operationToShow,
+      showOperation, editOperation, deleteOperation
     };
   },
 };

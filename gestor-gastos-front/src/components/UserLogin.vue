@@ -18,8 +18,8 @@
 <script>
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
-import { login } from '@/service/userService';
-import { fetchAccountingPersonal} from "@/service/accountingService";
+import { login } from '@/api/userAPI';
+import { fetchAccountingPersonal} from "@/api/accountingAPI";
 
 export default {
   name: 'UserLogin',

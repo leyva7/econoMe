@@ -36,11 +36,7 @@
           <h4 class="card-header">Últimas Operaciones</h4>
           <div v-if="hasData" class="card-body">
             <!-- Tabla de Últimas Operaciones -->
-            <DataTable :data="paginations[0].paginatedData.value" :columns="tableColumnsOperations"
-                       :currentPage="paginations[0].currentPage.value"
-                       :totalPages="paginations[0].totalPages.value"
-                       @prev-page="paginations[0].prevPage"
-                       @next-page="paginations[0].nextPage" />
+            <DataTable :pagination="paginations[0]" :columns="tableColumnsOperations" />
           </div>
           <NoDataMessage v-else/>
         </div>
@@ -54,11 +50,7 @@
         <div class="card h-100">
           <h4 class="card-header">{{ table.title }}</h4>
           <div v-if="table.hasData" class="card-body">
-            <DataTable :data="paginations[index+1].paginatedData.value" :columns="tableSpentUser"
-                       :currentPage="paginations[index+1].currentPage.value"
-                       :totalPages="paginations[index+1].totalPages.value"
-                       @prev-page="paginations[index+1].prevPage"
-                       @next-page="paginations[index+1].nextPage" />
+            <DataTable :pagination="paginations[index+1]" :columns="tableSpentUser" />
           </div>
           <NoDataMessage v-else />
         </div>
@@ -82,11 +74,11 @@
 </template>
 
 <script>
-import { spentCategoryColors, incomeCategoryColors, hasData, hasDataIncome, hasDataSpents, commonOptions, pieOptions, tableColumnsOperations } from "@/utils/global";
+import { spentCategoryColors, incomeCategoryColors, hasData, hasDataIncome, hasDataSpent, commonOptions, pieOptions, tableColumnsOperations } from "@/utils/global";
 import { useMultiplePagination } from "@/utils/usePagination";
 import { useAccountingStore } from '@/stores/accountingStore.js';
-import { deleteUserAccounting as deleteAccountingApi } from "@/service/accountingService";
-import { ref, onMounted, nextTick, computed } from "vue";
+import { deleteUserAccounting as deleteAccountingApi } from "@/api/accountingAPI";
+import {ref, onMounted, nextTick, computed, watch} from "vue";
 import { useRouter } from 'vue-router';
 import UserManagementModal from "@/components/UserManagementModal.vue";
 import IntervalSelector from "@/components/IntervalSelector.vue";
@@ -124,12 +116,12 @@ export default {
     const showElement = ref(false);
 
     const charts = ref([
-      { title: "Gastos por Categorías", id: "topCategoriesChart", hasData: computed(() => hasDataSpents.value) },
+      { title: "Gastos por Categorías", id: "topCategoriesChart", hasData: computed(() => hasDataSpent.value) },
       { title: "Ingresos por Categorías", id: "topCategoriesIncomeChart", hasData: computed(() => hasDataIncome.value) }
     ]);
 
     const tables = ref([
-      { title: "Detalle de Gastos", headers: ["Usuario", "Cantidad"], data: computed(() => processedSpentsUser.value), hasData: computed(() => hasDataSpents.value) },
+      { title: "Detalle de Gastos", headers: ["Usuario", "Cantidad"], data: computed(() => processedSpentsUser.value), hasData: computed(() => hasDataSpent.value) },
       { title: "Detalle de Ingresos", headers: ["Usuario", "Cantidad"], data: computed(() => processedIncomesUser.value), hasData: computed(() => hasDataIncome.value) }
     ]);
 
@@ -137,7 +129,7 @@ export default {
       await loadAccountings();
       calculateIsUserCreator();
       await fetchUsersAccountingAsync(accountingId.value);
-      updateData();
+      await updateData();
     });
 
     const updateData = async (selection) => {
@@ -155,7 +147,7 @@ export default {
       await fetchIncomeInterval(accountingId.value, filterType, startDate, endDate);
       await fetchOperationsAsync(accountingId.value, filterType, startDate, endDate);
 
-      hasDataSpents.value = (totalSpentMonth.value > 0);
+      hasDataSpent.value = (totalSpentMonth.value > 0);
       hasDataIncome.value = (totalIncomeMonth.value > 0);
       hasData.value = totalSpentMonth.value > 0 || totalIncomeMonth.value > 0;
 
@@ -163,6 +155,12 @@ export default {
       initChart();
       initIncomeChart();
     };
+
+    watch(isUserManagementModalOpen, async (newVal) => {
+      if (newVal === false) {
+        await fetchUsersAccountingAsync(accountingId.value);
+      }
+    });
 
     const openUserManagementModal = () => {
       isUserManagementModalOpen.value = true;
@@ -226,7 +224,7 @@ export default {
     };
 
     return {
-      accountings, sharedAccountings, isUserCreator, deleteAccounting, usersAccounting, accountingSharedSelected, processedSpents, processedIncomes, hasDataSpents, hasDataIncome, hasData, processedSpentsUser, processedIncomesUser, isUserManagementModalOpen, openUserManagementModal, closeModal, incomeCategoryColors, spentCategoryColors, paginations, showElement, charts, tables, updateData, operations, tableColumnsOperations, tableSpentUser: [{ key: "username", label: "Usuario" }, { key: "total", label: "Cantidad" }]
+      accountings, sharedAccountings, isUserCreator, deleteAccounting, usersAccounting, accountingSharedSelected, processedSpents, processedIncomes, hasDataSpent, hasDataIncome, hasData, processedSpentsUser, processedIncomesUser, isUserManagementModalOpen, openUserManagementModal, closeModal, incomeCategoryColors, spentCategoryColors, paginations, showElement, charts, tables, updateData, operations, tableColumnsOperations, tableSpentUser: [{ key: "username", label: "Usuario" }, { key: "total", label: "Cantidad" }]
     };
   }
 }

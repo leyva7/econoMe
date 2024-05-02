@@ -24,9 +24,9 @@
         <div class="row">
           <div class="col-12 mb-3">
             <div class="bg-white rounded shadow p-3">
-              <h4 class="text-center" v-if="hasDataSpents">Gastos Totales: {{ totalSpentMonth.toFixed(2) }} €</h4>
+              <h4 class="text-center" v-if="hasDataSpent">Gastos Totales: {{ totalSpentMonth.toFixed(2) }} €</h4>
               <NoDataMessage v-else message="Gastos Totales: No hay datos disponibles"/>
-              <div v-if="hasDataSpents" class="row g-3">
+              <div v-if="hasDataSpent" class="row g-3">
                 <div class="col-md-6">
                   <div class="card text-center">
                     <div v-if="categoriesDifferences && categoriesDifferences.spentDifferences" class="card-body">
@@ -56,7 +56,7 @@
           </div>
           <div class="col-12">
             <div class="bg-white rounded shadow p-3">
-              <h4 class="text-center" v-if="hasDataIncome">Ingresos Totales: {{ totalIncomeMonth.toFixed(2) }} €</h4>
+              <h4 class="text-center" v-if="hasDataIncome">Ingresos Totales: {{ addEuroSymbol(totalIncomeMonth) }} </h4>
               <NoDataMessage v-else message="Ingresos Totales: No hay datos disponibles"/>
               <div v-if="hasDataIncome" class="row g-3">
                 <div class="col-md-6">
@@ -96,11 +96,7 @@
         <h3 class="text-center mb-3">Últimas operaciones</h3>
         <!-- Tabla de Últimas Operaciones -->
         <div v-if="hasData">
-          <DataTable :data="paginations[0].paginatedData.value" :columns="tableColumnsOperations"
-                     :currentPage="paginations[0].currentPage.value"
-                     :totalPages="paginations[0].totalPages.value"
-                     @prev-page="paginations[0].prevPage"
-                     @next-page="paginations[0].nextPage" />
+          <DataTable :pagination="paginations[0]" :columns="tableColumnsOperations" />
         </div>
         <div v-else>
           <NoDataMessage message="No hay operaciones recientes disponibles."/>
@@ -116,16 +112,17 @@ import { Chart, registerables } from 'chart.js';
 import { onMounted, ref, nextTick} from 'vue';
 import { useAccountingStore } from '@/stores/accountingStore';
 import {useMultiplePagination} from "@/utils/usePagination";
-import {processFilterSelection} from "@/utils/functions";
+import {addEuroSymbol, processFilterSelection} from "@/utils/functions";
 import IntervalSelector from "./IntervalSelector.vue";
 import NoDataMessage from "@/components/NoDataMessage.vue";
-import {commonOptions, pieOptions, hasData, hasDataSpents, hasDataIncome, tableColumnsOperations} from "@/utils/global";
+import {commonOptions, pieOptions, hasData, hasDataSpent, hasDataIncome, tableColumnsOperations} from "@/utils/global";
 import {createChart} from "@/utils/chartService";
 import DataTable from "@/components/DataTable.vue";
 
 Chart.register(...registerables);
 export default {
   name: "HomeDetails",
+  methods: {addEuroSymbol},
   components:{ IntervalSelector, NoDataMessage, DataTable },
   setup() {
     const { accountingId, fetchSpentsInterval, totalSpentMonth, fetchIncomeInterval, totalIncomeMonth, topSpentCategory, topIncomeCategory, categoriesDifferences, categoryDifferencesAsync, operations, fetchOperationsAsync } = useAccountingStore();
@@ -140,7 +137,7 @@ export default {
     const showElement = ref(false);
 
     onMounted(async () => {
-      updateData();
+      await updateData();
     });
 
     const updateData = async (selection) => {
@@ -162,7 +159,7 @@ export default {
       await categoryDifferencesAsync(accountingId.value, filterType, startDate, endDate);
 
       hasData.value = totalSpentMonth.value > 0 || totalIncomeMonth.value > 0;
-      hasDataSpents.value = totalSpentMonth.value > 0;
+      hasDataSpent.value = totalSpentMonth.value > 0;
       hasDataIncome.value = totalIncomeMonth.value > 0;
 
       await nextTick();
@@ -193,7 +190,7 @@ export default {
       accountingId, totalSpentMonth, fetchIncomeInterval, totalIncomeMonth, topSpentCategory, topIncomeCategory, categoriesDifferences, categoryDifferencesAsync, fetchOperationsAsync, operations,
       updateData,
       showElement,
-      hasData, hasDataIncome, hasDataSpents,
+      hasData, hasDataIncome, hasDataSpent,
       paginations,
       tableColumnsOperations
     };

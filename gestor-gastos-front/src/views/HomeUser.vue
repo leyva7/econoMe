@@ -11,11 +11,11 @@
     <div style="flex: 0 0 85%; overflow-y: auto;">
       <TopBar/>
       <div class="dynamic-content p-3 overflow-auto position-relative">
-        <button @click="openAccountingInfoModal" class="btn button-custom position-absolute top-0 end-0 mt-3 me-3">
+        <button @click="openModal('infoAccounting')" class="btn button-custom position-absolute top-0 end-0 mt-3 me-3">
           <i class="fa-solid fa-circle-info me-2"></i>Información
         </button>
         <router-view @openModal="handleOpenModal"></router-view>
-        <button v-if="shouldShowAddButton" @click="openOperationsModal" class="add-floating-button position-fixed" style="right: 25px; bottom: 30px;">
+        <button v-if="shouldShowAddButton" @click="openModal('addOperations')" class="add-floating-button position-fixed" style="right: 25px; bottom: 30px;">
           <i class="fa-solid fa-plus "></i>
         </button>
       </div>
@@ -24,86 +24,38 @@
 </template>
 
 <script>
-import {provide, ref, onMounted} from 'vue';
-import { computed } from 'vue';
+import { onMounted } from 'vue';
 import { useRouter } from 'vue-router';
+import TopBar from "@/components/TopBar.vue";
 import SidebarPage from "@/components/AppSidebar.vue";
 import AddAccountingModal from "@/components/AddAccountingModal.vue";
-import AddOperationModal from "@/components/AddOperationModal.vue";
-import TopBar from "@/components/TopBar.vue";
-import { useAccountingStore } from '@/stores/accountingStore.js';
 import AccountingInfoModal from "@/components/AccountingInfoModal.vue";
+import AddOperationModal from "@/components/AddOperationModal.vue";
+import { useAccountingStore } from '@/stores/accountingStore.js';
+import { useToast } from "vue-toast-notification";
+import { showToastFromStorage } from "@/utils/toastService";
+import { isModalOpen, modalContentType, handleOpenModal, openModal, toggleModal, shouldShowButton } from "@/utils/modal"
 
 export default {
   name: 'UserHome',
-  components:{
-    AccountingInfoModal,
-    SidebarPage,
-    AddAccountingModal,
-    AddOperationModal,
-    TopBar,
-  },
+  components:{ TopBar, SidebarPage, AddAccountingModal, AccountingInfoModal, AddOperationModal },
   setup() {
-    const isModalOpen = ref(false);
     const { accountingId, sharedAccountings, loadAccountings, accountings, userRole, fetchUserRoleAsync, categories, fetchCategories} = useAccountingStore();
-    const modalContentType = ref('');
+    const toast = useToast();
     const router = useRouter();
 
     onMounted(async () => {
       await loadAccountings();
       await fetchUserRoleAsync(accountingId.value);
+      showToastFromStorage(toast);
     });
-
-    const handleOpenModal = (type) => {
-      modalContentType.value = type;
-      isModalOpen.value = true;
-    };
-
-    const openOperationsModal = () => {
-      modalContentType.value = 'addOperations';
-      isModalOpen.value = true;
-    };
-
-    const openAccountingInfoModal = () => {
-      modalContentType.value = 'infoAccounting';
-      isModalOpen.value = true;
-    };
-
-    const toggleModal = (value) => {
-      if (typeof value === 'boolean') {
-        isModalOpen.value = value;
-      } else {
-        isModalOpen.value = !isModalOpen.value;
-      }
-    };
-
-    const shouldShowAddButton = computed(() => {
-      const routeNamesToShowButton = ['home', 'income', 'spent', 'evolution'];
-      if (routeNamesToShowButton.includes(router.currentRoute.value.name)) {
-        return true;
-      }
-      if (router.currentRoute.value.name === 'shared' && userRole.value === 'EDITOR') {
-        return true;
-      }
-      return false;
-    });
-
-    provide('modalData', { isModalOpen, modalContentType, toggleModal });
 
     return {
-      isModalOpen,
-      toggleModal,
-      userRole,
-      shouldShowAddButton,
-      fetchUserRoleAsync,
-      openOperationsModal,
-      modalContentType,
-      categories,
-      fetchCategories,
-      sharedAccountings,
-      handleOpenModal,
-      openAccountingInfoModal,
-      accountings
+      userRole, fetchUserRoleAsync,
+      categories, fetchCategories,
+      sharedAccountings, accountings,
+      handleOpenModal, isModalOpen, modalContentType, openModal, toggleModal,
+      shouldShowAddButton: shouldShowButton(router, userRole)
     };
   },
 };
@@ -112,43 +64,21 @@ export default {
 
 <style scoped>
 
-.form-group label {
-  display: block;
-}
-
-.form-group input,
-.form-group textarea {
-  width: calc(100% - 20px); /* Ajustar para padding */
-  padding: 10px;
-  margin-top: 0.5rem;
-  border: 1px solid #ccc;
-  border-radius: 4px;
-}
-
 .dynamic-content {
   height: calc(95% - 40px);
   margin-top: 20px;
-  overflow-y: hidden; /* Permite desplazamiento vertical dentro del dynamic-content si es necesario */
-  flex-grow: 1; /* Asegura que este contenedor llene el espacio disponible en .content */
+  overflow-y: hidden;
+  flex-grow: 1;
   background-color: #ECF0F1;
   border-radius: 20px;
 }
 
-.user-actions-container:hover .tooltip, .user-actions:hover .tooltip {
-  opacity: 1;
-  visibility: visible;
-}
-
-.tooltip a {
-  display: block;
-  color: #2C3E50;
-  text-align: center;
-  text-decoration: none;
-  margin: 5px 0;
-}
-
-.user-actions-container:hover .tooltip, .user-actions:hover .tooltip {
-  display: block;
+.button-custom {
+  position: absolute;
+  top: 0;
+  end: 0;
+  margin-top: 3rem;
+  margin-right: 3rem;
 }
 
 .add-floating-button {
@@ -156,26 +86,24 @@ export default {
   right: 25px;
   bottom: 30px;
   z-index: 100;
-  padding: 0.8em; /* Ajustado para ser un poco más pequeño y proporcional */
-  font-size: 16px; /* Tamaño de fuente general del botón reducido */
+  padding: 0.8em;
+  font-size: 16px;
   color: #ffffff;
   background-color: #2C3E50;
   border: none;
-  border-radius: 50%; /* Círculo perfecto */
-  width: 60px; /* Ancho fijo para mantener el círculo perfecto */
-  height: 60px; /* Altura fija para mantener el círculo perfecto */
-  box-shadow: 0px 8px 15px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease 0s;
-  cursor: pointer;
-  outline: none;
-  display: flex; /* Para centrar el ícono "+" */
-  justify-content: center; /* Centrado horizontal */
-  align-items: center; /* Centrado vertical */
+  border-radius: 50%;
+  width: 60px;
+  height: 60px;
+  box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  display: flex;
+  justify-content: center;
+  align-items: center;
 }
 
 .add-floating-button:hover {
   background-color: #2C3E50;
-  box-shadow: 0px 15px 20px #2C3E50;
+  box-shadow: 0 15px 20px #2C3E50;
   color: #fff;
   transform: translateY(-7px);
 }
@@ -183,6 +111,4 @@ export default {
 .add-floating-button:active {
   transform: translateY(-1px);
 }
-
 </style>
-

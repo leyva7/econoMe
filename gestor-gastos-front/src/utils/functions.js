@@ -1,4 +1,3 @@
-
 export function formatDateToDDMMYYYY(date) {
     const d = new Date(date);
     let day = '' + d.getDate();
@@ -117,18 +116,24 @@ export function processFinancialData(data) {
 
     const dataWithDates = data.map(item => ({
         ...item,
-        date: convertDate(item.date)
+        date: convertDate(item.date) // Assuming convertDate is a function that parses dates correctly
     }));
 
     dataWithDates.sort((a, b) => a.date - b.date);
 
-    const interval = determineInterval(dataWithDates);
+    const interval = determineInterval(dataWithDates); // Ensure this function provides a valid interval
     const startDate = dataWithDates[0].date;
     const endDate = dataWithDates[dataWithDates.length - 1].date;
-    const financialData = generateDateKeys(startDate, endDate, interval);
+    const financialData = generateDateKeys(startDate, endDate, interval); // Presumably this initializes keys between startDate and endDate
+
+    // Ensure every key has an initialized object
+    Object.keys(financialData).forEach(key => {
+        financialData[key] = financialData[key] || { income: 0, spent: 0 };
+    });
 
     dataWithDates.forEach(item => {
-        const key = formatDate(item.date, interval);
+        const key = formatDate(item.date, interval); // Ensure formatDate returns a string that matches keys in financialData
+        financialData[key] = financialData[key] || { income: 0, spent: 0 };
         if (item.type === "INCOME") {
             financialData[key].income += item.quantity;
         } else if (item.type === "SPENT") {
@@ -142,6 +147,7 @@ export function processFinancialData(data) {
         spent: financialData[key].spent
     }));
 }
+
 
 export function proccessCategories(data, key) {
     const sumsByKey = data.reduce((acc, { [key]: keyValue, quantity }) => {
@@ -188,4 +194,12 @@ export function addEuroSymbol(value) {
         return value;
     }
 }
+
+export function determineInitialType(operationToEdit) {
+    if (operationToEdit) {
+        return operationToEdit.type === 'INCOME' ? 'ingreso' : 'gasto';
+    }
+    return '';
+}
+
 

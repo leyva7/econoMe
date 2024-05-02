@@ -26,11 +26,7 @@
 
       <div class="col-12 col-lg-6 mb-3">
         <div class="p-3 bg-white rounded shadow">
-          <DataTable :data="paginations[0].paginatedData.value" :columns="tableColumnEvolution"
-                     :currentPage="paginations[0].currentPage.value"
-                     :totalPages="paginations[0].totalPages.value"
-                     @prev-page="paginations[0].prevPage"
-                     @next-page="paginations[0].nextPage" />
+          <DataTable :pagination="paginations[0]" :columns="tableColumnEvolution" />
         </div>
       </div>
 

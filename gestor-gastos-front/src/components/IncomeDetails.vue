@@ -26,7 +26,7 @@
                 <span class="category-color" :style="{ backgroundColor: incomeCategoryColors[index] }"></span>
                 {{ income.category }}
               </td>
-              <td>{{ income.total.toFixed(2) }}</td>
+              <td>{{ addEuroSymbol(income.total) }}</td>
             </tr>
             </tbody>
           </table>
@@ -45,11 +45,7 @@
         <div class="bg-white rounded shadow p-3">
           <h3 class="text-center mb-3">Últimas operaciones</h3>
           <!-- Tabla de Últimas Operaciones -->
-          <DataTable :data="paginations[0].paginatedData.value" :columns="tableColumnsOperations"
-                     :currentPage="paginations[0].currentPage.value"
-                     :totalPages="paginations[0].totalPages.value"
-                     @prev-page="paginations[0].prevPage"
-                     @next-page="paginations[0].nextPage" />
+          <DataTable :pagination="paginations[0]" :columns="tableColumnsOperations" />
         </div>
       </div>
     </div>
@@ -63,7 +59,7 @@ import {onMounted, ref, nextTick} from 'vue';
 import { useAccountingStore } from '@/stores/accountingStore';
 import {commonOptions, incomeCategoryColors, pieOptions, hasDataIncome, tableColumnsOperations} from "@/utils/global";
 import {useMultiplePagination} from "@/utils/usePagination";
-import {processFilterSelection} from "@/utils/functions";
+import {addEuroSymbol, processFilterSelection} from "@/utils/functions";
 import IntervalSelector from "@/components/IntervalSelector.vue";
 import NoDataMessage from "@/components/NoDataMessage.vue";
 import {createChart} from "@/utils/chartService";
@@ -73,6 +69,7 @@ Chart.register(...registerables);
 
 export default {
   name: "IncomeDetails",
+  methods: {addEuroSymbol},
   components:{ IntervalSelector, NoDataMessage, DataTable },
   setup() {
     const { accountingId, processedIncomes, fetchIncomeAsync,fetchIncomeInterval, incomesFiltered, latestIncomes, monthlyIncomeData, totalIncomeMonth, processDailyIncomeData} = useAccountingStore();
@@ -86,7 +83,7 @@ export default {
     const showElement = ref(false);
 
     onMounted(async () => {
-      updateData();
+      await updateData();
     });
 
     const updateData = async (selection) => {

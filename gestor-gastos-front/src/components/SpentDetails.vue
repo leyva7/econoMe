@@ -1,10 +1,10 @@
 <template>
   <div class="container mt-5">
-    <h2 class="text-center mb-4 " v-if=hasDataSpents>{{'Gasto total: ' + totalSpentMonth.toFixed(2) + ' €'}}</h2>
+    <h2 class="text-center mb-4 " v-if=hasDataSpent>{{'Gasto total: ' + totalSpentMonth.toFixed(2) + ' €'}}</h2>
 
     <IntervalSelector :isVisible="showElement" @update-selection="updateData" />
 
-    <div v-if="hasDataSpents" class="row g-4">
+    <div v-if="hasDataSpent" class="row g-4">
       <!-- Gráfico por Categorías y Últimos Gastos en pantallas grandes; se apilan en pantallas más pequeñas -->
       <div class="col-12 col-lg-6">
         <div class="p-3 bg-white rounded shadow">
@@ -26,7 +26,7 @@
                 <span class="category-color" :style="{ backgroundColor: spentCategoryColors[index] }"></span>
                 {{ spent.category }}
               </td>
-              <td>{{ spent.total.toFixed(2) }}</td>
+              <td>{{ addEuroSymbol(spent.total) }}</td>
             </tr>
             </tbody>
           </table>
@@ -41,15 +41,11 @@
           </div>
         </div>
       </div>
-      <div v-if="hasDataSpents" class="mt-3 col-12">
+      <div v-if="hasDataSpent" class="mt-3 col-12">
         <div class="bg-white rounded shadow p-3">
           <h3 class="text-center mb-3">Últimas operaciones</h3>
           <!-- Tabla de Últimas Operaciones -->
-          <DataTable :data="paginations[0].paginatedData.value" :columns="tableColumnsOperations"
-                     :currentPage="paginations[0].currentPage.value"
-                     :totalPages="paginations[0].totalPages.value"
-                     @prev-page="paginations[0].prevPage"
-                     @next-page="paginations[0].nextPage" />
+          <DataTable :pagination="paginations[0]" :columns="tableColumnsOperations" />
         </div>
       </div>
     </div>
@@ -61,9 +57,9 @@
 import { Chart, registerables } from 'chart.js';
 import {onMounted, ref, nextTick} from 'vue';
 import { useAccountingStore } from '@/stores/accountingStore';
-import { spentCategoryColors, hasDataSpents, commonOptions, pieOptions, tableColumnsOperations } from "@/utils/global";
+import { spentCategoryColors, hasDataSpent, commonOptions, pieOptions, tableColumnsOperations } from "@/utils/global";
 import {createChart} from "@/utils/chartService";
-import {processFilterSelection} from "@/utils/functions";
+import {addEuroSymbol, processFilterSelection} from "@/utils/functions";
 import {useMultiplePagination} from "@/utils/usePagination";
 import IntervalSelector from "./IntervalSelector.vue";
 import NoDataMessage from "@/components/NoDataMessage.vue";
@@ -74,6 +70,7 @@ Chart.register(...registerables);
 
 export default {
   name: "SpentDetails",
+  methods: {addEuroSymbol},
   components:{ IntervalSelector, NoDataMessage, DataTable },
   setup() {
     const { accountingId, processedSpents, fetchSpentsInterval, spentsFiltered, totalSpentMonth, processDailySpentData} = useAccountingStore();
@@ -87,7 +84,7 @@ export default {
     const showElement = ref(false);
 
     onMounted(async () => {
-      updateData();
+      await updateData();
     });
 
     const updateData = async (selection) => {
@@ -106,7 +103,7 @@ export default {
 
       await fetchSpentsInterval(accountingId.value, filterType, startDate, endDate);
 
-      hasDataSpents.value = totalSpentMonth.value > 0;
+      hasDataSpent.value = totalSpentMonth.value > 0;
 
       await nextTick();
       initChart();
@@ -150,7 +147,7 @@ export default {
     };
 
     return {
-      spentsFiltered, accountingId, processedSpents, hasDataSpents, totalSpentMonth, spentCategoryColors,
+      spentsFiltered, accountingId, processedSpents, hasDataSpent, totalSpentMonth, spentCategoryColors,
       paginations, showElement, updateData, processDailySpentData, tableColumnsOperations
     };
   },

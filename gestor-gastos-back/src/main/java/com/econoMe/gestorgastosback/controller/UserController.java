@@ -6,6 +6,7 @@ import com.econoMe.gestorgastosback.service.JwtService;
 import com.econoMe.gestorgastosback.service.MappingService;
 import com.econoMe.gestorgastosback.service.UserService;
 import com.econoMe.gestorgastosback.exception.InvalidPasswordException;
+import jakarta.servlet.http.HttpServletRequest;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -26,20 +27,20 @@ public class UserController {
     private UserService userService;
 
     @Autowired
+    private MappingService mappingService;
+
+    @Autowired
     private JwtService jwtService;
 
-    @Autowired
-    private UserDetailsService userDetailsService;
-
-    @Autowired
-    private MappingService mappingService;
+    private User getUserFromRequest(HttpServletRequest request) {
+        String token = jwtService.getTokenFromRequest(request);
+        return jwtService.getUserFromToken(token);
+    }
     
     // Actualización de datos del usuario
     @PutMapping("/modifyDetails")
-    public ResponseEntity<?> updateUserDetails(Authentication authentication, @RequestBody UserDto userDto) throws Exception {
-        if (authentication == null || !(authentication.getPrincipal() instanceof User user)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).body("No se ha proporcionado una autenticación válida.");
-        }
+    public ResponseEntity<?> updateUserDetails(HttpServletRequest request, @RequestBody UserDto userDto) throws Exception {
+        User user = getUserFromRequest(request);
         User updatedUser = userService.updateDetails(user.getId(), userDto);
         return ResponseEntity.ok(updatedUser);
     }

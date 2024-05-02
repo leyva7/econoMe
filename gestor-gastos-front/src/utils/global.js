@@ -16,6 +16,7 @@ export const navigate = (path) => {
 };
 
 export const navigateHome = (path) => {
+    console.log(localStorage.getItem('personalAccountingId'));
     router.push({
         path: path,
         query: { id: localStorage.getItem('personalAccountingId') },
@@ -42,14 +43,14 @@ export const tableColumnsOperations = [
     { key: "date", label: "Fecha" }
 ];
 
+
+
 export const hasDataIncome = ref(false);
 export const hasDataSpent = ref(false);
 export const hasData = ref(false);
 
 export const spentCategoryColors = ['#480707', '#a01414', '#e61c1c', '#ff6a6a', '#ffc7c7', '#a4b0be'];
 export const incomeCategoryColors = ['#183c27', '#257042', '#3aad66', '#96dfb1', '#e1f7e8', '#a4b0be'];
-
-export const hasDataSpents = ref(false);
 
 export  const commonOptions = {
     scales: {
@@ -94,3 +95,18 @@ export const pieOptions = {
         }
     }
 }
+
+export const setToday = (operation) => {
+    const today = new Date();
+    const yyyy = today.getFullYear();
+    let mm = today.getMonth() + 1; // Los meses comienzan desde 0 en JavaScript
+    let dd = today.getDate();
+
+    // Agrega un cero delante para los días y meses menores a 10
+    mm = mm < 10 ? '0' + mm : mm;
+    dd = dd < 10 ? '0' + dd : dd;
+
+    operation.date = `${yyyy}-${mm}-${dd}`;
+};
+
+export let showElement = ref[false];
