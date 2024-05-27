@@ -9,7 +9,6 @@ import com.econoMe.gestorgastosback.model.Accounting;
 import com.econoMe.gestorgastosback.model.Roles;
 import com.econoMe.gestorgastosback.model.User;
 import com.econoMe.gestorgastosback.repository.AccountingRepository;
-import com.econoMe.gestorgastosback.repository.RolesRepository;
 
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;

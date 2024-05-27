@@ -1,6 +1,9 @@
 <template>
   <div class="container-fluid py-5 bg-custom-blue-900 d-flex align-items-center" style="min-height: 100vh;">
     <div class="row justify-content-center w-100">
+      <div class="text-center mb-5">
+        <h1 class="logo-text text-white">econoMe</h1>
+      </div>
       <div class="col-sm-12 col-md-6 col-lg-4">
         <form @submit.prevent="submitForm($event)" class="bg-white shadow p-4 rounded needs-validation" novalidate ref="formRef">
           <h2 class="text-black mb-4 text-center">Registro de usuario</h2>
@@ -55,7 +58,7 @@
 <script>
 import { ref } from 'vue';
 import { submitRegisterUser } from "@/service/userService";
-import {navigate} from "@/utils/global";
+import { navigate } from "@/utils/global";
 
 export default {
   name: 'UserRegister',
@@ -72,24 +75,17 @@ export default {
     const formRef = ref(null);
     const usernameError = ref('');
 
-
     const submitForm = async () => {
       submitted.value = true;
       if (formRef.value && !formRef.value.checkValidity()) {
-
         formRef.value.classList.add('was-validated');
         return;
       }
 
       await submitRegisterUser(user.value, submitted, formRef, usernameError);
-
     };
 
-    return { user, submitForm, navigate, formRef, submitted, usernameError };
+    return {user, submitForm, navigate, formRef, submitted, usernameError};
   }
 };
 </script>
-
-
-<style scoped>
-</style>

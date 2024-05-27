@@ -58,16 +58,29 @@ public class UserService{
 
     public User updateDetails(Long id, UserDto userDto) {
         User user = findById(id);
+
+        // Verificar si el nuevo nombre de usuario ya está en uso por otro usuario
+        if (!user.getUsername().equals(userDto.getUsername()) && userRepository.existsByUsername(userDto.getUsername())) {
+            throw new UserException("El nombre de usuario ya está en uso");
+        }
+
+        // Verificar si el nuevo correo electrónico ya está en uso por otro usuario
+        if (!user.getMail().equals(userDto.getMail()) && userRepository.existsByMail(userDto.getMail())) {
+            throw new UserException("El correo electrónico ya está en uso");
+        }
+
         user.setUsername(userDto.getUsername());
         user.setName(userDto.getName());
         user.setSurname(userDto.getSurname());
         user.setMail(userDto.getMail());
+
         accountingService.findPersonalAccounting(user)
                 .orElseThrow(() -> new UserException("No se encontró la contabilidad personal para el usuario: " + user.getUsername()))
                 .setDescription("Contabilidad personal del usuario " + user.getUsername());
 
         return userRepository.save(user);
     }
+
 
     public void updatePassword(Long id, String passwordUser, String newPassword) {
         User user = findById(id);

@@ -9,7 +9,7 @@
         </a>
 
         <ul class="dropdown-menu ml-4" aria-labelledby="dropdownMenuLink">
-          <li><a class="dropdown-item" href="#" @click="navigate('/modify-details')">Modificar usuario</a></li>
+          <li><a class="dropdown-item" href="#" @click="navigate('/modify-details')">Datos usuario</a></li>
           <li><a class="dropdown-item" href="#" @click="navigate('/modify-password')">Modificar contraseña</a></li>
           <li><hr class="dropdown-divider"></li>
           <li><a class="dropdown-item" href="#" @click="logout">Cerrar sesión</a></li>
@@ -42,5 +42,4 @@ onMounted(async () => {
   left: auto;
 }
 
-/* Estilos adicionales si es necesario */
 </style>

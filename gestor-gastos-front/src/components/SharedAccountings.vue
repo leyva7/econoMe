@@ -86,6 +86,7 @@ import DataTable from "@/components/DataTable.vue";
 import NoDataMessage from "@/components/NoDataMessage.vue";
 import { processFilterSelection } from "@/utils/functions";
 import { createChart } from "@/utils/chartService";
+import {saveToastMessage} from "@/utils/toastService";
 
 export default {
   name: "SharedAccountings",
@@ -180,11 +181,17 @@ export default {
         try {
           await deleteAccountingApi(accountingId.value, localStorage.getItem('username'));
           console.log("Eliminada la contabilidad");
-          await loadAccountings();
           router.push({
             path: '/home-user',
             query: { id: localStorage.getItem('personalAccountingId') }
+          }).then(() => {
+            // Añade un pequeño retraso para asegurar que la redirección se complete
+            setTimeout(() => {
+              location.reload();
+            }, 100); // Puedes ajustar este tiempo si es necesario
           });
+          saveToastMessage('success', 'Contabilidad eliminada con éxito');
+          await loadAccountings();
         } catch (error) {
           console.error("Error al eliminar la contabilidad:", error);
         }

@@ -7,7 +7,7 @@
     <form class="modal-body">
       <div class="mb-3">
         <label for="type" class="form-label">Tipo</label>
-        <textarea id="type" v-model="operation.type" class="form-control" disabled></textarea>
+        <textarea id="type" v-model="computedType" class="form-control" disabled></textarea>
       </div>
       <div class="mb-3">
         <label for="category" class="form-label">Categoría</label>
@@ -19,7 +19,7 @@
       </div>
       <div class="mb-3">
         <label for="date" class="form-label">Fecha</label>
-        <input type="date" id="date" v-model="operation.date" class="form-control" disabled>
+        <input type="date" id="date" v-model="computedDate" class="form-control" disabled>
       </div>
       <div class="mb-3">
         <label for="amount" class="form-label">Cantidad</label>
@@ -34,7 +34,8 @@
 
 <script>
 import ModalWindow from './ModalWindow.vue';
-import { defineComponent, toRefs } from 'vue';
+import {computed, defineComponent, toRefs} from 'vue';
+import {determineInitialType, formatAsYYYYMMDD} from "@/utils/functions";
 
 export default defineComponent({
   components: {
@@ -60,8 +61,12 @@ export default defineComponent({
       emit('update:isVisible', value);
     };
 
+    const computedType = computed(() => determineInitialType(operationToShow.value.type));
+    const computedDate = computed(() => formatAsYYYYMMDD(operationToShow.value.date));
+
     return {
       operation: operationToShow,
+      computedType, computedDate,
       updateVisibility
     };
   }

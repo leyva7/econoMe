@@ -52,8 +52,8 @@ public class RolesService {
         return rolesRepository.findByUserUsernameAndAccountingId(username, accountingId).orElseThrow(() -> new RoleException("Se produjo un error al buscar roles por nombre de usuario " + username + " y ID de contabilidad " + accountingId));
     }
 
-    public List<Roles> findAllAccountingUsersNotCreator(Accounting accounting) {
-        return rolesRepository.findAllByAccountingAndUserNot(accounting, accounting.getUserCreator());
+    public List<Roles> findAllByAccounting(Accounting accounting) {
+        return rolesRepository.findAllByAccounting(accounting);
     }
 
     public void deleteRole(RolesId rolesId) {

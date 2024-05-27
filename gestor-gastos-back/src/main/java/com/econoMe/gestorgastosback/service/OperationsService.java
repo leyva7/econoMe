@@ -81,8 +81,7 @@ public class OperationsService {
         return findByAccounting(accounting).stream()
                 .filter(op -> (op.getDate().isEqual(start) || op.getDate().isAfter(start)) &&
                         (op.getDate().isEqual(end) || op.getDate().isBefore(end)) &&
-                        (type == null || Objects.equals(type, op.getType())) &&
-                        (user == null || Objects.equals(user, op.getUser())))
+                        (type == null || Objects.equals(type, op.getType())))
                 .sorted((o1, o2) -> o2.getDate().compareTo(o1.getDate())) // Ordenar por fecha descendente
                 .collect(Collectors.toList());
     }

@@ -240,13 +240,6 @@ public class AccountingController {
         return getFilteredOperations(id, filterType, null, startDate, endDate, OperationType.INCOME);
     }
 
-
-    @GetMapping("/{id}/operation/incomeMonth")
-    public ResponseEntity<?> getAccountingIncomeMonth(@PathVariable Long id) {
-
-        return ResponseEntity.ok(mappingService.operationListToDto(operationsService.findOperationsForDateRange(accountingService.findAccountingById(id), OperationType.INCOME, null, YearMonth.now().atDay(1), YearMonth.now().atEndOfMonth())));
-    }
-
     @GetMapping("/{id}/categoryDifferences")
     public ResponseEntity<?> getCategoryDifferences(@PathVariable Long id, @RequestParam(required = false) String filterType,
                                                     @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate,
@@ -314,7 +307,7 @@ public class AccountingController {
     @GetMapping("/{id}/users")
     public ResponseEntity<?> getAccountingUsers(@PathVariable Long id) {
 
-        return ResponseEntity.ok(mappingService.rolesListToDto(rolesService.findAllAccountingUsersNotCreator(accountingService.findAccountingById(id))));
+        return ResponseEntity.ok(mappingService.rolesListToDto(rolesService.findAllByAccounting(accountingService.findAccountingById(id))));
     }
 
     @DeleteMapping("/{id}/deleteUser")

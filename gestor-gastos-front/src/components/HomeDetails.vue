@@ -34,7 +34,10 @@
                         {{ Object.keys(categoriesDifferences.spentDifferences)[0] }}
                       </h5>
                       <div class="card-text">
-                        <div class="arrow-up arrow-up-spent"></div><h5>+{{categoriesDifferences.spentDifferences[Object.keys(categoriesDifferences.spentDifferences)[0]]}}</h5>
+                        <div class="arrow-up arrow-up-spent"></div>
+                        <h5>
+                          +{{addEuroSymbol(categoriesDifferences.spentDifferences[Object.keys(categoriesDifferences.spentDifferences)[0]])}}
+                        </h5>
                       </div>
                     </div>
                   </div>
@@ -46,7 +49,7 @@
                         {{ Object.keys(categoriesDifferences.spentDifferences)[1] }}
                       </h5>
                       <div class="card-text font-weight-bold">
-                        <div class="arrow-down arrow-down-spent"></div><h5>{{categoriesDifferences.spentDifferences[Object.keys(categoriesDifferences.spentDifferences)[1]]}}</h5>
+                        <div class="arrow-down arrow-down-spent"></div><h5>{{addEuroSymbol(categoriesDifferences.spentDifferences[Object.keys(categoriesDifferences.spentDifferences)[1]])}}</h5>
                       </div>
                     </div>
                   </div>
@@ -66,7 +69,7 @@
                         {{ Object.keys(categoriesDifferences.incomeDifferences)[0] }}
                       </h5>
                       <div class="card-text">
-                        <div class="arrow-up arrow-up-income"></div><h5>+{{categoriesDifferences.incomeDifferences[Object.keys(categoriesDifferences.incomeDifferences)[0]]}}</h5>
+                        <div class="arrow-up arrow-up-income"></div><h5>+{{addEuroSymbol(categoriesDifferences.incomeDifferences[Object.keys(categoriesDifferences.incomeDifferences)[0]])}}</h5>
                       </div>
                     </div>
                   </div>
@@ -78,7 +81,7 @@
                         {{ Object.keys(categoriesDifferences.incomeDifferences)[1] }}
                       </h5>
                       <div class="card-text font-weight-bold">
-                        <div class="arrow-down arrow-down-income"></div><h5>{{categoriesDifferences.incomeDifferences[Object.keys(categoriesDifferences.incomeDifferences)[1]]}}</h5>
+                        <div class="arrow-down arrow-down-income"></div><h5>{{addEuroSymbol(categoriesDifferences.incomeDifferences[Object.keys(categoriesDifferences.incomeDifferences)[1]])}}</h5>
                       </div>
                     </div>
                   </div>

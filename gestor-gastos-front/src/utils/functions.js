@@ -197,7 +197,7 @@ export function addEuroSymbol(value) {
 
 export function determineInitialType(operationToEdit) {
     if (operationToEdit) {
-        return operationToEdit.type === 'INCOME' ? 'ingreso' : 'gasto';
+        return operationToEdit.type === 'INCOME' ? 'Ingreso' : 'Gasto';
     }
     return '';
 }

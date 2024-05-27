@@ -44,6 +44,7 @@
 import { onMounted, ref } from 'vue';
 import { useAccountingStore } from "@/stores/accountingStore";
 import { addUser as addUserApi, deleteUserAccounting } from "@/api/userRoleAPI";
+import {saveToastMessage} from "@/utils/toastService";
 
 export default {
   name: 'UserManagementModal',
@@ -71,13 +72,14 @@ export default {
           await deleteUserAccounting(accountingId.value, username);
           console.log(`Eliminado usuario con username: ${username}`);
         }
-        alert("Usuarios borrados con éxito");
+        saveToastMessage('success', 'Usuarios borrados con éxito');
         await fetchUsersAccountingAsync(accountingId.value);
         selectedUsers.value = [];
+        location.reload();
         closeModal();
       } catch (error) {
         console.error('Error al borrar usuarios:', error);
-        alert('Ocurrió un error al borrar los usuarios. Por favor, inténtalo de nuevo.');
+        saveToastMessage('error', 'Ocurrió un error al borrar usuarios');
       }
     };
 
@@ -89,12 +91,13 @@ export default {
       };
       try {
         await addUserApi(accountingData.accountingId, accountingData);
-        alert("Usuario añadido con éxito");
+        saveToastMessage('success', 'Usuario añadido');
         await fetchUsersAccountingAsync(accountingId.value);
+        location.reload();
         closeModal();
       } catch (error) {
         console.error('Error al añadir usuario:', error);
-        alert('Ocurrió un error al añadir el usuario. Por favor, inténtalo de nuevo.');
+        saveToastMessage('error', 'Ocurrión un error al añadir el usuario');
       }
       newUserName.value = '';
     };

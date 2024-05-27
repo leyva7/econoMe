@@ -24,7 +24,7 @@
 </template>
 
 <script>
-import { onMounted } from 'vue';
+import {onMounted, ref, watch} from 'vue';
 import { useRouter } from 'vue-router';
 import TopBar from "@/components/TopBar.vue";
 import SidebarPage from "@/components/AppSidebar.vue";
@@ -43,11 +43,22 @@ export default {
     const { accountingId, sharedAccountings, loadAccountings, accountings, userRole, fetchUserRoleAsync, categories, fetchCategories} = useAccountingStore();
     const toast = useToast();
     const router = useRouter();
+    const shouldShowAddButton = ref(false);
+
+    const updateShouldShowAddButton = async() => {
+      shouldShowAddButton.value = shouldShowButton(router, userRole);
+    };
 
     onMounted(async () => {
       await loadAccountings();
       await fetchUserRoleAsync(accountingId.value);
+      await updateShouldShowAddButton();
       showToastFromStorage(toast);
+    });
+
+    watch(() => router.currentRoute.value.name, async () => {
+      await fetchUserRoleAsync(accountingId.value);
+      await updateShouldShowAddButton();
     });
 
     return {
@@ -55,7 +66,7 @@ export default {
       categories, fetchCategories,
       sharedAccountings, accountings,
       handleOpenModal, isModalOpen, modalContentType, openModal, toggleModal,
-      shouldShowAddButton: shouldShowButton(router, userRole)
+      shouldShowAddButton, router
     };
   },
 };

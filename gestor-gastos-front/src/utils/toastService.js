@@ -16,7 +16,8 @@ export function showToastFromStorage() {
     const message = localStorage.getItem('toastMessage');
     if (message) {
         $toast[type](message, {
-            duration: 5000
+            duration: 5000,
+            position: 'top'
         });
         clearToastMessage();
     }

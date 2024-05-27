@@ -7,6 +7,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.userdetails.UserDetails;
+import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 @Service
@@ -18,8 +19,9 @@ public class AuthService {
     private final AuthenticationManager authenticationManager;
 
     public AuthResponse login(LoginDto request){
+        UserDetails user = userRepository.findByUsername(request.getUsername())
+                .orElseThrow(() -> new UsernameNotFoundException("Usuario no encontrado"));
         authenticationManager.authenticate(new UsernamePasswordAuthenticationToken(request.getUsername(), request.getPassword()));
-        UserDetails user = userRepository.findByUsername(request.getUsername()).orElseThrow();
         String token = jwtService.getToken(user);
 
         return AuthResponse.builder()

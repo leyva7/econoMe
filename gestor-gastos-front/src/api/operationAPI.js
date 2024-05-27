@@ -17,6 +17,8 @@ export const fetchOperations = async (params) => {
         queryParams += `&startDate=${encodeURIComponent(startDate)}&endDate=${encodeURIComponent(endDate)}`;
     }
 
+    console.log(`${API_URL}${accountingId}/operation/all${queryParams}`);
+
     return await axios.get(`${API_URL}${accountingId}/operation/all${queryParams}`, {
         headers: getAuthHeaders()
     });

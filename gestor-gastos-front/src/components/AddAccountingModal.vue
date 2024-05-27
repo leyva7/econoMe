@@ -15,7 +15,7 @@
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" @click="updateVisibility(false)">Cancelar</button>
-        <button type="submit" class="btn bg-custom-blue-900 text-white">Aceptar</button>
+        <button type="submit" class="btn btn-primary">Aceptar</button>
       </div>
     </form>
   </ModalWindow>

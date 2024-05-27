@@ -2,6 +2,7 @@ import router from "@/router";
 import {changePassword, fetchUserDetails, registerUser, updateUserDetails} from "@/api/userAPI";
 import {navigate, navigateHome} from "@/utils/global";
 import {callAPI} from "@/service/service";
+import {saveToastMessage} from "@/utils/toastService";
 
 // Función para cargar los datos del usuario
 export async function loadUserData(user) {
@@ -9,16 +10,36 @@ export async function loadUserData(user) {
 }
 
 // Función para enviar cambios en los datos del usuario
-export async function submitUserDataChanges(user) {
-    const successMessage = 'Usuario modificado exitosamente.';
-    const errorMessage = 'Ocurrió un error al modificar los datos del usuario. Por favor, inténtalo de nuevo.';
+export async function submitUserDataChanges(user, submitted, formRef, usernameError) {
+    if (formRef.value.checkValidity()) {
+        const successMessage = 'Usuario modificado exitosamente.';
+        const errorMessage = 'Ocurrió un error al modificar los datos del usuario. Por favor, inténtalo de nuevo.';
 
-    const successCallback = () => {
-        localStorage.setItem('username', user.username);
-        navigateHome('/home-user');
-    };
+        const successCallback = () => {
+            localStorage.setItem('username', user.username);
+            saveToastMessage('success', successMessage);
+            navigateHome('/home-user');
+        };
 
-    await callAPI(user, updateUserDetails, errorMessage, successMessage, successCallback, null);
+        await callAPI(
+            user,
+            updateUserDetails,
+            errorMessage,
+            null,
+            successCallback,
+            null
+        ).catch(error => {
+            submitted.value = false;
+            if (error.response.data && error.response.data.error.includes('nombre de usuario')) {
+                usernameError.value = 'Este nombre de usuario ya está registrado.';
+                const usernameInput = formRef.value.querySelector('#username');
+                usernameInput.classList.remove('is-valid');
+                usernameInput.classList.add('is-invalid');
+            }
+        });
+    } else {
+        submitted.value = true;
+    }
 }
 
 export async function submitPasswordChange(userPassword) {
@@ -53,7 +74,6 @@ export async function submitRegisterUser(user, submitted, formRef, usernameError
         ).catch(error => {
             submitted.value = false;
             if (error.response.data && error.response.data.error.includes('nombre de usuario')) {
-                console.log('aaaaaaaa');
                 usernameError.value = 'Este nombre de usuario ya está registrado.';
                 const usernameInput = formRef.value.querySelector('#username');
                 usernameInput.classList.remove('is-valid');

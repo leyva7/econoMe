@@ -10,23 +10,22 @@
       </div>
       <button class="btn btn-lg btn-primary btn-block" type="submit">Iniciar sesión</button>
     </form>
-    <p class="mt-4 bg" >¿Aún no te has registrado? <router-link to="/register" class="register-link">Registrate ahora</router-link></p>
   </div>
 </template>
 
 
 <script>
 import { ref } from 'vue';
-import { useRouter } from 'vue-router';
+import router from "@/router";
 import { login } from '@/api/userAPI';
 import { fetchAccountingPersonal} from "@/api/accountingAPI";
+import {saveToastMessage} from "@/utils/toastService";
 
 export default {
   name: 'UserLogin',
   setup() {
     const username = ref('');
     const password = ref('');
-    const router = useRouter();
 
     const loginAction = async () => {
       try {
@@ -40,23 +39,18 @@ export default {
         localStorage.setItem('username', data.username);
         const accountingData = await fetchAccountingPersonal();
         localStorage.setItem('personalAccountingId', accountingData.data.id);
-        alert("Inicio de sesión exitoso");
+        saveToastMessage('success', 'Inicio de sesión exitoso');
         router.push({ name: 'home', query: { id: accountingData.data.id } });
       } catch (error) {
         console.error("Error en el inicio de sesión:", error);
-        alert("Error al iniciar sesión");
+        alert(error.response.data);
       }
-    };
-
-    const navigate = () => {
-      router.push({ name: 'register' });
     };
 
     return {
       username,
       password,
-      loginAction,
-      navigate
+      loginAction
     };
   }
 };
@@ -70,23 +64,23 @@ export default {
   }
 
   form input {
-    border: none; /* Elimina todos los bordes */
-    border-bottom: 2px solid var(--pickled-bluewood-500); /* Solo añade borde en la parte inferior */
-    background-color: transparent; /* Fondo transparente */
-    width: calc(100% - 20px); /* Ajusta el ancho para tener en cuenta el padding */
+    border: none;
+    border-bottom: 2px solid var(--pickled-bluewood-500);
+    background-color: transparent;
+    width: calc(100% - 20px);
   }
 
   form input:focus {
-    outline: none; /* Elimina el contorno al enfocar */
-    border-bottom: 2px solid var(--pickled-bluewood-700); /* Cambia el color del borde inferior al enfocar */
+    outline: none;
+    border-bottom: 2px solid var(--pickled-bluewood-700);
   }
 
   .form-group {
-    margin-bottom: 15px; /* Espacio entre campos */
+    margin-bottom: 15px;
   }
 
   form button {
-    width: 100%; /* Ocupa todo el ancho disponible */
+    width: 100%;
     background-color: var(--pickled-bluewood-700);
     color: white;
     border: none;
@@ -94,18 +88,9 @@ export default {
   }
 
   form button:hover {
-    background-color: var(--pickled-bluewood-400);
+    background-color: var(--pickled-bluewood-600);
   }
 
-  .register-link {
-    color: var(--pickled-bluewood-700); /* Cambia el color del texto a rojo */
-    font-weight: bold; /* Añade negrita al texto */
-    text-decoration: none;
-  }
-
-  .register-link:hover {
-    text-decoration: underline; /* Subraya el texto al pasar el cursor sobre él */
-  }
 
 </style>
   

@@ -184,4 +184,26 @@
 .table-container {
     min-height: 250px; /* Ajusta a la altura mínima que prefieras para la tabla */
 }
+
+.btn-primary, .btn-primary:active, .btn-primary:visited {
+    background-color: var(--pickled-bluewood-600) !important;
+    border-color: var(--pickled-bluewood-600) !important;
+}
+
+.btn-primary:hover{
+    background-color: var(--pickled-bluewood-700) !important;
+}
+
+.btn-edit, .btn-edit:active, .btn-edit:visited {
+    background-color: #e29300 !important;
+    border-color: #e29300 !important;
+}
+
+.btn-edit:hover{
+    background-color: #bb6802 !important;
+}
+
+.logo-text {
+    font-size: 3rem; /* Ajusta este tamaño según tus necesidades */
+}
   

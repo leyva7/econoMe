@@ -15,7 +15,7 @@ public interface RolesRepository extends JpaRepository<Roles, RolesId> {
 
     Optional<Roles> findByUserUsernameAndAccountingId(String username, Long accountingId);
 
-    List<Roles> findAllByAccountingAndUserNot(Accounting accounting, User userCreator);
+    List<Roles> findAllByAccounting(Accounting accounting);
 
     List<Roles> findAllByUser(User user);
 

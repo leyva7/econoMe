@@ -26,6 +26,7 @@ import ModalWindow from './ModalWindow.vue';
 import {defineComponent, onMounted, ref, watch} from 'vue';
 import {useAccountingStore} from '@/stores/accountingStore';
 import {updateAccounting} from "@/api/accountingAPI";
+import {saveToastMessage} from "@/utils/toastService";
 
 export default defineComponent({
   components: {
@@ -93,12 +94,13 @@ export default defineComponent({
         emit('save', newData); // Emitir evento con los nuevos datos
         isEditing.value = false;
         updateVisibility(false);
-        alert('La contabilidad se ha actualizado correctamente.');
-        await loadAccountings(); // Recargar contabilidades para reflejar los cambios
-        location.reload(); // Recargar la página para asegurar que todos los componentes se actualicen
+        saveToastMessage('success', 'Contabilidad modificada con éxito');
+        await loadAccountings();
+        location.reload();
       } catch (error) {
         console.error('Error al actualizar la contabilidad:', error);
-        alert('Se produjo un error al actualizar la contabilidad. Por favor, inténtalo de nuevo.');
+        saveToastMessage('error', 'Error al actualizar la contabilidad');
+        location.reload();
       }
     };
 

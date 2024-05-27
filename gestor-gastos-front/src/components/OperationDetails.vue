@@ -90,12 +90,12 @@
           <td>{{ accountings.find(accounting => accounting.id === operation.accountingId)?.name }}</td>
           <td>{{ operation.type === 'INCOME' ? 'Ingreso' : 'Gasto' }}</td>
           <td>{{ operation.category }}</td>
-          <td>{{ operation.quantity }}</td>
+          <td>{{ addEuroSymbol(operation.quantity) }}</td>
           <td>{{ operation.date }}</td>
           <td>
             <div class="d-flex justify-content-around">
               <button class="btn btn-primary btn-sm" @click="showOperation(operation)">Ver</button>
-              <button class="btn btn-primary btn-sm" v-if="accountingsRoles[operation.accountingId] === 'EDITOR'" @click="editOperation(operation)">Editar</button>
+              <button class="btn btn-edit btn-sm text-white" v-if="accountingsRoles[operation.accountingId] === 'EDITOR'" @click="editOperation(operation)">Editar</button>
               <button class="btn btn-danger btn-sm" v-if="accountingsRoles[operation.accountingId] === 'EDITOR'" @click="deleteOperation(operation.id)">Eliminar</button>
             </div>
           </td>
@@ -123,9 +123,12 @@ import { useAccountingStore } from '@/stores/accountingStore.js';
 import { fetchFilteredOperations, deleteOperation as deleteOperationApi } from '@/api/operationAPI'
 import { isModalOpen, isNewModalOpen, toggleModal, operationToEdit, operationToShow, editOperation, showOperation} from "@/utils/modal";
 import { useMultiplePagination } from "@/utils/usePagination";
+import {addEuroSymbol} from "../utils/functions";
+import {saveToastMessage} from "@/utils/toastService";
 
 export default {
   name: 'OperationDetails',
+  methods: {addEuroSymbol},
   components:{
     AddOperationModal, OperationInfoModal
   },
@@ -223,9 +226,11 @@ export default {
         const response = await deleteOperationApi(id);
         console.log("Eliminando operación", response);
         await fetchAllAccountingsUserOperationsAsync();
+        saveToastMessage('success', 'Operación borrada exitosamente');
         location.reload();
       } catch (error) {
         console.error("Error aplicando filtros:", error);
+        saveToastMessage('error', 'Algo falló al borrar la operación');
       }
     };
 
