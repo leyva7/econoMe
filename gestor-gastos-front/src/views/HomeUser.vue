@@ -4,26 +4,33 @@
     <div style="flex: 0 0 15%; overflow-y: auto;">
       <SidebarPage :sharedAccountings="sharedAccountings" @openModal="handleOpenModal"/>
     </div>
+    <!-- Modales -->
     <AddAccountingModal :isVisible="isModalOpen && modalContentType === 'addAccounting'" @update:isVisible="toggleModal" />
     <AddOperationModal :isVisible="isModalOpen && modalContentType === 'addOperations'" @update:isVisible="toggleModal" />
     <AccountingInfoModal :isVisible="isModalOpen && modalContentType === 'infoAccounting'" @update:isVisible="toggleModal"/>
 
+    <!-- Contenido principal -->
     <div style="flex: 0 0 85%; overflow-y: auto;">
       <TopBar/>
       <div class="dynamic-content p-3 overflow-auto position-relative">
+        <!-- Botón para abrir el modal de información de contabilidad -->
         <button @click="openModal('infoAccounting')" class="btn button-custom position-absolute top-0 end-0 mt-3 me-3">
           <i class="fa-solid fa-circle-info me-2"></i>Información
         </button>
+        <!-- Componente de ruta dinámica -->
         <router-view @openModal="handleOpenModal"></router-view>
+        <!-- Botón flotante para añadir operaciones -->
         <button v-if="shouldShowAddButton" @click="openModal('addOperations')" class="add-floating-button position-fixed" style="right: 25px; bottom: 30px;">
-          <i class="fa-solid fa-plus "></i>
+          <i class="fa-solid fa-plus"></i>
         </button>
       </div>
     </div>
   </div>
 </template>
 
+
 <script>
+// Importación de utilidades, componentes y servicios necesarios
 import {onMounted, ref, watch} from 'vue';
 import { useRouter } from 'vue-router';
 import TopBar from "@/components/TopBar.vue";
@@ -38,24 +45,27 @@ import { isModalOpen, modalContentType, handleOpenModal, openModal, toggleModal,
 
 export default {
   name: 'UserHome',
-  components:{ TopBar, SidebarPage, AddAccountingModal, AccountingInfoModal, AddOperationModal },
+  components: { TopBar, SidebarPage, AddAccountingModal, AccountingInfoModal, AddOperationModal },
   setup() {
-    const { accountingId, sharedAccountings, loadAccountings, accountings, userRole, fetchUserRoleAsync, categories, fetchCategories} = useAccountingStore();
+    const { accountingId, sharedAccountings, loadAccountings, accountings, userRole, fetchUserRoleAsync, categories, fetchCategories } = useAccountingStore();
     const toast = useToast();
     const router = useRouter();
     const shouldShowAddButton = ref(false);
 
-    const updateShouldShowAddButton = async() => {
+    // Actualiza el estado de shouldShowAddButton basado en la ruta y el rol del usuario
+    const updateShouldShowAddButton = async () => {
       shouldShowAddButton.value = shouldShowButton(router, userRole);
     };
 
+    // Carga las contabilidades y el rol del usuario al montar el componente
     onMounted(async () => {
       await loadAccountings();
       await fetchUserRoleAsync(accountingId.value);
       await updateShouldShowAddButton();
-      showToastFromStorage(toast);
+      showToastFromStorage(toast); // Muestra mensajes de tostadas almacenados en el localStorage
     });
 
+    // Observa cambios en la ruta para actualizar el rol del usuario y el botón de añadir operaciones
     watch(() => router.currentRoute.value.name, async () => {
       await fetchUserRoleAsync(accountingId.value);
       await updateShouldShowAddButton();

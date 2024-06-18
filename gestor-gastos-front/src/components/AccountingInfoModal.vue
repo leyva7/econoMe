@@ -1,9 +1,11 @@
 <template>
   <ModalWindow :isVisible="isVisible" @update:isVisible="updateVisibility">
+    <!-- Encabezado del modal -->
     <div class="modal-header">
       <h5 class="modal-title">{{ isEditing ? 'Editar Contabilidad' : 'Detalles de la Contabilidad' }}</h5>
       <button type="button" class="btn-close" @click="updateVisibility(false)"></button>
     </div>
+    <!-- Cuerpo del modal con formulario -->
     <form class="modal-body" @submit.prevent="isEditing ? updateAccount() : updateVisibility(false)">
       <div class="mb-3">
         <label for="accountName" class="form-label">Nombre de contabilidad</label>
@@ -13,6 +15,7 @@
         <label for="description" class="form-label">Descripción</label>
         <textarea id="description" v-model="description" class="form-control" :disabled="!isEditing"></textarea>
       </div>
+      <!-- Pie del modal con botones -->
       <div class="modal-footer">
         <button type="button" class="btn btn-secondary" @click="toggleEditing">{{ isEditing ? 'Cancelar' : 'Editar' }}</button>
         <button type="submit" class="btn btn-primary text-white">{{ isEditing ? 'Guardar' : 'Cerrar' }}</button>
@@ -22,11 +25,11 @@
 </template>
 
 <script>
-import ModalWindow from './ModalWindow.vue';
-import {defineComponent, onMounted, ref, watch} from 'vue';
-import {useAccountingStore} from '@/stores/accountingStore';
-import {updateAccounting} from "@/api/accountingAPI";
-import {saveToastMessage} from "@/utils/toastService";
+import ModalWindow from './ModalWindow.vue'; // Importar componente ModalWindow
+import { defineComponent, onMounted, ref, watch } from 'vue';
+import { useAccountingStore } from '@/stores/accountingStore'; // Importar store de contabilidad
+import { updateAccounting } from "@/api/accountingAPI"; // Importar API de actualización
+import { saveToastMessage } from "@/utils/toastService"; // Importar servicio de mensajes toast
 
 export default defineComponent({
   components: {
@@ -40,8 +43,8 @@ export default defineComponent({
     }
   },
   emits: ['update:isVisible', 'save'],
-  setup(props, {emit}) {
-    const {loadAccountings, currentAccounting} = useAccountingStore();
+  setup(props, { emit }) {
+    const { loadAccountings, currentAccounting } = useAccountingStore();
     const isEditing = ref(false);
     const accountName = ref('');
     const description = ref('');
@@ -55,12 +58,12 @@ export default defineComponent({
         accountName.value = newData.name || '';
         description.value = newData.description || '';
       }
-    }, {immediate: true});
+    }, { immediate: true });
 
     const updateVisibility = (value) => {
       emit('update:isVisible', value);
       if (!value) {
-        isEditing.value = false; // Reset editing state when modal closes
+        isEditing.value = false; // Resetear estado de edición al cerrar el modal
       }
     };
 
@@ -78,7 +81,7 @@ export default defineComponent({
       // Validar que el nombre no esté vacío
       if (!accountName.value.trim()) {
         alert('El nombre de la contabilidad no puede estar vacío.');
-        return; // Salir del método si el nombre está vacío
+        return;
       }
 
       try {
@@ -89,9 +92,9 @@ export default defineComponent({
           userCreator: currentAccounting.value.userCreator
         };
 
-        // Llamar a la función de actualización
+        // Actualizar contabilidad
         await updateAccounting(currentAccounting.value.id, newData);
-        emit('save', newData); // Emitir evento con los nuevos datos
+        emit('save', newData);
         isEditing.value = false;
         updateVisibility(false);
         saveToastMessage('success', 'Contabilidad modificada con éxito');
@@ -116,4 +119,3 @@ export default defineComponent({
   }
 });
 </script>
-

@@ -6,12 +6,13 @@
 
 <script>
 export default {
-  name: "NoDataMessage",
+  name: "NoDataMessage", // Nombre del componente
   props: {
     message: {
-      type: String,
-      default: 'No hay datos disponibles'
+      type: String, // Tipo de la propiedad es String
+      default: 'No hay datos disponibles' // Valor por defecto si no se proporciona ninguna prop message
     }
   }
 }
 </script>
+

@@ -1,10 +1,12 @@
 <template>
   <ModalWindow :isVisible="isVisible" @update:isVisible="updateVisibility">
+    <!-- Encabezado del modal -->
     <div class="modal-header">
-      <h5 v-if=isEditMode class="modal-title">Editar operación</h5>
+      <h5 v-if="isEditMode" class="modal-title">Editar operación</h5>
       <h5 v-else class="modal-title">Nueva Operación</h5>
       <button type="button" class="btn-close" @click="updateVisibility(false)"></button>
     </div>
+    <!-- Cuerpo del modal con formulario -->
     <form @submit.prevent="submitOperations" class="modal-body" v-if="operation">
       <div class="mb-3">
         <label for="type" class="form-label">Tipo</label>
@@ -45,6 +47,7 @@
         <label for="amount" class="form-label">Cantidad</label>
         <input type="number" id="amount" v-model="operation.quantity" step="0.01" class="form-control">
       </div>
+      <!-- Pie del modal con botones -->
       <div class="modal-footer">
         <button type="submit" class="btn btn-primary">Aceptar</button>
         <button type="button" @click="updateVisibility(false)" class="btn btn-secondary">Cancelar</button>
@@ -52,15 +55,16 @@
     </form>
   </ModalWindow>
 </template>
+
 <script>
-import ModalWindow from './ModalWindow.vue';
+import ModalWindow from './ModalWindow.vue'; // Importar componente ModalWindow
 import {ref, defineComponent, computed, watch, onMounted} from 'vue';
 import { useAccountingStore } from '@/stores/accountingStore';
-import { globalStore} from "@/stores/globalStore";
-import { createOperation, updateOperation } from "@/api/operationAPI";
+import { globalStore } from "@/stores/globalStore";
+import { createOperation, updateOperation } from "@/api/operationAPI"; // Importar API de operaciones
 import { formatDateToDDMMYYYY } from "@/utils/functions";
-import {saveToastMessage} from "@/utils/toastService";
-import { setToday } from "@/utils/global"
+import { saveToastMessage } from "@/utils/toastService";
+import { setToday } from "@/utils/global";
 
 export default defineComponent({
   components: {
@@ -74,8 +78,8 @@ export default defineComponent({
     },
   },
   setup(props, { emit }) {
-    const { fetchCategoriesSpentAsync, fetchCategoriesIncomeAsync, categories } = useAccountingStore();
-    const { accountingId } = globalStore();
+    const {fetchCategoriesSpentAsync, fetchCategoriesIncomeAsync, categories} = useAccountingStore();
+    const {accountingId} = globalStore();
 
     const isEditMode = computed(() => props.operationToEdit !== null);
 
@@ -90,6 +94,7 @@ export default defineComponent({
       quantity: ''
     });
 
+    // Determinar el tipo inicial de la operación
     function determineInitialType() {
       if (props.operationToEdit) {
         return props.operationToEdit.type === 'INCOME' ? 'ingreso' : 'gasto';
@@ -97,6 +102,7 @@ export default defineComponent({
       return '';
     }
 
+    // Inicializar el formulario
     const initializeForm = () => {
       if (isEditMode.value) {
         // Convertir el valor de type de INCOME/SPENT a ingreso/gasto para el formulario
@@ -116,6 +122,7 @@ export default defineComponent({
       }
     };
 
+    // Limpiar el formulario
     const clearForm = () => {
       operation.value.type = '';
       operation.value.description = '';
@@ -126,6 +133,7 @@ export default defineComponent({
       selectedOption.value = '';
     };
 
+    // Actualizar categorías basadas en el tipo
     const updateCategories = () => {
       const currentAccountingId = isEditMode.value ? props.operationToEdit.accountingId : accountingId.value;
       if (operation.value.type === 'ingreso') {
@@ -138,13 +146,14 @@ export default defineComponent({
     onMounted(() => {
       clearForm();
       if (props.isVisible) {
-        initializeForm()
+        initializeForm();
         updateCategories();
       }
     });
 
     const isCustomOptionSelected = computed(() => selectedOption.value === 'custom');
 
+    // Manejar cambios en la selección de categoría
     const onSelectChange = () => {
       if (!isCustomOptionSelected.value) {
         customOption.value = '';
@@ -155,15 +164,16 @@ export default defineComponent({
       updateCategories();
     });
 
-    watch([() => props.operationToEdit, () => props.isVisible], initializeForm, { immediate: true });
+    watch([() => props.operationToEdit, () => props.isVisible], initializeForm, {immediate: true});
 
+    // Actualizar visibilidad del modal
     const updateVisibility = (value) => {
       emit('update:isVisible', value);
       clearForm();
     };
 
+    // Enviar datos de la operación
     const submitOperations = async () => {
-
       let categoryValid = isCustomOptionSelected.value ? customOption.value.trim() !== '' : selectedOption.value !== '';
       if (!categoryValid || !operation.value.type || !operation.value.date || operation.value.quantity <= 0) {
         alert('Por favor, completa todos los campos.');
@@ -177,14 +187,13 @@ export default defineComponent({
       } else {
         operation.value.type = 'SPENT';
       }
-      // Asigna la categoría basada en si la opción personalizada está seleccionada o no
+      // Asignar categoría basada en la opción seleccionada
       operation.value.category = isCustomOptionSelected.value ? customOption.value : selectedOption.value;
       operation.value.date = formatDateToDDMMYYYY(operation.value.date);
 
       try {
-
         if (isEditMode.value) {
-          // Suponiendo que tienes una función updateOperation disponible para actualizar la operación
+          // Actualizar operación existente
           operation.value.id = props.operationToEdit.id;
           operation.value.accountingId = props.operationToEdit.accountingId;
           await updateOperation(operation.value);
@@ -220,8 +229,3 @@ export default defineComponent({
 });
 
 </script>
-
-<style>
-
-</style>
-

@@ -4,7 +4,7 @@ import router from '@/router';
 let alertShown = false;
 
 const axiosInstance = axios.create({
-    baseURL: 'http://192.168.1.100:8081/api', // Reemplaza con la IP del servidor y el puerto correcto
+    baseURL: 'http://localhost:8081/api', // Reemplaza con la IP del servidor y el puerto correcto
     timeout: 10000,
     headers: {
         'Content-Type': 'application/json',

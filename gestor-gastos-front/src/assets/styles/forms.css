@@ -1,11 +1,14 @@
+/* Estilo para el contenedor de cada grupo de formularios */
 .form-group {
     margin-bottom: 1rem;
 }
 
+/* Estilo para las etiquetas de los formularios */
 .form-group label {
     display: block;
 }
 
+/* Estilo para los inputs y textareas */
 .form-group input,
 .form-group textarea {
     width: calc(100% - 20px); /* Ajustar para padding */
@@ -15,6 +18,7 @@
     border-radius: 4px;
 }
 
+/* Estilo para botones primarios */
 .btn-primary {
     background-color: #007bff;
     color: white;
@@ -24,6 +28,7 @@
     cursor: pointer;
 }
 
+/* Estilo para botones secundarios */
 .btn-secondary {
     background-color: #6c757d;
     color: white;

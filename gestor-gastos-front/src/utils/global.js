@@ -1,6 +1,9 @@
-import {ref} from "vue";
+import { ref } from "vue";
 import router from "@/router";
 
+/**
+ * Función que redirige a la página de inicio con el ID de la contabilidad personal almacenado en localStorage.
+ */
 export const home = () => {
     const personalAccountingId = localStorage.getItem('personalAccountingId');
     router.push({
@@ -9,12 +12,20 @@ export const home = () => {
     });
 };
 
+/**
+ * Función que navega a una ruta específica.
+ * @param {string} path - Ruta a la que se desea navegar.
+ */
 export const navigate = (path) => {
     router.push({
         path: path
     });
 };
 
+/**
+ * Función que navega a una ruta específica con el ID de la contabilidad personal en los parámetros de la query.
+ * @param {string} path - Ruta a la que se desea navegar.
+ */
 export const navigateHome = (path) => {
     console.log(localStorage.getItem('personalAccountingId'));
     router.push({
@@ -23,6 +34,10 @@ export const navigateHome = (path) => {
     });
 };
 
+/**
+ * Función que navega a la contabilidad compartida utilizando el nombre y el ID de la contabilidad.
+ * @param {object} accounting - Objeto que contiene el nombre e ID de la contabilidad.
+ */
 export const navigateToAccounting = (accounting) => {
     router.push({
         name: 'shared',
@@ -31,11 +46,17 @@ export const navigateToAccounting = (accounting) => {
     });
 };
 
+/**
+ * Función que cierra la sesión borrando los datos de localStorage y redirigiendo a la página de inicio.
+ */
 export const logout = () => {
     localStorage.clear();
     router.push('/');
 };
 
+/**
+ * Configuración de las columnas de la tabla de operaciones.
+ */
 export const tableColumnsOperations = [
     { key: "type", label: "Tipo de operación" },
     { key: "category", label: "Categoría" },
@@ -43,16 +64,27 @@ export const tableColumnsOperations = [
     { key: "date", label: "Fecha" }
 ];
 
-
-
+/**
+ * Variables reactivas para indicar si hay datos de ingresos y gastos.
+ */
 export const hasDataIncome = ref(false);
 export const hasDataSpent = ref(false);
 export const hasData = ref(false);
 
+/**
+ * Colores asignados a las categorías de gastos.
+ */
 export const spentCategoryColors = ['#480707', '#a01414', '#e61c1c', '#ff6a6a', '#ffc7c7', '#a4b0be'];
+
+/**
+ * Colores asignados a las categorías de ingresos.
+ */
 export const incomeCategoryColors = ['#183c27', '#257042', '#3aad66', '#96dfb1', '#e1f7e8', '#a4b0be'];
 
-export  const commonOptions = {
+/**
+ * Opciones comunes para la configuración de gráficos.
+ */
+export const commonOptions = {
     scales: {
         y: {
             ticks: {
@@ -85,6 +117,9 @@ export  const commonOptions = {
     }
 };
 
+/**
+ * Opciones específicas para gráficos de tipo pie.
+ */
 export const pieOptions = {
     scales: {
         y: {
@@ -96,6 +131,10 @@ export const pieOptions = {
     }
 }
 
+/**
+ * Función que establece la fecha actual en el objeto de operación.
+ * @param {object} operation - Objeto de operación al que se asignará la fecha actual.
+ */
 export const setToday = (operation) => {
     const today = new Date();
     const yyyy = today.getFullYear();
@@ -109,4 +148,7 @@ export const setToday = (operation) => {
     operation.date = `${yyyy}-${mm}-${dd}`;
 };
 
-export let showElement = ref[false];
+/**
+ * Variable reactiva que controla la visibilidad de un elemento.
+ */
+export let showElement = ref(false);

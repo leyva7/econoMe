@@ -1,4 +1,5 @@
 <template>
+  <!-- Modales para agregar/editar y ver operaciones -->
   <AddOperationModal :isVisible="isModalOpen" :operationToEdit="operationToEdit" @update:isVisible="toggleModal" />
   <OperationInfoModal :isVisible="isNewModalOpen" :operationToShow="operationToShow" @update:isVisible="toggleModal" />
 
@@ -40,6 +41,7 @@
             <label for="category">Categoría:</label>
           </div>
         </div>
+        <!-- Filtros de cantidad mínima y máxima -->
         <div class="col-md-auto">
           <div class="d-flex align-items-center gap-2">
             <div class="form-floating">
@@ -52,6 +54,7 @@
             </div>
           </div>
         </div>
+        <!-- Filtros de fecha de inicio y fin -->
         <div class="col-md-auto">
           <div class="d-flex align-items-center gap-2">
             <div class="form-floating">
@@ -64,6 +67,7 @@
             </div>
           </div>
         </div>
+        <!-- Botón para aplicar filtros -->
         <div class="d-flex justify-content-end mt-3">
           <button @click="applyFilters" class="btn btn-primary">Aplicar Filtros</button>
         </div>
@@ -104,20 +108,21 @@
       </table>
     </div>
 
+    <!-- Controles de paginación -->
     <div class="d-flex justify-content-center mb-4">
       <div v-if="paginations[0].totalPages.value > 1" class="pagination-container d-flex justify-content-center mb-4">
-        <button @click=paginations[0].prevPage() class="btn btn-secondary me-2" :disabled="paginations[0].currentPage.value <= 1">Anterior</button>
+        <button @click="paginations[0].prevPage()" class="btn btn-secondary me-2" :disabled="paginations[0].currentPage.value <= 1">Anterior</button>
         <span class="me-2">Página {{ paginations[0].currentPage }} de {{ paginations[0].totalPages.value }}</span>
-        <button @click=paginations[0].nextPage() class="btn btn-secondary" :disabled="paginations[0].currentPage >= paginations[0].totalPages.value">Siguiente</button>
+        <button @click="paginations[0].nextPage()" class="btn btn-secondary" :disabled="paginations[0].currentPage >= paginations[0].totalPages.value">Siguiente</button>
       </div>
     </div>
   </div>
 </template>
 
 <script>
+// Importación de utilidades, componentes y servicios necesarios
 import AddOperationModal from "@/components/AddOperationModal.vue";
 import OperationInfoModal from "@/components/OperationInfoModal.vue";
-
 import { ref, watch, reactive, onMounted } from 'vue';
 import { useAccountingStore } from '@/stores/accountingStore.js';
 import { fetchFilteredOperations, deleteOperation as deleteOperationApi } from '@/api/operationAPI'
@@ -128,14 +133,16 @@ import {saveToastMessage} from "@/utils/toastService";
 
 export default {
   name: 'OperationDetails',
-  methods: {addEuroSymbol},
-  components:{
-    AddOperationModal, OperationInfoModal
+  methods: { addEuroSymbol },
+  components: {
+    AddOperationModal,
+    OperationInfoModal
   },
   setup() {
     const accountingStore = useAccountingStore();
     const { accountings, loadAccountings, fetchAllAccountingsUserOperationsAsync, allAccountingUserOperations, fetchCategoriesSpentAsync, fetchCategoriesIncomeAsync, fetchCategoriesAsync, categories, fetchUserRoleAsync, userRole } = accountingStore;
 
+    // Variables reactivas para los filtros y la paginación
     const selectedAccountingId = ref(null);
     const selectedType = ref('');
     const selectedCategory = ref('');
@@ -144,16 +151,19 @@ export default {
     const dateStart = ref('');
     const dateEnd = ref('');
 
+    // Variable reactiva para los roles de las contabilidades
     const accountingsRoles = reactive({});
 
+    // Variable reactiva para las operaciones filtradas
     const filteredOperations = ref([]);
 
+    // Configuración de la paginación
     const paginationConfigs = [
       { data: filteredOperations, reduced: false },
     ];
-
     const paginations = useMultiplePagination(paginationConfigs);
 
+    // Carga inicial de datos
     onMounted(async () => {
       await loadAccountings();
       await fetchAllAccountingsUserOperationsAsync();
@@ -161,6 +171,7 @@ export default {
       filteredOperations.value = allAccountingUserOperations.value;
     });
 
+    // Función para obtener los roles de usuario para cada contabilidad
     const fetchRolesForAccountings = async () => {
       for (const accounting of accountings.value) {
         await fetchUserRoleAsync(accounting.id);
@@ -168,9 +179,10 @@ export default {
       }
     };
 
+    // Observadores para los cambios en contabilidad y tipo de operación
     watch([selectedAccountingId, selectedType], async ([newAccountId, newType]) => {
       if (!newAccountId) return;
-      switch(newType) {
+      switch (newType) {
         case 'INCOME':
           await fetchCategoriesIncomeAsync(newAccountId);
           break;
@@ -183,20 +195,21 @@ export default {
       }
     }, { immediate: true });
 
+    // Función para aplicar los filtros
     const applyFilters = async () => {
-      // Verifica que la contabilidad seleccionada, el tipo y la categoría no estén vacíos
+      // Verificar que la contabilidad seleccionada, el tipo y la categoría no estén vacíos
       if (!selectedAccountingId.value || selectedType.value === '' || selectedCategory.value === '') {
         alert("Por favor, rellena todos los campos para filtrar.");
         return;
       }
 
-      // Verifica que los campos de cantidad no sean vacíos y el rango sea válido
+      // Verificar que los campos de cantidad no sean vacíos y el rango sea válido
       if (quantityMin.value > quantityMax.value) {
         alert("El rango de cantidad no es válido.");
         return;
       }
 
-      // Verifica que ambos campos de fecha tengan valor y el rango de fechas sea válido
+      // Verificar que ambos campos de fecha tengan valor y el rango de fechas sea válido
       if ((!dateStart.value || !dateEnd.value) || (dateStart.value && dateEnd.value && dateStart.value > dateEnd.value)) {
         alert("Por favor, selecciona un rango de fechas válido.");
         return;
@@ -204,7 +217,7 @@ export default {
 
       const filters = {
         accountingId: selectedAccountingId.value,
-        type: selectedType.value.toUpperCase(), // Asegúrate de que el valor coincide con los tipos esperados en el backend
+        type: selectedType.value.toUpperCase(), // Asegurarse de que el valor coincide con los tipos esperados en el backend
         category: selectedCategory.value,
         quantityMin: quantityMin.value,
         quantityMax: quantityMax.value,
@@ -217,26 +230,28 @@ export default {
         // Suponiendo que la respuesta del backend es la lista de operaciones filtradas
         filteredOperations.value = response.data;
       } catch (error) {
-        console.error("Error aplicando filtros:", error);
+        saveToastMessage('error', 'Algo falló al obtener las operaciones filtradas');
       }
     };
 
+    // Función para eliminar una operación
     const deleteOperation = async (id) => {
       try {
-        const response = await deleteOperationApi(id);
-        console.log("Eliminando operación", response);
+        await deleteOperationApi(id);
         await fetchAllAccountingsUserOperationsAsync();
         saveToastMessage('success', 'Operación borrada exitosamente');
-        location.reload();
+        location.reload(); // Recargar la página después de eliminar para actualizar la lista de operaciones
       } catch (error) {
-        console.error("Error aplicando filtros:", error);
         saveToastMessage('error', 'Algo falló al borrar la operación');
       }
     };
 
     return {
+      // Datos de contabilidades y operaciones
       accountings,
       allAccountingUserOperations,
+
+      // Filtros y valores seleccionados
       selectedAccountingId,
       categories,
       selectedType,
@@ -245,9 +260,15 @@ export default {
       quantityMax,
       dateStart,
       dateEnd,
+
+      // Roles de las contabilidades y funcionalidades
       accountingsRoles,
+
+      // Funciones para aplicar filtros y paginación
       applyFilters,
       paginations,
+
+      // Variables y métodos para los modales de operación
       isModalOpen, isNewModalOpen, toggleModal, operationToEdit, operationToShow,
       showOperation, editOperation, deleteOperation
     };

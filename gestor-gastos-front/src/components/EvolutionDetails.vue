@@ -2,10 +2,12 @@
   <div class="container mt-5">
     <h2 class="text-center mb-4">Evolución</h2>
 
+    <!-- Componente IntervalSelector -->
     <IntervalSelector :isVisible="showElement" @update-selection="updateData" />
 
-    <!-- Gráfico de Evolución y Ahorros -->
+    <!-- Sección de gráficos y tabla de datos -->
     <div v-if="hasData" class="row">
+      <!-- Gráfico de Evolución de Gastos e Ingresos -->
       <div class="col-12 mb-3">
         <div class="p-3 bg-white rounded shadow h-100">
           <h3 class="text-center mb-3">Evolución gastos e ingresos</h3>
@@ -15,6 +17,7 @@
         </div>
       </div>
 
+      <!-- Gráfico de Ahorros -->
       <div class="col-12 col-lg-6 mb-3">
         <div class="p-3 bg-white rounded shadow">
           <h3 class="text-center mb-3">Ahorro</h3>
@@ -24,73 +27,89 @@
         </div>
       </div>
 
+      <!-- Tabla de Evolución de Ahorros -->
       <div class="col-12 col-lg-6 mb-3">
         <div class="p-3 bg-white rounded shadow">
           <DataTable :pagination="paginations[0]" :columns="tableColumnEvolution" />
         </div>
       </div>
-
     </div>
+
+    <!-- Mensaje de datos no disponibles -->
     <NoDataMessage v-else/>
   </div>
 </template>
 
 <script>
-
+// Importación de utilidades, componentes y servicios necesarios
 import { Chart, registerables } from 'chart.js';
 import { onMounted, ref, nextTick } from 'vue';
 import { useAccountingStore } from '@/stores/accountingStore';
 import IntervalSelector from "@/components/IntervalSelector.vue";
 import NoDataMessage from "@/components/NoDataMessage.vue";
-import {processFilterSelection} from "@/utils/functions";
-import {commonOptions, hasData} from "@/utils/global";
-import {createChart} from "@/utils/chartService";
-import {useMultiplePagination} from "@/utils/usePagination";
+import { processFilterSelection } from "@/utils/functions";
+import { commonOptions, hasData } from "@/utils/global";
+import { createChart } from "@/utils/chartService";
+import { useMultiplePagination } from "@/utils/usePagination";
 import DataTable from "@/components/DataTable.vue";
 
-Chart.register(...registerables);
+Chart.register(...registerables); // Registra módulos de Chart.js
+
 export default {
   name: "EvolutionDetails",
-  components: {IntervalSelector, NoDataMessage, DataTable},
+  components: { IntervalSelector, NoDataMessage, DataTable }, // Componentes utilizados en el template
   setup() {
-    const { accountingId, fetchSpentsInterval, fetchIncomeInterval, totalIncomeMonth, totalSpentMonth, combinedDataProcessed, fetchOperationsAsync, processDailySpentData, savingsData} = useAccountingStore();
+    // Variables y funciones obtenidas del store mediante Vuex
+    const {
+      accountingId, fetchSpentsInterval, fetchIncomeInterval, totalIncomeMonth, totalSpentMonth,
+      combinedDataProcessed, fetchOperationsAsync, processDailySpentData, savingsData
+    } = useAccountingStore();
+
+    // Configuraciones de paginación para diferentes datos
     const paginationConfigs = [
       { data: savingsData, reduced: false },
     ];
-    const paginations = useMultiplePagination(paginationConfigs);
-    const evolution = ref(null);
-    const savings = ref(null);
+    const paginations = useMultiplePagination(paginationConfigs); // Maneja múltiples configuraciones de paginación
 
-    const showElement = ref(false);
+    const evolution = ref(null); // Referencia para el gráfico de evolución
+    const savings = ref(null); // Referencia para el gráfico de ahorros
 
+    const showElement = ref(false); // Controla la visibilidad de elementos en el template
+
+    // Se ejecuta al montar el componente
     onMounted(async () => {
       updateData();
     });
 
+    // Actualiza los datos basados en la selección del intervalo de fechas
     const updateData = async (selection) => {
       if (!selection || !selection.interval) {
         return;
       }
 
+      // Simula un retardo antes de mostrar elementos
       setTimeout(() => {
         showElement.value = true;
       }, 1000);
 
+      // Procesa la selección de filtro para obtener datos específicos
       const { filterType, startDate, endDate } = processFilterSelection(selection);
 
-      console.log(`Fetching with accountingId: ${accountingId.value}, filterType: ${filterType}, startDate: ${startDate}, endDate: ${endDate}`);
-
+      // Obtiene datos de gastos e ingresos basados en el intervalo seleccionado
       await fetchSpentsInterval(accountingId.value, filterType, startDate, endDate);
       await fetchIncomeInterval(accountingId.value, filterType, startDate, endDate);
       await fetchOperationsAsync(accountingId.value, filterType, startDate, endDate);
 
+      // Actualiza la variable global que indica si hay datos disponibles
       hasData.value = totalSpentMonth.value > 0 || totalIncomeMonth.value > 0;
 
+      // Espera hasta el próximo ciclo de actualización para iniciar los gráficos
       await nextTick();
       initLineChart();
       initLineSavings();
     };
 
+    // Inicializa el gráfico de evolución de gastos e ingresos
     const initLineChart = () => {
       showElement.value = false;
       const lineCtx = document.getElementById('evolution');
@@ -121,6 +140,7 @@ export default {
       }
     };
 
+    // Inicializa el gráfico de ahorros
     const initLineSavings = () => {
       showElement.value = false;
       const lineCtx = document.getElementById('savings');
@@ -135,7 +155,7 @@ export default {
               fill: false,
               borderColor: '#35526f',
               tension: 0.1,
-              backgroundColor: '#35526f' // Color semi transparente para ingresos
+              backgroundColor: '#35526f' // Color semi transparente para ahorros
             }
           ]
         };
@@ -143,19 +163,15 @@ export default {
       }
     };
 
-
     return {
-      hasData, fetchSpentsInterval, fetchIncomeInterval, processDailySpentData, accountingId, showElement, updateData, combinedDataProcessed, savingsData,
-      paginations, tableColumnEvolution : [
+      // Variables y funciones disponibles para el template
+      hasData, fetchSpentsInterval, fetchIncomeInterval, processDailySpentData, accountingId, showElement, updateData,
+      combinedDataProcessed, savingsData, paginations,
+      tableColumnEvolution: [
         { key: "date", label: "Fecha" },
         { key: "savings", label: "Ahorro" }
       ]
     };
   },
 };
-
 </script>
-
-<style scoped>
-
-</style>
