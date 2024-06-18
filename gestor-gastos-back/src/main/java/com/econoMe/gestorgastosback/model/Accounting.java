@@ -14,19 +14,19 @@ public class Accounting {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long id; // Identificador único de la contabilidad
 
     @Column(nullable = false)
-    private String name;
+    private String name; // Nombre de la contabilidad
 
     @Column
-    private String description;
+    private String description; // Descripción de la contabilidad
 
     @ManyToOne
     @JoinColumn(name = "user_creator", nullable = false)
-    private User userCreator;
+    private User userCreator; // Usuario creador de la contabilidad
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private Type type;
+    private Type type; // Tipo de la contabilidad (enum)
 }

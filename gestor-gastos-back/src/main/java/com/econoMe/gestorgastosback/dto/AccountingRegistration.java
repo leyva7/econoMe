@@ -11,11 +11,13 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class AccountingRegistration {
-    private String name;
 
-    private String description;
+    private String name;            // Nombre de la contabilidad a registrar
 
-    private String userCreator;
+    private String description;     // Descripción de la contabilidad a registrar
 
-    private Type type;
+    private String userCreator;     // Usuario creador de la contabilidad
+
+    private Type type;              // Tipo de contabilidad (personal o compartida)
+
 }

@@ -13,14 +13,14 @@ import lombok.NoArgsConstructor;
 @AllArgsConstructor
 public class AccountingDto {
 
-    private Long id;
+    private Long id;                // Identificador único de la contabilidad
 
-    private String name;
+    private String name;            // Nombre de la contabilidad
 
-    private String description;
+    private String description;     // Descripción de la contabilidad
 
-    private String userCreator;
+    private String userCreator;     // Usuario creador de la contabilidad
 
-    private Type type;
+    private Type type;              // Tipo de contabilidad (personal o compartida)
 
 }

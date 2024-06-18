@@ -17,8 +17,6 @@ import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.mockito.MockitoAnnotations;
 
-import java.net.UnknownServiceException;
-
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -40,12 +38,14 @@ public class RegistrationServiceTest {
 
     @BeforeEach
     public void setUp() {
+        // Inicializar los mocks antes de cada test
         MockitoAnnotations.initMocks(this);
     }
 
     @Test
     public void testRegisterUserAndAccounting() {
         // Arrange
+        // Configurar datos de prueba
         RegistrationDto registrationDto = new RegistrationDto();
         User newUser = new User();
         User savedUser = new User();
@@ -53,14 +53,19 @@ public class RegistrationServiceTest {
         UserDto userDto = new UserDto();
 
         registrationDto.setUser(newUser);
+        // Mock UserService para devolver el usuario guardado
         when(userService.createUser(newUser)).thenReturn(savedUser);
+        // Mock MappingService para convertir un AccountingDto a Accounting
         when(mappingService.accountingDtoToAccounting(any())).thenReturn(newAccounting);
+        // Mock MappingService para convertir User a UserDto
         when(mappingService.userToDto(savedUser)).thenReturn(userDto);
 
         // Act
+        // Llamar al método bajo prueba
         UserDto result = registrationService.registerUserAndAccounting(registrationDto);
 
         // Assert
+        // Verificar resultados esperados
         assertEquals(userDto, result);
         verify(userService, times(1)).createUser(newUser);
         verify(accountingService, times(1)).createFirstAccounting(newAccounting);
@@ -70,29 +75,45 @@ public class RegistrationServiceTest {
 
     @Test
     public void testRegisterUserWithExistingUsername() {
-        // Configuración del usuario y el DTO de registro
+        // Arrange
+        // Configurar datos de prueba
         User existingUser = new User();
         existingUser.setUsername("existingUsername");
         RegistrationDto registrationDto = new RegistrationDto(existingUser, new AccountingDto());
 
-        // Mock del UserService para simular que ya existe un usuario con el mismo username
+        // Mock UserService para simular un usuario existente con el mismo username
         Mockito.when(userService.createUser(existingUser)).thenThrow(new UserException("El usuario ya existe"));
 
-        // Verificar que se lanza la excepción esperada al intentar registrar un usuario con el mismo username
+        // Act & Assert
+        // Verificar que se lanza la excepción esperada
         assertThrows(UserException.class, () -> registrationService.registerUserAndAccounting(registrationDto));
+
+        // Verify
+        // Verificar interacciones con los mocks
+        verify(userService, times(1)).createUser(existingUser);
+        verifyNoInteractions(accountingService);
+        verifyNoInteractions(mappingService);
     }
 
     @Test
     public void testRegisterUserWithExistingEmail() {
-        // Configuración del usuario y el DTO de registro
+        // Arrange
+        // Configurar datos de prueba
         User existingUser = new User();
         existingUser.setMail("existing@example.com");
         RegistrationDto registrationDto = new RegistrationDto(existingUser, new AccountingDto());
 
-        // Mock del UserService para simular que ya existe un usuario con el mismo correo electrónico
+        // Mock UserService para simular un usuario existente con el mismo email
         Mockito.when(userService.createUser(existingUser)).thenThrow(new UserException("El correo electrónico ya está en uso"));
 
-        // Verificar que se lanza la excepción esperada al intentar registrar un usuario con el mismo correo electrónico
+        // Act & Assert
+        // Verificar que se lanza la excepción esperada
         assertThrows(UserException.class, () -> registrationService.registerUserAndAccounting(registrationDto));
+
+        // Verify
+        // Verificar interacciones con los mocks
+        verify(userService, times(1)).createUser(existingUser);
+        verifyNoInteractions(accountingService);
+        verifyNoInteractions(mappingService);
     }
 }

@@ -27,27 +27,29 @@ public class SecurityConfig {
         this.authProvider = authProvider;
     }
 
+    // Configuración del filtro de seguridad
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
-
         return http
-                .cors().and()
-                .csrf().disable()
+                .cors().and() // Habilitar la configuración CORS
+                .csrf().disable() // Deshabilitar CSRF
                 .authorizeHttpRequests(authz -> authz
+                        // Permitir acceso sin autenticación a ciertos endpoints
                         .requestMatchers("/api/auth/login").permitAll()
                         .requestMatchers("/api/auth/register").permitAll()
                         .requestMatchers("/actuator/mappings").permitAll()
+                        // Requerir autenticación para todos los demás endpoints
                         .anyRequest().authenticated()
                 )
-                .sessionManagement(sessionManager->
-                    sessionManager
-                            .sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-                .authenticationProvider(authProvider)
-                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+                .sessionManagement(sessionManager ->
+                        sessionManager
+                                .sessionCreationPolicy(SessionCreationPolicy.STATELESS)) // Configurar política de sesión sin estado
+                .authenticationProvider(authProvider) // Configurar el proveedor de autenticación
+                .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class) // Agregar filtro JWT antes del filtro de autenticación estándar
                 .build();
-
     }
 
+    // Configuración del filtro CORS para permitir solicitudes desde http://localhost:8080
     @Bean
     public CorsFilter corsFilter() {
         CorsConfiguration config = new CorsConfiguration();
@@ -61,5 +63,4 @@ public class SecurityConfig {
 
         return new CorsFilter(source);
     }
-
 }

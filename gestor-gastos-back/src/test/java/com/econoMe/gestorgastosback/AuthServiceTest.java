@@ -21,8 +21,6 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
-import java.util.NoSuchElementException;
-
 import java.util.Optional;
 
 @ExtendWith(MockitoExtension.class)
@@ -78,6 +76,8 @@ public class AuthServiceTest {
 
         // Act & Assert
         assertThrows(UsernameNotFoundException.class, () -> authService.login(request));
+
+        // Verificación para confirmar que no se intentó autenticar
         verify(authenticationManager, never()).authenticate(any(Authentication.class));
     }
 
@@ -90,6 +90,8 @@ public class AuthServiceTest {
         user.setUsername("user");
         user.setPassword("securePassword");
         when(userRepository.findByUsername("user")).thenReturn(Optional.of(user));
+
+        // Simulación de una excepción al autenticar debido a una contraseña incorrecta
         when(authenticationManager.authenticate(any(Authentication.class)))
                 .thenThrow(new BadCredentialsException("Contraseña incorrecta"));
 

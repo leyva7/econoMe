@@ -8,21 +8,21 @@ import lombok.*;
 @IdClass(RolesId.class)
 @Getter
 @Setter
-@NoArgsConstructor
+@NoArgsConstructor // Constructor sin argumentos
 @AllArgsConstructor
 public class Roles {
 
     @Id
     @ManyToOne
     @JoinColumn(name = "user_username", nullable = false)
-    private User user;
+    private User user; // Usuario asociado al rol
 
     @Id
     @ManyToOne
     @JoinColumn(name = "accounting_id", nullable = false)
-    private Accounting accounting;
+    private Accounting accounting; // Contabilidad asociada al rol
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private Role role; // Enum de roles
+    private Role role; // Rol del usuario en la contabilidad (enum)
 }

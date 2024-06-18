@@ -30,12 +30,13 @@ public class UserController {
     @Autowired
     private JwtService jwtService;
 
+    // Método privado para obtener el usuario desde la solicitud HTTP utilizando JWT
     private User getUserFromRequest(HttpServletRequest request) {
         String token = jwtService.getTokenFromRequest(request);
         return jwtService.getUserFromToken(token);
     }
-    
-    // Actualización de datos del usuario
+
+    // Endpoint para actualizar detalles del usuario
     @PutMapping("/modifyDetails")
     public ResponseEntity<?> updateUserDetails(HttpServletRequest request, @RequestBody UserDto userDto) throws Exception {
         User user = getUserFromRequest(request);
@@ -43,16 +44,20 @@ public class UserController {
         return ResponseEntity.ok(updatedUser);
     }
 
-    // Actualización de contraseña
+    // Endpoint para actualizar la contraseña del usuario
     @PutMapping("/modifyPassword")
     public ResponseEntity<?> updatePassword(Authentication authentication, @RequestBody Map<String, String> passwordDetails) {
+        // Verificar la autenticación y obtener el usuario
         if (authentication == null || !(authentication.getPrincipal() instanceof User user)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("No se ha proporcionado una autenticación válida.");
         }
 
+        // Obtener las contraseñas actuales y nueva del cuerpo de la solicitud
         String currentPassword = passwordDetails.get("currentPassword");
         String newPassword = passwordDetails.get("newPassword");
+
         try {
+            // Intentar actualizar la contraseña
             userService.updatePassword(user.getId(), currentPassword, newPassword);
             return ResponseEntity.ok().build();
         } catch (InvalidPasswordException e) {
@@ -62,8 +67,10 @@ public class UserController {
         }
     }
 
+    // Endpoint para obtener el perfil del usuario actual
     @GetMapping("/details")
     public ResponseEntity<?> getUserProfile(Authentication authentication) {
+        // Verificar la autenticación y obtener los detalles del usuario
         if (authentication == null || !(authentication.getPrincipal() instanceof UserDetails userDetails)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("No se ha proporcionado una autenticación válida.");
         }
@@ -74,15 +81,17 @@ public class UserController {
         return ResponseEntity.ok(userDto);
     }
 
+    // Endpoint para obtener todos los usuarios
     @GetMapping("/all")
     public ResponseEntity<List<User>> getAllUsers() {
         List<User> users = userService.getAllUser();
         return ResponseEntity.ok(users);
     }
 
-    // Ejemplo: Eliminar usuario
+    // Ejemplo: Endpoint para eliminar un usuario
     @DeleteMapping("/delete")
     public ResponseEntity<?> deleteUser(Authentication authentication) {
+        // Verificar la autenticación y eliminar al usuario
         if (authentication == null || !(authentication.getPrincipal() instanceof User user)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).body("No se ha proporcionado una autenticación válida.");
         }

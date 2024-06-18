@@ -1,9 +1,6 @@
 package com.econoMe.gestorgastosback.model;
 
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.io.Serializable;
 import java.util.Objects;
@@ -11,18 +8,19 @@ import java.util.Objects;
 @Getter
 @Setter
 @AllArgsConstructor
-@NoArgsConstructor
+@NoArgsConstructor // Constructor sin argumentos
 public class RolesId implements Serializable {
-    private Long user;
-    private Long accounting;
+
+    private Long user; // ID del usuario
+    private Long accounting; // ID de la contabilidad
 
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
-        RolesId that = (RolesId) o;
-        return Objects.equals(user, that.user) &&
-                Objects.equals(accounting, that.accounting);
+        RolesId rolesId = (RolesId) o;
+        return Objects.equals(user, rolesId.user) &&
+                Objects.equals(accounting, rolesId.accounting);
     }
 
     @Override

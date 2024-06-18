@@ -5,12 +5,16 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.Optional;
 
+// Repositorio JPA para la entidad User
 public interface UserRepository extends JpaRepository<User, Long> {
-    User findByMail(String mail);
 
-    Optional<User> findByUsername(String username);
+    // Métodos para realizar consultas personalizadas sobre la entidad User
 
-    boolean existsByMail(String mail);
+    User findByMail(String mail); // Buscar usuario por correo electrónico
 
-    boolean existsByUsername(String username);
+    Optional<User> findByUsername(String username); // Buscar usuario por nombre de usuario
+
+    boolean existsByMail(String mail); // Verificar si existe un usuario con un correo electrónico específico
+
+    boolean existsByUsername(String username); // Verificar si existe un usuario con un nombre de usuario específico
 }

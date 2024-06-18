@@ -20,22 +20,22 @@ import java.time.LocalDate;
 @AllArgsConstructor
 public class OperationsDto {
 
-    private Long id;
+    private Long id;                   // Identificador único de la operación
 
-    private Long accountingId;
+    private Long accountingId;         // ID de la contabilidad asociada a la operación
 
-    private String username;
+    private String username;           // Nombre de usuario asociado a la operación
 
-    private String description;
+    private String description;        // Descripción de la operación
 
-    private Double quantity;
+    private Double quantity;           // Cantidad de la operación
 
-    private String category;
+    private String category;           // Categoría de la operación
 
     @JsonFormat(pattern = "dd-MM-yyyy")
     @DateTimeFormat(pattern = "dd-MM-yyyy")
-    private LocalDate date;
+    private LocalDate date;            // Fecha de la operación
 
-    private OperationType type;
+    private OperationType type;        // Tipo de la operación (Ingreso o Gasto)
 
 }

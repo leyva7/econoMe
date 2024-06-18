@@ -11,6 +11,9 @@ import lombok.NoArgsConstructor;
 @NoArgsConstructor
 @AllArgsConstructor
 public class RegistrationDto {
-    private User user;
-    private AccountingDto accounting;
+
+    private User user;                 // Datos del usuario a registrar
+
+    private AccountingDto accounting;  // Datos de la contabilidad asociada al usuario
+
 }

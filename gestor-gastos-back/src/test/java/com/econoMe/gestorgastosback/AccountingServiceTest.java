@@ -21,8 +21,6 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
 
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 
 @ExtendWith(MockitoExtension.class)
@@ -43,6 +41,7 @@ public class AccountingServiceTest {
 
     @BeforeEach
     void setUp() {
+        // Configuración inicial antes de cada prueba
         user = new User();
         user.setId(1L);
         user.setUsername("user");
@@ -57,72 +56,96 @@ public class AccountingServiceTest {
 
     @Test
     void createAccounting_Success() {
+        // Prueba para verificar la creación exitosa de una contabilidad
+
+        // Configuración del mock para simular el comportamiento del repositorio
         when(accountingRepository.save(any(Accounting.class))).thenReturn(accounting);
         when(rolesService.createRole(any(Roles.class))).thenReturn(new Roles());
 
+        // Ejecución del método a probar
         Accounting result = accountingService.createAccounting(accounting);
+
+        // Verificación de los resultados esperados
         assertNotNull(result);
         assertEquals(accounting.getName(), result.getName());
 
+        // Verificación de interacciones con los mocks
         verify(accountingRepository).save(accounting);
         verify(rolesService).createRole(any(Roles.class));
     }
 
     @Test
     void createAccounting_DataAccessException() {
-        // Simula la excepción de acceso a datos al intentar guardar la contabilidad
+        // Prueba para verificar el manejo de excepciones al crear una contabilidad
+
+        // Configuración del mock para simular una excepción al guardar en el repositorio
         when(accountingRepository.save(any(Accounting.class)))
                 .thenThrow(new DataIntegrityViolationException("DB error"));
 
-        // Verifica que se lanza la excepción correcta al intentar crear la contabilidad
+        // Verificación de que se lanza la excepción adecuada
         assertThrows(DataIntegrityViolationException.class, () -> accountingService.createAccounting(new Accounting()));
 
-        // Verifica que no se intenta crear un rol si falla la creación de la contabilidad
+        // Verificación de que no se intenta crear un rol si falla la creación de la contabilidad
         verify(rolesService, never()).createRole(any(Roles.class));
     }
 
-
     @Test
     void findAccountingById_NotFound_ThrowsException() {
+        // Prueba para verificar el manejo de excepciones cuando no se encuentra una contabilidad por ID
+
+        // Configuración del mock para simular que no se encuentra la contabilidad
         when(accountingRepository.findById(1L)).thenReturn(Optional.empty());
 
+        // Verificación de que se lanza la excepción adecuada
         assertThrows(AccountingException.class, () -> accountingService.findAccountingById(1L));
     }
 
     @Test
     void updateAccounting_Success() {
+        // Prueba para verificar la actualización exitosa de una contabilidad
+
+        // Configuración del mock para simular el comportamiento del repositorio
         when(accountingRepository.existsById(accounting.getId())).thenReturn(true);
         when(accountingRepository.findById(accounting.getId())).thenReturn(Optional.of(accounting));
         when(accountingRepository.save(accounting)).thenReturn(accounting);
 
+        // Ejecución del método a probar
         Accounting updated = accountingService.updateAccounting(accounting.getId(), user, "New Name", "New Description");
+
+        // Verificación de los resultados esperados
         assertNotNull(updated);
         assertEquals("New Name", updated.getName());
         assertEquals("New Description", updated.getDescription());
 
+        // Verificación de interacciones con los mocks
         verify(accountingRepository).save(accounting);
     }
 
     @Test
     void deleteAccounting_NotCreator_ThrowsException() {
-        User anotherUser = new User();
-        anotherUser.setId(2L);
-        anotherUser.setUsername("anotherUser");
+        // Prueba para verificar el manejo de excepciones al intentar eliminar una contabilidad por un usuario que no es el creador
 
+        // Configuración del mock para simular la existencia de la contabilidad
         when(accountingRepository.findById(accounting.getId())).thenReturn(Optional.of(accounting));
 
-        assertThrows(AccountingException.class, () -> accountingService.deleteAccounting(accounting.getId(), anotherUser));
+        // Verificación de que se lanza la excepción adecuada
+        assertThrows(AccountingException.class, () -> accountingService.deleteAccounting(accounting.getId(), new User()));
     }
 
     @Test
     void deleteAccounting_Success() {
+        // Prueba para verificar la eliminación exitosa de una contabilidad
+
+        // Configuración del mock para simular el comportamiento del repositorio y servicios relacionados
         when(accountingRepository.findById(accounting.getId())).thenReturn(Optional.of(accounting));
         doNothing().when(operationsService).deleteByAccounting(accounting);
         doNothing().when(rolesService).deleteByAccounting(accounting);
         doNothing().when(accountingRepository).deleteById(accounting.getId());
 
+        // Ejecución del método a probar
         assertDoesNotThrow(() -> accountingService.deleteAccounting(accounting.getId(), user));
 
+        // Verificación de interacciones con los mocks
         verify(operationsService).deleteByAccounting(accounting);
         verify(rolesService).deleteByAccounting(accounting);
         verify(accountingRepository).deleteById(accounting.getId());

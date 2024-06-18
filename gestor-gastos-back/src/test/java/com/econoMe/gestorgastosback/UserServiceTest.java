@@ -26,8 +26,10 @@ public class UserServiceTest {
 
     @Mock
     private UserRepository userRepository;
+
     @Mock
     private AccountingService accountingService;
+
     @Mock
     private PasswordEncoder passwordEncoder;
 
@@ -38,6 +40,7 @@ public class UserServiceTest {
 
     @BeforeEach
     void setUp() {
+        // Configuración inicial común para las pruebas
         user = new User();
         user.setId(1L);
         user.setUsername("testuser");
@@ -47,6 +50,7 @@ public class UserServiceTest {
 
     @Test
     void createUser_UsernameExists_ThrowsException() {
+        // Prueba para verificar que se lanza una excepción cuando el nombre de usuario ya existe
         when(userRepository.existsByUsername(user.getUsername())).thenReturn(true);
 
         UserException thrown = assertThrows(UserException.class, () -> userService.createUser(user));
@@ -55,6 +59,7 @@ public class UserServiceTest {
 
     @Test
     void createUser_EmailExists_ThrowsException() {
+        // Prueba para verificar que se lanza una excepción cuando el correo electrónico ya existe
         when(userRepository.existsByUsername(user.getUsername())).thenReturn(false);
         when(userRepository.existsByMail(user.getMail())).thenReturn(true);
 
@@ -64,6 +69,7 @@ public class UserServiceTest {
 
     @Test
     void createUser_Success_ReturnsUser() {
+        // Prueba para verificar que se crea correctamente un usuario
         when(userRepository.existsByUsername(anyString())).thenReturn(false);
         when(userRepository.existsByMail(anyString())).thenReturn(false);
         when(userRepository.save(any(User.class))).thenReturn(user);
@@ -75,6 +81,7 @@ public class UserServiceTest {
 
     @Test
     void getAllUser_ReturnsListOfUsers() {
+        // Prueba para obtener todos los usuarios
         when(userRepository.findAll()).thenReturn(Arrays.asList(user));
 
         List<User> users = userService.getAllUser();
@@ -84,6 +91,7 @@ public class UserServiceTest {
 
     @Test
     void getUserByUsername_NotFound_ThrowsException() {
+        // Prueba para verificar que se lanza una excepción cuando no se encuentra un usuario por nombre de usuario
         when(userRepository.findByUsername(anyString())).thenReturn(Optional.empty());
 
         UserException thrown = assertThrows(UserException.class, () -> userService.getUserByUsername("nonexistentuser"));
@@ -92,6 +100,7 @@ public class UserServiceTest {
 
     @Test
     void findById_NotFound_ThrowsException() {
+        // Prueba para verificar que se lanza una excepción cuando no se encuentra un usuario por ID
         when(userRepository.findById(anyLong())).thenReturn(Optional.empty());
 
         UserException thrown = assertThrows(UserException.class, () -> userService.findById(99L));
@@ -100,6 +109,7 @@ public class UserServiceTest {
 
     @Test
     void updateDetails_UserNotFound_ThrowsException() {
+        // Prueba para verificar que se lanza una excepción cuando no se encuentra un usuario para actualizar sus detalles
         when(userRepository.findById(anyLong())).thenReturn(Optional.empty());
 
         UserException thrown = assertThrows(UserException.class, () -> userService.updateDetails(99L, new UserDto()));
@@ -108,6 +118,7 @@ public class UserServiceTest {
 
     @Test
     void updatePassword_IncorrectCurrentPassword_ThrowsException() {
+        // Prueba para verificar que se lanza una excepción cuando la contraseña actual proporcionada es incorrecta al actualizar la contraseña
         when(userRepository.findById(anyLong())).thenReturn(Optional.of(user));
         when(passwordEncoder.matches(anyString(), anyString())).thenReturn(false);
 
@@ -117,6 +128,7 @@ public class UserServiceTest {
 
     @Test
     void deleteUser_UserDoesNotExist_ThrowsException() {
+        // Prueba para verificar que se lanza una excepción cuando se intenta eliminar un usuario que no existe
         when(userRepository.existsById(anyLong())).thenReturn(false);
 
         UserException thrown = assertThrows(UserException.class, () -> userService.deleteUser(99L));

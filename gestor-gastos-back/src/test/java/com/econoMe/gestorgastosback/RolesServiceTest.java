@@ -31,26 +31,32 @@ public class RolesServiceTest {
 
     @Test
     public void testCreateRole() {
-        // Configuración del rol
+        // Arrange
+        // Configurar el objeto de prueba
         Roles role = new Roles();
         role.setRole(Role.EDITOR);
 
-        // Mock del método save del repositorio
+        // Mock del método save del repositorio para devolver el mismo rol
         when(rolesRepository.save(any(Roles.class))).thenReturn(role);
 
-        // Crear el rol y verificar que se devuelve correctamente
+        // Act
+        // Llamar al método bajo prueba
         Roles createdRole = rolesService.createRole(role);
+
+        // Assert
+        // Verificar que el rol creado no sea nulo y tenga el rol correcto
         assertNotNull(createdRole);
         assertEquals(Role.EDITOR, createdRole.getRole());
     }
 
     @Test
     public void testFindAllByUser() {
-        // Configuración del usuario
+        // Arrange
+        // Configurar el usuario de prueba
         User user = new User();
         user.setId(1L);
 
-        // Configuración de roles
+        // Configurar roles de prueba asociados al usuario
         Roles role1 = new Roles();
         role1.setRole(Role.EDITOR);
         role1.setUser(user);
@@ -63,48 +69,62 @@ public class RolesServiceTest {
         roles.add(role1);
         roles.add(role2);
 
-        // Mock del método findAllByUser del repositorio
+        // Mock del método findAllByUser del repositorio para devolver los roles configurados
         when(rolesRepository.findAllByUser(user)).thenReturn(roles);
 
-        // Obtener todos los roles asociados al usuario y verificar que se devuelven correctamente
+        // Act
+        // Llamar al método bajo prueba
         List<Roles> foundRoles = rolesService.findAllByUser(user);
+
+        // Assert
+        // Verificar que se encuentran todos los roles asociados al usuario
         assertNotNull(foundRoles);
         assertEquals(2, foundRoles.size());
     }
 
     @Test
     public void testFindById() {
-        // Configuración del ID del rol
+        // Arrange
+        // Configurar el ID del rol
         RolesId rolesId = new RolesId(1L, 1L);
 
-        // Configuración del rol
+        // Configurar el rol de prueba
         Roles role = new Roles();
         role.setRole(Role.EDITOR);
 
-        // Mock del método findById del repositorio
+        // Mock del método findById del repositorio para devolver el rol configurado
         when(rolesRepository.findById(rolesId)).thenReturn(Optional.of(role));
 
-        // Obtener el rol por ID y verificar que se devuelve correctamente
+        // Act
+        // Llamar al método bajo prueba
         Roles foundRole = rolesService.findById(rolesId);
+
+        // Assert
+        // Verificar que se encuentra el rol por su ID
         assertNotNull(foundRole);
         assertEquals(Role.EDITOR, foundRole.getRole());
     }
 
     @Test
     public void testFindByUserUsernameAndAccountingId() {
-        // Configuración del nombre de usuario y el ID de la contabilidad
+        // Arrange
+        // Configurar el nombre de usuario y el ID de la contabilidad
         String username = "example_user";
         Long accountingId = 1L;
 
-        // Configuración del rol
+        // Configurar el rol de prueba
         Roles role = new Roles();
         role.setRole(Role.EDITOR);
 
-        // Mock del método findByUserUsernameAndAccountingId del repositorio
+        // Mock del método findByUserUsernameAndAccountingId del repositorio para devolver el rol configurado
         when(rolesRepository.findByUserUsernameAndAccountingId(username, accountingId)).thenReturn(Optional.of(role));
 
-        // Obtener el rol por nombre de usuario y ID de contabilidad y verificar que se devuelve correctamente
+        // Act
+        // Llamar al método bajo prueba
         Roles foundRole = rolesService.findByUserUsernameAndAccountingId(username, accountingId);
+
+        // Assert
+        // Verificar que se encuentra el rol por nombre de usuario y ID de contabilidad
         assertNotNull(foundRole);
         assertEquals(Role.EDITOR, foundRole.getRole());
     }

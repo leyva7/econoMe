@@ -15,7 +15,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.time.YearMonth;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -31,20 +30,22 @@ public class OperationsService {
         this.rolesService = rolesService;
     }
 
+    // Crear una nueva operación
     public Operations createOperation(Operations operation) {
-
-            if(rolesService.findByUserUsernameAndAccountingId(operation.getUser().getUsername(), operation.getAccounting().getId()).getRole().equals(Role.EDITOR)){
-                return operationsRepository.save(operation);
-            }
-            else{
-                throw new RoleException("El usuario " + operation.getUser().getUsername() + " no tiene rol de editor en la contabilidad " + operation.getAccounting().getId());
-            }
+        // Verificar si el usuario tiene permisos de editor en la contabilidad especificada
+        if (rolesService.findByUserUsernameAndAccountingId(operation.getUser().getUsername(), operation.getAccounting().getId()).getRole().equals(Role.EDITOR)) {
+            return operationsRepository.save(operation);
+        } else {
+            throw new RoleException("El usuario " + operation.getUser().getUsername() + " no tiene rol de editor en la contabilidad " + operation.getAccounting().getId());
+        }
     }
 
+    // Crear múltiples operaciones
     public List<Operations> createOperations(List<Operations> operations) {
         return operations.stream().map(this::createOperation).collect(Collectors.toList());
     }
 
+    // Encontrar todas las operaciones de todas las contabilidades a las que tiene acceso un usuario
     public List<Operations> findAllOperationsAccountingUser(User user) {
         return rolesService.findAllByUser(user).stream()
                 .map(Roles::getAccounting)
@@ -52,10 +53,12 @@ public class OperationsService {
                 .collect(Collectors.toList());
     }
 
+    // Encontrar operaciones por contabilidad
     public List<Operations> findByAccounting(Accounting accounting) {
         return operationsRepository.findByAccounting(accounting);
     }
 
+    // Encontrar categorías de operaciones por tipo y contabilidad
     public List<String> findAllAccountingCategoriesByType(Accounting accounting, OperationType type) {
         return findByAccounting(accounting).stream()
                 .filter(op -> op.getType() == type)
@@ -64,19 +67,22 @@ public class OperationsService {
                 .collect(Collectors.toList());
     }
 
-
+    // Encontrar todas las operaciones de un usuario para una contabilidad específica
     public List<Operations> findAllUserOperationByAccounting(User user, Accounting accounting) {
         return operationsRepository.findByUserAndAccounting(user, accounting);
     }
 
+    // Encontrar todas las operaciones de un usuario
     public List<Operations> findAllUserOperation(User user) {
         return operationsRepository.findByUser(user);
     }
 
+    // Encontrar operaciones por contabilidad y tipo
     public List<Operations> findByAccountingAndType(Accounting accounting, OperationType type) {
         return operationsRepository.findByAccountingAndType(accounting, type);
     }
 
+    // Encontrar operaciones en un rango de fechas específico
     public List<Operations> findOperationsForDateRange(Accounting accounting, OperationType type, User user, LocalDate start, LocalDate end) {
         return findByAccounting(accounting).stream()
                 .filter(op -> (op.getDate().isEqual(start) || op.getDate().isAfter(start)) &&
@@ -86,8 +92,9 @@ public class OperationsService {
                 .collect(Collectors.toList());
     }
 
+    // Calcular diferencias significativas de categoría entre períodos
     public Map<String, Double> calculateSignificantCategoryDifferences(Accounting accounting, OperationType type, User user, LocalDate startDate, LocalDate endDate) {
-        // Obtener las operaciones para el rango de fechas especificado
+        // Obtener las operaciones para el período actual y el período anterior
         List<Operations> operationsCurrentPeriod = findOperationsForDateRange(accounting, type, user, startDate, endDate);
         LocalDate startOfLastPeriod = startDate.minusMonths(1);
         LocalDate endOfLastPeriod = endDate.minusMonths(1).withDayOfMonth(endDate.minusMonths(1).lengthOfMonth());
@@ -119,16 +126,16 @@ public class OperationsService {
             }
         });
 
-        // Encuentra la máxima diferencia positiva y negativa, o usa un valor predeterminado
+        // Encontrar la máxima diferencia positiva y negativa
         double maxPositiveDifference = positiveDifferences.values().stream()
                 .max(Double::compare)
-                .orElse(0.0);  // Usa 0.0 si no hay diferencias positivas
+                .orElse(0.0);
 
         double maxNegativeDifference = negativeDifferences.values().stream()
                 .min(Double::compare)
-                .orElse(0.0);  // Usa 0.0 si no hay diferencias negativas
+                .orElse(0.0);
 
-        // Seleccionar categorías correspondientes o usar un valor predeterminado
+        // Encontrar la categoría correspondiente a las máximas diferencias
         String maxPositiveCategory = positiveDifferences.entrySet().stream()
                 .filter(entry -> entry.getValue() == maxPositiveDifference)
                 .map(Map.Entry::getKey)
@@ -148,18 +155,19 @@ public class OperationsService {
         return result;
     }
 
+    // Filtrar operaciones basadas en criterios específicos
     public List<Operations> findFilteredOperations(OperationFilterDto operationFilterDto, User user) {
-        // Obtener todas las operaciones para el usuario dado.
+        // Obtener todas las operaciones para el usuario dado
         List<Operations> operations = findAllOperationsAccountingUser(user);
 
-        // Filtrar por ID de contabilidad si está presente.
+        // Filtrar por ID de contabilidad si está presente
         if (operationFilterDto.getAccountingId() != null) {
             operations = operations.stream()
                     .filter(op -> op.getAccounting().getId().equals(Long.valueOf(operationFilterDto.getAccountingId())))
                     .collect(Collectors.toList());
         }
 
-        // Filtrar por tipo de operación si está presente.
+        // Filtrar por tipo de operación si está presente
         if (operationFilterDto.getType() != null) {
             if (!operationFilterDto.getType().equalsIgnoreCase("BOTH")) {
                 operations = operations.stream()
@@ -168,7 +176,7 @@ public class OperationsService {
             }
         }
 
-        // Filtrar por categoría si está presente.
+        // Filtrar por categoría si está presente
         if (operationFilterDto.getCategory() != null) {
             if(!operationFilterDto.getCategory().equalsIgnoreCase("ALL")){
                 operations = operations.stream()
@@ -177,40 +185,43 @@ public class OperationsService {
             }
         }
 
-        // Filtrar por cantidad mínima si está presente.
+        // Filtrar por cantidad mínima si está presente
         if (operationFilterDto.getQuantityMin() != null) {
             operations = operations.stream()
                     .filter(op -> op.getQuantity() >= operationFilterDto.getQuantityMin())
                     .collect(Collectors.toList());
         }
 
-        // Filtrar por cantidad máxima si está presente.
+        // Filtrar por cantidad máxima si está presente
         if (operationFilterDto.getQuantityMax() != null) {
             operations = operations.stream()
                     .filter(op -> op.getQuantity() <= operationFilterDto.getQuantityMax())
                     .collect(Collectors.toList());
         }
 
-        // Filtrar por fecha de inicio si está presente.
+        // Filtrar por fecha de inicio si está presente
         if (operationFilterDto.getDateStart() != null) {
             operations = operations.stream()
                     .filter(op -> !op.getDate().isBefore(operationFilterDto.getDateStart()))
                     .collect(Collectors.toList());
         }
 
-        // Filtrar por fecha de fin si está presente.
+        // Filtrar por fecha de fin si está presente
         if (operationFilterDto.getDateEnd() != null) {
             operations = operations.stream()
                     .filter(op -> !op.getDate().isAfter(operationFilterDto.getDateEnd()))
                     .collect(Collectors.toList());
         }
 
+        // Ordenar las operaciones por fecha
         operations.sort(Comparator.comparing(Operations::getDate));
 
         return operations;
     }
 
+    // Actualizar una operación existente
     public Operations updateOperation(Long id, Operations updatedOperation) {
+        // Verificar si la operación existe y luego actualizarla
         if (id == null || !operationsRepository.existsById(id)) {
             throw new OperationException("La operación con el ID " + updatedOperation.getId() + " no existe.");
         }
@@ -228,16 +239,19 @@ public class OperationsService {
         return operationsRepository.save(existingOperation);
     }
 
-
+    // Eliminar una operación por su ID
     public void deleteOperation(Long id) {
+        // Verificar si la operación existe y luego eliminarla
         if (!operationsRepository.existsById(id)) {
             throw new OperationException("La operación con el ID " + id + " no existe.");
         }
         operationsRepository.deleteById(id);
     }
 
+    // Eliminar operaciones por contabilidad
     public void deleteByAccounting(Accounting accounting) {
         operationsRepository.deleteByAccounting(accounting);
     }
 
 }
+

@@ -2,6 +2,9 @@
   <div class="user-password-container">
     <div class="container-fluid py-5 bg-custom-blue-900 d-flex align-items-center" style="min-height: 100vh;">
       <div class="row justify-content-center w-100">
+        <div class="text-center mb-5">
+          <h1 class="logo-text text-white">econoMe</h1>
+        </div>
         <div class="col-sm-12 col-md-6 col-lg-4">
           <form @submit.prevent="submitForm" class="bg-white shadow p-4 rounded">
             <h2 class="text-black mb-4 text-center">Cambiar Contraseña</h2>

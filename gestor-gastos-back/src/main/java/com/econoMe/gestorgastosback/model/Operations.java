@@ -16,29 +16,28 @@ public class Operations {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+    private Long id; // Identificador único de la operación
 
     @ManyToOne
     @JoinColumn(name = "accounting_id", nullable = false)
-    private Accounting accounting;
+    private Accounting accounting; // Contabilidad asociada a la operación
 
     @ManyToOne
     @JoinColumn(name = "user", nullable = false)
-    private User user;
+    private User user; // Usuario asociado a la operación
 
-    private String description;
-
-    @Column(nullable = false)
-    private Double quantity;
+    private String description; // Descripción de la operación
 
     @Column(nullable = false)
-    private String category;
+    private Double quantity; // Cantidad de la operación
 
     @Column(nullable = false)
-    private LocalDate date;
+    private String category; // Categoría de la operación
+
+    @Column(nullable = false)
+    private LocalDate date; // Fecha de la operación
 
     @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private OperationType type;
+    private OperationType type; // Tipo de la operación (enum)
 }
-

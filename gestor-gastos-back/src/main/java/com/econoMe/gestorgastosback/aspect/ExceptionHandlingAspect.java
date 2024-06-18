@@ -21,8 +21,10 @@ public class ExceptionHandlingAspect {
     @Around("serviceLayer()")
     public Object handleExceptions(ProceedingJoinPoint joinPoint) throws Throwable {
         try {
+            // Intenta ejecutar el método objetivo
             return joinPoint.proceed();
         } catch (DataAccessException e) {
+            // Captura excepciones de acceso a datos y lanza excepciones personalizadas según el servicio
             String className = joinPoint.getTarget().getClass().getSimpleName();
             switch(className) {
                 case "AccountingService":
@@ -38,6 +40,7 @@ public class ExceptionHandlingAspect {
                 case "MappingService":
                     throw new MappingException("Error de mapeo: ", e);
                 default:
+                    // Si el servicio no coincide, vuelve a lanzar la excepción original
                     throw e;
             }
         }

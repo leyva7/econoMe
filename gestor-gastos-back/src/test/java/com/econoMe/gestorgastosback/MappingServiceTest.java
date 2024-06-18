@@ -32,13 +32,20 @@ public class MappingServiceTest {
 
     @Test
     void whenMappingUserToDto_thenCorrectlyMapped() {
+        // Arrange
         User user = new User();
         user.setId(1L);
         user.setUsername("testuser");
         user.setPassword("securepassword");
         user.setMail("testuser@example.com");
+
+        // Simulación de comportamiento del UserService si fuera necesario
+        // when(userService.someMethod()).thenReturn(...);
+
+        // Act
         UserDto result = mappingService.userToDto(user);
 
+        // Assert
         assertEquals(user.getUsername(), result.getUsername());
         assertEquals(user.getName(), result.getName());
         assertEquals(user.getSurname(), result.getSurname());
@@ -47,6 +54,7 @@ public class MappingServiceTest {
 
     @Test
     void whenMappingAccountingToDto_thenCorrectlyMapped() {
+        // Arrange
         User user = new User();
         user.setId(1L);
         user.setUsername("testuser");
@@ -54,8 +62,13 @@ public class MappingServiceTest {
         user.setMail("testuser@example.com");
         Accounting accounting = new Accounting(1L, "Accounting Name", "Description", user, Type.SHARED);
 
+        // Simulación de comportamiento del AccountingService si fuera necesario
+        // when(accountingService.someMethod()).thenReturn(...);
+
+        // Act
         AccountingDto result = mappingService.accountingToDto(accounting);
 
+        // Assert
         assertEquals(accounting.getId(), result.getId());
         assertEquals(accounting.getName(), result.getName());
         assertEquals(accounting.getDescription(), result.getDescription());
@@ -65,6 +78,7 @@ public class MappingServiceTest {
 
     @Test
     void whenConvertingDtoToAccounting_thenCorrectlyMapped() {
+        // Arrange
         AccountingDto dto = new AccountingDto(1L, "Accounting Name", "Description", "User Name", Type.SHARED);
         User user = new User();
         user.setId(1L);
@@ -72,8 +86,14 @@ public class MappingServiceTest {
         user.setPassword("securepassword");
         user.setMail("testuser@example.com");
 
+        // Simulación de comportamiento del UserService o AccountingService si fuera necesario
+        // when(userService.someMethod()).thenReturn(...);
+        // when(accountingService.someMethod()).thenReturn(...);
+
+        // Act
         Accounting result = mappingService.accountingDtoToAccounting(dto);
 
+        // Assert
         assertNotNull(result);
         assertEquals(dto.getId(), result.getId());
         assertEquals(dto.getName(), result.getName());

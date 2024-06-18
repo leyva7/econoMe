@@ -11,7 +11,6 @@ import com.econoMe.gestorgastosback.model.User;
 import com.econoMe.gestorgastosback.repository.OperationsRepository;
 import com.econoMe.gestorgastosback.service.OperationsService;
 import com.econoMe.gestorgastosback.service.RolesService;
-import jakarta.persistence.*;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
@@ -41,6 +40,8 @@ public class OperationsServiceTest {
 
     @Test
     void whenCreateOperationWithEditorRole_thenOperationIsSaved() {
+        // Arrange
+        // Configurar datos de prueba
         User user = new User();
         user.setUsername("editorUser");
         Accounting accounting = new Accounting();
@@ -50,17 +51,25 @@ public class OperationsServiceTest {
         operation.setAccounting(accounting);
 
         Roles roles = new Roles(user, accounting, Role.EDITOR);
+        // Mock RolesService para devolver el rol del editor
         when(rolesService.findByUserUsernameAndAccountingId(user.getUsername(), accounting.getId())).thenReturn(roles);
+        // Mock OperationsRepository para devolver la operación guardada
         when(operationsRepository.save(operation)).thenReturn(operation);
 
+        // Act
+        // Llamar al método bajo prueba
         Operations createdOperation = operationsService.createOperation(operation);
 
+        // Assert
+        // Verificar que la operación creada no sea nula y que se haya llamado al método save del repository
         assertNotNull(createdOperation);
         verify(operationsRepository).save(operation);
     }
 
     @Test
     void whenCreateOperationWithoutEditorRole_thenThrowRoleException() {
+        // Arrange
+        // Configurar datos de prueba
         User userCreator = new User();
         userCreator.setUsername("creator");
         User user = new User();
@@ -69,15 +78,20 @@ public class OperationsServiceTest {
         Operations operation = new Operations(1L, accounting, user, null, 100.00, "Category", LocalDate.now(), OperationType.SPENT);
 
         Roles roles = new Roles(user, accounting, Role.VISUALIZER);
+        // Mock RolesService para devolver el rol del visualizador
         when(rolesService.findByUserUsernameAndAccountingId(user.getUsername(), accounting.getId())).thenReturn(roles);
 
+        // Act & Assert
+        // Verificar que se lanza RoleException al intentar crear la operación sin permisos de editor
         assertThrows(RoleException.class, () -> operationsService.createOperation(operation));
+        // Verificar que no se llama al método save del repository
         verify(operationsRepository, never()).save(any(Operations.class));
     }
 
     @Test
     void whenFindAllOperationsByUserAndAccounting_thenReturnsOperations() {
-        // Preparar
+        // Arrange
+        // Configurar datos de prueba
         User user = new User();
         user.setUsername("user1");
         Accounting accounting = new Accounting();
@@ -85,14 +99,18 @@ public class OperationsServiceTest {
         Operations operation = new Operations(null, accounting, user, null, 50.0, "Category", LocalDate.now(), OperationType.SPENT);
         List<Operations> expectedOperations = Collections.singletonList(operation);
 
-        // Configuración de los mocks
+        // Mocking setup
+        // Mock RolesService para devolver los roles del usuario
         when(rolesService.findAllByUser(any(User.class))).thenReturn(Collections.singletonList(new Roles(user, accounting, Role.EDITOR)));
+        // Mock OperationsRepository para devolver las operaciones esperadas
         when(operationsRepository.findByAccounting(any(Accounting.class))).thenReturn(expectedOperations);
 
-        // Actuar
+        // Act
+        // Llamar al método bajo prueba
         List<Operations> actualOperations = operationsService.findAllUserOperationByAccounting(user, accounting);
 
-        // Verificar
+        // Assert
+        // Verificar que la lista de operaciones no sea nula, no esté vacía y tenga el tamaño esperado
         assertNotNull(actualOperations);
         assertFalse(actualOperations.isEmpty(), "The operations list should not be empty");
         assertEquals(expectedOperations.size(), actualOperations.size());
@@ -101,7 +119,8 @@ public class OperationsServiceTest {
 
     @Test
     void whenFindOperationsForDateRange_thenFilteredByDates() {
-        // Preparar
+        // Arrange
+        // Configurar datos de prueba
         User user = new User();
         user.setUsername("user1");
         Accounting accounting = new Accounting();
@@ -112,13 +131,16 @@ public class OperationsServiceTest {
         Operations operation2 = new Operations(null, accounting, user, null, 200.0, "Food", LocalDate.of(2021, 2, 1), OperationType.SPENT);
         List<Operations> operations = Arrays.asList(operation1, operation2);
 
-        // Configuración de los mocks
+        // Mocking setup
+        // Mock OperationsRepository para devolver las operaciones según la contabilidad
         when(operationsRepository.findByAccounting(accounting)).thenReturn(operations);
 
-        // Actuar
+        // Act
+        // Llamar al método bajo prueba
         List<Operations> filteredOperations = operationsService.findOperationsForDateRange(accounting, null, null, startDate, endDate);
 
-        // Verificar
+        // Assert
+        // Verificar que las operaciones filtradas contengan la operación1 y no contengan la operación2
         assertNotNull(filteredOperations);
         assertTrue(filteredOperations.contains(operation1));
         assertFalse(filteredOperations.contains(operation2));
@@ -126,20 +148,25 @@ public class OperationsServiceTest {
 
     @Test
     void whenUpdateExistingOperation_thenUpdated() {
-        // Preparar
+        // Arrange
+        // Configurar datos de prueba
         Long operationId = 1L;
         Operations existingOperation = new Operations(operationId, null, null, null, 50.0, "Category", LocalDate.now(), OperationType.SPENT);
         Operations updatedOperation = new Operations(operationId, null, null, null, 100.0, "Updated Category", LocalDate.now(), OperationType.SPENT);
 
-        // Configuración de los mocks
+        // Mocking setup
+        // Mock OperationsRepository para verificar la existencia y obtener la operación existente
         when(operationsRepository.existsById(operationId)).thenReturn(true);
         when(operationsRepository.findById(operationId)).thenReturn(Optional.of(existingOperation));
+        // Mock OperationsRepository para devolver la operación actualizada
         when(operationsRepository.save(existingOperation)).thenReturn(updatedOperation);
 
-        // Actuar
+        // Act
+        // Llamar al método bajo prueba
         Operations resultOperation = operationsService.updateOperation(operationId, updatedOperation);
 
-        // Verificar
+        // Assert
+        // Verificar que la operación resultante no sea nula y que los campos se hayan actualizado correctamente
         assertNotNull(resultOperation);
         assertEquals(updatedOperation.getQuantity(), resultOperation.getQuantity());
         assertEquals(updatedOperation.getCategory(), resultOperation.getCategory());
@@ -148,31 +175,36 @@ public class OperationsServiceTest {
 
     @Test
     void whenDeleteExistingOperation_thenDeleted() {
-        // Preparar
+        // Arrange
+        // Configurar datos de prueba
         Long operationId = 1L;
 
-        // Configuración de los mocks
+        // Mocking setup
+        // Mock OperationsRepository para verificar la existencia y eliminar la operación
         when(operationsRepository.existsById(operationId)).thenReturn(true);
 
-        // Actuar
+        // Act
+        // Llamar al método bajo prueba
         operationsService.deleteOperation(operationId);
 
-        // Verificar
+        // Assert
+        // Verificar que se llamó al método deleteById del repository con el ID correcto
         verify(operationsRepository).deleteById(operationId);
     }
 
     @Test
     void whenDeleteByAccounting_thenAllOperationsDeleted() {
-        // Preparar
+        // Arrange
+        // Configurar datos de prueba
         Accounting accounting = new Accounting();
         accounting.setId(1L);
 
-        // Actuar
+        // Act
+        // Llamar al método bajo prueba
         operationsService.deleteByAccounting(accounting);
 
-        // Verificar
+        // Assert
+        // Verificar que se llamó al método deleteByAccounting del repository con la contabilidad correcta
         verify(operationsRepository).deleteByAccounting(accounting);
     }
-
-
 }
