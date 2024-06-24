@@ -16,11 +16,8 @@
           <div class="mb-3">
             <label for="username" class="form-label">Nombre de usuario</label>
             <!-- Campo de nombre de usuario -->
-            <input type="text" class="form-control" id="username" v-model.trim="user.username" :class="{ 'is-invalid': usernameError || (submitted && !user.username) }" required autocomplete="off">
+            <input type="text" class="form-control" id="username" v-model.trim="user.username" :class="{ 'is-invalid': (submitted && !user.username) }" required autocomplete="off">
             <!-- Validación de nombre de usuario -->
-            <div v-if="usernameError" class="invalid-feedback">
-              {{ usernameError }}
-            </div>
             <div v-if="submitted && !user.username" class="invalid-feedback">
               El usuario es obligatorio.
             </div>
@@ -75,9 +72,11 @@
 </template>
 
 <script>
-import { ref } from 'vue';
+import {onMounted, ref} from 'vue';
 import { submitRegisterUser } from "@/service/userService"; // Importa la función para registrar usuario desde el servicio
-import { navigate } from "@/utils/global"; // Importa la función navigate desde utilidades globales
+import { navigate } from "@/utils/global";
+import {showToastFromStorage} from "@/utils/toastService";
+import {useToast} from "vue-toast-notification"; // Importa la función navigate desde utilidades globales
 
 export default {
   name: 'UserRegister',
@@ -92,7 +91,11 @@ export default {
 
     const submitted = ref(false); // Estado de si el formulario ha sido enviado
     const formRef = ref(null); // Referencia al formulario
-    const usernameError = ref(''); // Error específico de nombre de usuario
+    const toast = useToast();
+
+    onMounted(async () => {
+      showToastFromStorage(toast); // Muestra mensajes de tostadas almacenados en el localStorage
+    });
 
     const submitForm = async () => {
       submitted.value = true; // Marca el formulario como enviado
@@ -101,7 +104,7 @@ export default {
         return;
       }
 
-      await submitRegisterUser(user.value, submitted, formRef, usernameError); // Llama a la función para registrar usuario con los datos del formulario
+      await submitRegisterUser(user.value, submitted, formRef); // Llama a la función para registrar usuario con los datos del formulario
     };
 
     return { // Devuelve los datos y funciones necesarias para el template
@@ -109,8 +112,7 @@ export default {
       submitForm,
       navigate,
       formRef,
-      submitted,
-      usernameError
+      submitted
     };
   }
 };

@@ -1,6 +1,7 @@
 package com.econoMe.gestorgastosback.jwt;
 
 import com.econoMe.gestorgastosback.exception.InvalidJwtAuthenticationException;
+import com.econoMe.gestorgastosback.model.User;
 import com.econoMe.gestorgastosback.service.JwtService;
 import io.jsonwebtoken.ExpiredJwtException;
 import lombok.RequiredArgsConstructor;
@@ -29,10 +30,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-
         try {
-            final String token = getTokenFromRequest(request); // Obtiene el token JWT del encabezado de la solicitud
-            final String username;
+            final String token = jwtService.getTokenFromRequest(request); // Obtiene el token JWT del encabezado de la solicitud
+            final Long userId;
 
             if (token == null) {
                 // Si no hay token, continúa con el siguiente filtro
@@ -40,12 +40,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                 return;
             }
 
-            // Extrae el nombre de usuario desde el token JWT
-            username = jwtService.getUsernameFromToken(token);
+            // Extrae el ID del usuario desde el token JWT
+            userId = Long.parseLong(jwtService.getUserIdFromToken(token));
 
-            if (username != null && SecurityContextHolder.getContext().getAuthentication() == null) {
-                // Si el nombre de usuario es válido y no hay autenticación en el contexto actual
-                UserDetails userDetails = userDetailsService.loadUserByUsername(username);
+            if (userId != null && SecurityContextHolder.getContext().getAuthentication() == null) {
+                // Si el ID del usuario es válido y no hay autenticación en el contexto actual
+                User user = jwtService.getUserFromToken(token);
+                UserDetails userDetails = userDetailsService.loadUserByUsername(user.getUsername());
 
                 if (jwtService.isTokenValid(token, userDetails)) {
                     // Si el token JWT es válido para el usuario
@@ -68,6 +69,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         // Continúa con el siguiente filtro en la cadena de filtros
         filterChain.doFilter(request, response);
     }
+
 
     // Método para obtener el token JWT del encabezado de la solicitud
     private String getTokenFromRequest(HttpServletRequest request) {

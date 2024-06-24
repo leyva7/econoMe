@@ -56,8 +56,8 @@ export default {
         saveToastMessage('success', 'Inicio de sesión exitoso');
         router.push({ name: 'home', query: { id: accountingData.data.id } });
       } catch (error) {
-        console.error("Error en el inicio de sesión:", error);
-        alert(error.response.data); // Muestra el mensaje de error en caso de fallo de autenticación
+        saveToastMessage('error', 'Nombre de usuario o contraseña incorrecta') // Muestra el mensaje de error en caso de fallo de autenticación
+        location.reload();
       }
     };
 

@@ -32,6 +32,7 @@
             placeholder="Escriba su opción"
             v-model="customOption"
             class="form-control"
+            autocomplete="off"
         />
       </div>
       <div class="mb-3">
@@ -207,7 +208,6 @@ export default defineComponent({
         updateVisibility(false);
         location.reload();
       } catch (error) {
-        console.error('Error al registrar operación:', error);
         saveToastMessage('error', 'Algo falló en la operación. Por favor inténtelo de nuevo');
       }
     };

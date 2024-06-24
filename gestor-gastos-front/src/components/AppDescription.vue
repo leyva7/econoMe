@@ -41,16 +41,6 @@ export default {
 /* Importación de la librería de iconos FontAwesome */
 @import url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css');
 
-/* Variables CSS para mantener consistencia en colores */
-:root {
-  --main-text-color: #2c3e50;
-  --secondary-text-color: #34495e;
-  --card-background: #ecf0f1;
-  --card-border: #bdc3c7;
-  --button-bg-color: var(--pickled-bluewood-600);
-  --button-hover-bg-color: var(--pickled-bluewood-700);
-}
-
 /* Estilos del contenedor principal */
 .product-description {
   text-align: center;

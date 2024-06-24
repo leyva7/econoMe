@@ -5,7 +5,7 @@ import router from "@/router";
 import { changePassword, fetchUserDetails, registerUser, updateUserDetails } from "@/api/userAPI";
 
 // Importación de funciones de utilidad global y servicios
-import { navigate, navigateHome } from "@/utils/global";
+import {navigate, navigateHome} from "@/utils/global";
 import { callAPI } from "@/service/service";
 import { saveToastMessage } from "@/utils/toastService";
 
@@ -66,7 +66,7 @@ export async function submitPasswordChange(userPassword) {
 }
 
 // Función para registrar un nuevo usuario
-export async function submitRegisterUser(user, submitted, formRef, usernameError) {
+export async function submitRegisterUser(user, submitted, formRef) {
     // Verifica si el formulario es válido antes de registrar al usuario
     if (formRef.value.checkValidity()) {
         const registrationData = {
@@ -78,24 +78,20 @@ export async function submitRegisterUser(user, submitted, formRef, usernameError
             }
         };
 
+        const successCallback = () => {
+            saveToastMessage('success', 'Usuario registrado exitosamente'); // Muestra un mensaje de éxito
+            navigate('/'); // Navega de regreso a la página de inicio del usuario
+        };
+
         // Llama a la API para registrar al usuario junto con la contabilidad personal
         await callAPI(
             registrationData, // Datos completos para el registro
             registerUser, // Función de la API para registrar usuarios
             'Hubo un error al registrar el usuario.', // Mensaje de error si falla la llamada
-            'Usuario y contabilidad registrados exitosamente.', // Mensaje de éxito (no se muestra aquí)
-            () => navigate('/'), // Función a ejecutar si la llamada tiene éxito
+            null, // Mensaje de éxito (no se muestra aquí)
+            successCallback, // Función a ejecutar si la llamada tiene éxito
             null // No se asigna ningún objeto en este caso
-        ).catch(error => {
-            submitted.value = false; // Marca el estado como no enviado
-            // Verifica si hay un error específico relacionado con el nombre de usuario
-            if (error.response.data && error.response.data.error.includes('nombre de usuario')) {
-                usernameError.value = 'Este nombre de usuario ya está registrado.'; // Establece el mensaje de error
-                const usernameInput = formRef.value.querySelector('#username');
-                usernameInput.classList.remove('is-valid'); // Remueve las clases de validación
-                usernameInput.classList.add('is-invalid'); // Agrega la clase de invalidación
-            }
-        });
+        );
     } else {
         submitted.value = true; // Marca el formulario como enviado
     }

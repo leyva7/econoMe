@@ -89,7 +89,7 @@ export default defineComponent({
           name: accountName.value,
           description: description.value,
           type: currentAccounting.value.type,
-          userCreator: currentAccounting.value.userCreator
+          userCreator: localStorage.getItem('username')
         };
 
         // Actualizar contabilidad
@@ -103,7 +103,6 @@ export default defineComponent({
       } catch (error) {
         console.error('Error al actualizar la contabilidad:', error);
         saveToastMessage('error', 'Error al actualizar la contabilidad');
-        location.reload();
       }
     };
 

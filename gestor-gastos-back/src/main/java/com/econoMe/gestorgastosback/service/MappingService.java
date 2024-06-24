@@ -38,7 +38,7 @@ public class MappingService {
         accountingDto.setName(accounting.getName());
         accountingDto.setDescription(accounting.getDescription());
         accountingDto.setType(accounting.getType());
-        accountingDto.setUserCreator(accounting.getUserCreator().getName());
+        accountingDto.setUserCreator(accounting.getUserCreator().getUsername());
         return accountingDto;
     }
 

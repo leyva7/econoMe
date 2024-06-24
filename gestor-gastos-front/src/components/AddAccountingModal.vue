@@ -9,11 +9,11 @@
     <form @submit.prevent="submitSharedAccounting" class="modal-body">
       <div class="mb-3">
         <label for="accountName" class="form-label">Nombre de contabilidad</label>
-        <input type="text" id="accountName" v-model="accountName" class="form-control">
+        <input type="text" id="accountName" v-model="accountName" class="form-control" autocomplete="off">
       </div>
       <div class="mb-3">
         <label for="description" class="form-label">Descripción</label>
-        <textarea id="description" v-model="description" class="form-control"></textarea>
+        <textarea id="description" v-model="description" class="form-control" autocomplete="off"></textarea>
       </div>
       <!-- Pie del modal con botones -->
       <div class="modal-footer">
@@ -27,7 +27,8 @@
 <script>
 import ModalWindow from './ModalWindow.vue'; // Importar componente ModalWindow
 import {ref, defineComponent} from 'vue';
-import {createAccounting} from "@/api/accountingAPI"; // Importar API de creación
+import {createAccounting} from "@/api/accountingAPI";
+import {saveToastMessage} from "@/utils/toastService"; // Importar API de creación
 
 export default defineComponent({
   components: {
@@ -66,12 +67,11 @@ export default defineComponent({
 
       try {
         await createAccounting(accountingData);
-        alert("Contabilidad añadida con éxito");
+        saveToastMessage('success', 'Contabilidad añadida con éxito');
         updateVisibility(false);
         location.reload();
       } catch (error) {
-        console.error('Error al añadir contabilidad:', error);
-        alert('Ocurrió un error al añadir la contabilidad. Por favor, inténtalo de nuevo.');
+        saveToastMessage('error', 'Ocurrió un error al añadir la contabilidad. Por favor, inténtalo de nuevo.');
       }
     };
 

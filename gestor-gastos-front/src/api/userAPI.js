@@ -27,5 +27,6 @@ export const updateUserDetails = async (userDetails) => {
 
 // Función para obtener los detalles del usuario
 export const fetchUserDetails = async () => {
+    console.log(getAuthHeaders());
     return await axios.get(`${USER_API_URL}/details`, { headers: getAuthHeaders() }); // Solicitud GET para obtener los detalles del usuario, con encabezados de autenticación
 };

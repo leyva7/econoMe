@@ -31,15 +31,17 @@ public class JwtService {
     private static final String SECRET_KEY = "+66jHCLihGgchsGQ5QBnwRC0rCVzzR0R16xaXn4BL3Y=";
 
     // Método para generar un token JWT
-    public String getToken(UserDetails user) {
-        return getToken(new HashMap<>(), user);
+    public String getToken(UserDetails user, Long userId) {
+        Map<String, Object> claims = new HashMap<>();
+        claims.put("username", user.getUsername()); // Añadir el nombre de usuario como una reclamación adicional
+        return getToken(claims, userId);
     }
 
     // Método privado para generar un token JWT con reclamaciones adicionales
-    private String getToken(Map<String, Object> extraClaims, UserDetails user) {
+    private String getToken(Map<String, Object> extraClaims, Long userId) {
         return Jwts.builder()
                 .setClaims(extraClaims) // Establece las reclamaciones personalizadas
-                .setSubject(user.getUsername()) // Establece el nombre de usuario como sujeto del token
+                .setSubject(String.valueOf(userId)) // Establece el ID del usuario como sujeto del token
                 .setIssuedAt(new Date(System.currentTimeMillis())) // Establece la fecha de emisión del token
                 .setExpiration(new Date(System.currentTimeMillis() + 1000 * 60 * 60)) // Establece la fecha de expiración del token (1 hora)
                 .signWith(getKey(), SignatureAlgorithm.HS256) // Firma el token con el algoritmo HMAC SHA-256
@@ -72,10 +74,14 @@ public class JwtService {
         return getClaim(token, Claims::getSubject); // Obtiene el sujeto (nombre de usuario) del token
     }
 
+    public String getUserIdFromToken(String token) {
+        return getClaim(token, Claims::getSubject); // Obtiene el sujeto (ID del usuario) del token
+    }
+
     // Método para verificar si un token JWT es válido para un UserDetails dado
     public boolean isTokenValid(String token, UserDetails userDetails) {
-        final String username = getUsernameFromToken(token); // Obtiene el nombre de usuario del token
-        return (username.equals(userDetails.getUsername()) && !isTokenExpired(token)); // Verifica si el nombre de usuario coincide y el token no ha expirado
+        User user = getUserFromToken(token); // Obtiene el usuario desde el token
+        return (user.getUsername().equals(userDetails.getUsername()) && !isTokenExpired(token)); // Verifica si el nombre de usuario coincide y el token no ha expirado
     }
 
     // Método privado para obtener la fecha de expiración de un token JWT
@@ -88,10 +94,9 @@ public class JwtService {
         return getExpiration(token).before(new Date()); // Verifica si la fecha de expiración del token es anterior a la fecha actual
     }
 
-    // Método para obtener el usuario asociado a un token JWT
     public User getUserFromToken(String token) {
-        String username = getUsernameFromToken(token); // Obtiene el nombre de usuario desde el token
-        return userRepository.findByUsername(username) // Busca al usuario en el repositorio por su nombre de usuario
+        Long userId = Long.parseLong(getUserIdFromToken(token)); // Obtiene el ID del usuario desde el token
+        return userRepository.findById(userId) // Busca al usuario en el repositorio por su ID
                 .orElseThrow(() -> new UserException("Usuario no encontrado")); // Lanza una excepción si el usuario no es encontrado
     }
 

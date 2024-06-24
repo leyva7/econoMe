@@ -44,7 +44,7 @@
 <script>
 import ModalWindow from './ModalWindow.vue';
 import { computed, defineComponent, toRefs } from 'vue';
-import { determineInitialType, formatAsYYYYMMDD } from "@/utils/functions";
+import { formatAsYYYYMMDD } from "@/utils/functions";
 
 export default defineComponent({
   components: {
@@ -70,6 +70,13 @@ export default defineComponent({
     const updateVisibility = (value) => {
       emit('update:isVisible', value); // Emite el evento 'update:isVisible' con el nuevo valor de visibilidad
     };
+
+    function determineInitialType() {
+      if (props.operationToShow) {
+        return props.operationToShow.type === 'INCOME' ? 'Ingreso' : 'Gasto';
+      }
+      return '';
+    }
 
     // Propiedades computadas para mostrar el tipo y fecha de manera formateada
     const computedType = computed(() => determineInitialType(operationToShow.value.type));

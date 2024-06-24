@@ -49,7 +49,7 @@ public class AuthServiceTest {
         when(userRepository.findByUsername("user")).thenReturn(Optional.of(user));
 
         // Simulación del servicio JWT para devolver un token ficticio
-        when(jwtService.getToken(any(UserDetails.class))).thenReturn("token");
+        when(jwtService.getToken(any(UserDetails.class), anyLong())).thenReturn("token");
 
         // Simulación del administrador de autenticación para que no lance excepciones
         when(authenticationManager.authenticate(any(Authentication.class))).thenReturn(null);
@@ -64,7 +64,7 @@ public class AuthServiceTest {
 
         // Verificaciones para confirmar interacciones con los mocks
         verify(userRepository).findByUsername("user");
-        verify(jwtService).getToken(any(UserDetails.class));
+        verify(jwtService).getToken(any(UserDetails.class), any(Long.class));
         verify(authenticationManager).authenticate(any(UsernamePasswordAuthenticationToken.class));
     }
 

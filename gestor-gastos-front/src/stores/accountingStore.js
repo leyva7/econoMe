@@ -48,7 +48,7 @@ export const useAccountingStore = () => {
             }
             return response.data; // Devuelve los datos obtenidos
         } catch (error) {
-            console.error(errorHandler || `Hubo un error al obtener los datos de: ${endpointFunction.name}`, error);
+            errorHandler.toString();
             if (targetRef) {
                 targetRef.value = []; // Limpia el targetRef en caso de error
             }

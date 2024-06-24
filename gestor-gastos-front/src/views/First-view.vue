@@ -15,7 +15,10 @@
 
 <script>
 import AppDescription from '../components/AppDescription.vue'; // Importa el componente AppDescription
-import UserLogin from '../components/UserLogin.vue'; // Importa el componente UserLogin
+import UserLogin from '../components/UserLogin.vue';
+import {onMounted} from "vue";
+import { useToast } from "vue-toast-notification";
+import {showToastFromStorage} from "@/utils/toastService"; // Importa el componente UserLogin
 
 export default {
   name: 'App', // Nombre del componente
@@ -23,5 +26,12 @@ export default {
     AppDescription, // Registra el componente AppDescription
     UserLogin, // Registra el componente UserLogin
   },
+  setup(){
+    const toast = useToast();
+
+    onMounted(async () => {
+      showToastFromStorage(toast); // Muestra mensajes de tostadas almacenados en el localStorage
+    });
+  }
 };
 </script>

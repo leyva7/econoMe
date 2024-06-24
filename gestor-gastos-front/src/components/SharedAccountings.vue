@@ -191,6 +191,9 @@ export default {
     const calculateIsUserCreator = () => {
       const sharedAccounting = sharedAccountings.value.find(accounting => accounting.id === Number(accountingId.value));
       isUserCreator.value = sharedAccounting ? sharedAccounting.userCreator === localStorage.getItem('username') : false;
+      console.log(sharedAccounting);
+      console.log(sharedAccounting.userCreator);
+      console.log(localStorage.getItem('username'));
     };
 
     // Función para eliminar la contabilidad
@@ -209,7 +212,7 @@ export default {
             }, 100); // Puedes ajustar este tiempo si es necesario
           });
         } catch (error) {
-          console.error("Error al eliminar la contabilidad:", error); // Muestra un error en la consola si hay problemas
+          saveToastMessage('error', 'Ocurrió un error al eliminar la contabilidad'); // Muestra un mensaje de éxito
         }
       }
     };

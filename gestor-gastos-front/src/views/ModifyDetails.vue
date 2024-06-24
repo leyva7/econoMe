@@ -53,7 +53,9 @@
 <script>
 import { reactive, ref, onMounted } from 'vue';
 import { loadUserData, submitUserDataChanges } from "@/service/userService"; // Importa funciones de servicio
-import { home } from "@/utils/global"; // Importa función home desde utilidades globales
+import { home } from "@/utils/global";
+import { useToast } from "vue-toast-notification";
+import {showToastFromStorage} from "@/utils/toastService"; // Importa función home desde utilidades globales
 
 export default {
   name: 'UserForm',
@@ -65,6 +67,8 @@ export default {
       mail: '',
     });
 
+    const toast = useToast();
+
     const isEditMode = ref(false); // Referencia reactiva para controlar el modo de edición
 
     const enableEdit = () => { // Función para alternar el modo de edición
@@ -73,6 +77,7 @@ export default {
 
     onMounted(async () => { // Hook para cargar los datos del usuario al montar el componente
       await loadUserData(user);
+      showToastFromStorage(toast); // Muestra mensajes de tostadas almacenados en el localStorage
     });
 
     const submitted = ref(false); // Estado para verificar si el formulario ha sido enviado

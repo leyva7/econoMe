@@ -128,7 +128,7 @@ import { useAccountingStore } from '@/stores/accountingStore.js';
 import { fetchFilteredOperations, deleteOperation as deleteOperationApi } from '@/api/operationAPI'
 import { isModalOpen, isNewModalOpen, toggleModal, operationToEdit, operationToShow, editOperation, showOperation} from "@/utils/modal";
 import { useMultiplePagination } from "@/utils/usePagination";
-import {addEuroSymbol} from "../utils/functions";
+import {addEuroSymbol} from "@/utils/functions";
 import {saveToastMessage} from "@/utils/toastService";
 
 export default {

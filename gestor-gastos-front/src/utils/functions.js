@@ -26,11 +26,21 @@ export function formatDateToDDMMYYYY(date) {
  */
 export function formatAsYYYYMMDD(date) {
     if (!date) return null; // Retorna null si date no está definido
-    const d = new Date(date); // Crea un objeto Date a partir del parámetro date
-    const month = `${d.getMonth() + 1}`.padStart(2, '0'); // Obtiene el mes con dos dígitos (0-11)
-    const day = `${d.getDate()}`.padStart(2, '0'); // Obtiene el día del mes con dos dígitos
-    return `${d.getFullYear()}-${month}-${day}`; // Retorna la fecha formateada como 'YYYY-MM-DD'
+
+    // Divide la fecha en día, mes y año
+    const [day, month, year] = date.split('-');
+
+    // Crea un nuevo objeto Date usando los componentes
+    const d = new Date(year, month - 1, day); // El mes en JavaScript es 0-indexado
+
+    // Formatea los componentes de la fecha
+    const formattedMonth = `${d.getMonth() + 1}`.padStart(2, '0'); // Obtiene el mes con dos dígitos
+    const formattedDay = `${d.getDate()}`.padStart(2, '0'); // Obtiene el día del mes con dos dígitos
+
+    // Retorna la fecha formateada como 'YYYY-MM-DD'
+    return `${d.getFullYear()}-${formattedMonth}-${formattedDay}`;
 }
+
 
 /**
  * Función para convertir una cadena de fecha en formato DD-MM-YYYY a un objeto Date.
@@ -267,16 +277,3 @@ export function addEuroSymbol(value) {
         return value; // Retorna el valor original si no es un número válido
     }
 }
-
-/**
- * Función para determinar el tipo inicial de una operación ('Ingreso' o 'Gasto').
- * @param {object|null} operationToEdit - Operación a editar, si existe.
- * @returns {string} - Tipo inicial de la operación ('Ingreso' o 'Gasto') o una cadena vacía si no se proporciona operationToEdit.
- */
-export function determineInitialType(operationToEdit) {
-    if (operationToEdit) {
-        return operationToEdit.type === 'INCOME' ? 'Ingreso' : 'Gasto'; // Retorna 'Ingreso' si type es 'INCOME', 'Gasto' si es 'SPENT'
-    }
-    return ''; // Retorna una cadena vacía si operationToEdit no está definido
-}
-

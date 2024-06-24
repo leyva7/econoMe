@@ -1,3 +1,45 @@
+<template>
+  <!-- Modal principal -->
+  <div class="modal fade" :class="{ show: isVisible }" tabindex="-1" role="dialog" style="display: block;" aria-hidden="true" v-if="isVisible">
+    <div class="modal-dialog modal-dialog-centered" role="document">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h5 class="modal-title">Gestionar usuarios</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" @click="closeModal(false)"></button>
+        </div>
+        <div class="modal-body">
+          <section class="add-user mb-3">
+            <h3>Agregar Usuario</h3>
+            <form @submit.prevent="addUser" class="mb-3">
+              <div class="mb-3">
+                <input v-model="newUserName" placeholder="Nombre de usuario" required class="form-control">
+              </div>
+              <div class="mb-3">
+                <select v-model="newUserRole" class="form-select">
+                  <option value="EDITOR">Editor</option>
+                  <option value="VISUALIZER">Visualizador</option>
+                </select>
+              </div>
+              <button type="submit" class="btn btn-primary w-100">Agregar</button>
+            </form>
+          </section>
+          <section class="user-list">
+            <h3>Usuarios Actuales</h3>
+            <div v-for="(user) in usersAccounting" :key="user.id" class="form-check">
+              <input class="form-check-input" type="checkbox" :value="user.username" v-model="selectedUsers">
+              <label class="form-check-label" for="user.username">
+                {{ user.username }}
+              </label>
+            </div>
+            <button class="btn btn-danger w-100 mt-3" @click="removeSelectedUsers">Eliminar seleccionados</button>
+          </section>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="modal-backdrop fade" :class="{ show: isVisible }" v-if="isVisible"></div>
+</template>
+
 <script>
 import { onMounted, ref } from 'vue'; // Importa las funciones 'onMounted' y 'ref' de Vue
 import { useAccountingStore } from "@/stores/accountingStore"; // Importa el hook 'useAccountingStore' desde el store accountingStore

@@ -11,6 +11,13 @@
     --pickled-bluewood-800: #2f475d;
     --pickled-bluewood-900: #2c3e50;
     --pickled-bluewood-950: #1d2834;
+
+    --main-text-color: #2c3e50;
+    --secondary-text-color: #34495e;
+    --card-background: #ecf0f1;
+    --card-border: #bdc3c7;
+    --button-bg-color: var(--pickled-bluewood-600);
+    --button-hover-bg-color: var(--pickled-bluewood-700);
 }
 
 /* Fondo azul personalizado para diferentes tonos */

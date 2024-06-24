@@ -1,16 +1,16 @@
 // Importación del router para navegar entre vistas
 import router from "@/router";
+import {saveToastMessage} from "@/utils/toastService";
 
 // Función para manejar errores
 export function handleError(error, errorMessage = 'Ocurrió un error. Por favor, inténtalo de nuevo.') {
     if (error.response) { // Si hay una respuesta del servidor
         if (error.response.status === 401) { // Si el estado de la respuesta es 401 (Unauthorized)
-            console.error("Sesión expirada. Por favor, inicia sesión de nuevo.", error);
-            alert("Sesión expirada. Por favor, inicia sesión de nuevo.");
+            saveToastMessage('warning',"Sesión expirada. Por favor, inicia sesión de nuevo.");
             router.push({ name: 'login' }); // Redirige al usuario a la página de inicio de sesión
         } else if (error.response.data && error.response.data.error) { // Si hay un mensaje de error en los datos de la respuesta
-            console.error("Error:", error);
-            alert(`Ocurrió un error: ${error.response.data.error}`);
+            saveToastMessage('error',`${error.response.data.error}`);
+            location.reload();
             throw error; // Lanza el error para manejo adicional si es necesario
         } else { // Si hay una respuesta pero no se maneja específicamente
             console.error("Error:", error);
@@ -30,7 +30,7 @@ export async function callAPI(callArgument, call, errorMessage, successMessage, 
             Object.assign(assigneeObject, response.data); // Asigna los datos de respuesta a un objeto si se proporciona
         }
         if (successMessage) {
-            alert(successMessage); // Muestra un mensaje de éxito si se proporciona
+            saveToastMessage('success', successMessage); // Muestra un mensaje de éxito si se proporciona
         }
         if (successCallback) {
             successCallback(response.data); // Ejecuta una función de éxito si se proporciona, pasando los datos de respuesta
