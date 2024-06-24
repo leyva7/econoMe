@@ -18,4 +18,5 @@ public interface OperationsRepository extends JpaRepository<Operations, Long> {
     List<Operations> findByUserAndAccounting(User user, Accounting accounting); // Buscar operaciones por User y Accounting
     List<Operations> findByAccountingAndType(Accounting accounting, OperationType type); // Buscar operaciones por Accounting y Type
     void deleteByAccounting(Accounting accounting); // Eliminar operaciones por Accounting
+    void deleteByUser(User user);
 }

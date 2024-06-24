@@ -126,13 +126,27 @@ import OperationInfoModal from "@/components/OperationInfoModal.vue";
 import { ref, watch, reactive, onMounted } from 'vue';
 import { useAccountingStore } from '@/stores/accountingStore.js';
 import { fetchFilteredOperations, deleteOperation as deleteOperationApi } from '@/api/operationAPI'
-import { isModalOpen, isNewModalOpen, toggleModal, operationToEdit, operationToShow, editOperation, showOperation} from "@/utils/modal";
+import {
+  isModalOpen,
+  isNewModalOpen,
+  toggleModal,
+  operationToEdit,
+  operationToShow,
+  editOperation,
+  showOperation,
+  modalContentType
+} from "@/utils/modal";
 import { useMultiplePagination } from "@/utils/usePagination";
 import {addEuroSymbol} from "@/utils/functions";
 import {saveToastMessage} from "@/utils/toastService";
 
 export default {
   name: 'OperationDetails',
+  computed: {
+    modalContentType() {
+      return modalContentType
+    }
+  },
   methods: { addEuroSymbol },
   components: {
     AddOperationModal,

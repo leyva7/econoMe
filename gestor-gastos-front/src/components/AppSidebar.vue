@@ -33,7 +33,9 @@
     <div class="shared-accountings mt-4 color-white-less">
       <span class="text-white">Contabilidades Compartidas</span>
       <!-- Botón para añadir una nueva contabilidad compartida -->
-      <button @click="emitOpenModal('addAccounting')" class="btn btn-outline-light mt-2">Añadir Contabilidad</button>
+      <button v-if="activePath !== '/home-user/operation'" @click="emitOpenModal('addAccounting')" class="btn btn-outline-light mt-2">
+        Añadir Contabilidad
+      </button>
       <!-- Lista de contabilidades compartidas, cada una es un enlace clickeable -->
       <ul class="list-unstyled mt-3">
         <li v-for="(accounting, index) in sharedAccountings" :key="index" @click.prevent="navigateToAccounting(accounting)" class="mb-2 cursor-pointer clickable-item">
@@ -48,9 +50,15 @@
 import { defineComponent, ref, watch, watchEffect } from 'vue';
 import { useRoute } from 'vue-router';
 import { navigate, navigateHome, navigateToAccounting } from "@/utils/global";
+import router from "@/router";
 
 export default defineComponent({
   name: 'AppSidebar',
+  methods: {
+    router() {
+      return router
+    }
+  },
   props: {
     sharedAccountings: Array,
   },

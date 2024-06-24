@@ -191,9 +191,6 @@ export default {
     const calculateIsUserCreator = () => {
       const sharedAccounting = sharedAccountings.value.find(accounting => accounting.id === Number(accountingId.value));
       isUserCreator.value = sharedAccounting ? sharedAccounting.userCreator === localStorage.getItem('username') : false;
-      console.log(sharedAccounting);
-      console.log(sharedAccounting.userCreator);
-      console.log(localStorage.getItem('username'));
     };
 
     // Función para eliminar la contabilidad

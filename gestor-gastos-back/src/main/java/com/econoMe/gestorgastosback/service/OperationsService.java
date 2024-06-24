@@ -253,5 +253,10 @@ public class OperationsService {
         operationsRepository.deleteByAccounting(accounting);
     }
 
+    // Eliminar operaciones por usuario
+    public void deleteByUser(User user) {
+        operationsRepository.deleteByUser(user);
+    }
+
 }
 

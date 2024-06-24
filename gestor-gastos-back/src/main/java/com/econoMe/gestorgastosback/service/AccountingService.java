@@ -5,6 +5,7 @@ import com.econoMe.gestorgastosback.common.Type;
 import com.econoMe.gestorgastosback.exception.AccountingException;
 import com.econoMe.gestorgastosback.model.Accounting;
 import com.econoMe.gestorgastosback.model.Roles;
+import com.econoMe.gestorgastosback.model.RolesId;
 import com.econoMe.gestorgastosback.model.User;
 import com.econoMe.gestorgastosback.repository.AccountingRepository;
 
@@ -103,6 +104,15 @@ public class AccountingService {
         } else {
             throw new AccountingException("El usuario " + userCreator.getUsername() + " no es el creador de la contabilidad " + accounting.getId());
         }
+    }
+
+    // Método para eliminar un usuario de una contabilidad compartida
+    @Transactional
+    public void deleteUserOfAccounting(Long id, User user) {
+        // Verifica si la contabilidad existe
+        Accounting accounting = findAccountingById(id);
+        operationsService.deleteByUser(user);
+        rolesService.deleteRole(new RolesId(user.getId(), id));
     }
 
     // Método para eliminar una contabilidad

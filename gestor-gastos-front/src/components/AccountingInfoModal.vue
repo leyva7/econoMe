@@ -9,11 +9,11 @@
     <form class="modal-body" @submit.prevent="isEditing ? updateAccount() : updateVisibility(false)">
       <div class="mb-3">
         <label for="accountName" class="form-label">Nombre de contabilidad</label>
-        <input type="text" id="accountName" v-model="accountName" class="form-control" :disabled="!isEditing">
+        <input type="text" id="accountName" v-model="accountName" class="form-control" :disabled="!isEditing" autocomplete="off">
       </div>
       <div class="mb-3">
         <label for="description" class="form-label">Descripción</label>
-        <textarea id="description" v-model="description" class="form-control" :disabled="!isEditing"></textarea>
+        <textarea id="description" v-model="description" class="form-control" :disabled="!isEditing" autocomplete="off"></textarea>
       </div>
       <!-- Pie del modal con botones -->
       <div class="modal-footer">

@@ -25,7 +25,7 @@
           </section>
           <section class="user-list">
             <h3>Usuarios Actuales</h3>
-            <div v-for="(user) in usersAccounting" :key="user.id" class="form-check">
+            <div v-for="(user) in filteredUsersAccounting" :key="user.id" class="form-check bg-custom-blue-200 rounded">
               <input class="form-check-input" type="checkbox" :value="user.username" v-model="selectedUsers">
               <label class="form-check-label" for="user.username">
                 {{ user.username }}
@@ -41,7 +41,7 @@
 </template>
 
 <script>
-import { onMounted, ref } from 'vue'; // Importa las funciones 'onMounted' y 'ref' de Vue
+import {computed, onMounted, ref} from 'vue'; // Importa las funciones 'onMounted' y 'ref' de Vue
 import { useAccountingStore } from "@/stores/accountingStore"; // Importa el hook 'useAccountingStore' desde el store accountingStore
 import { addUser as addUserApi, deleteUserAccounting } from "@/api/userRoleAPI"; // Importa funciones específicas para añadir usuario y eliminar usuario desde userRoleAPI
 import { saveToastMessage } from "@/utils/toastService"; // Importa la función 'saveToastMessage' desde toastService
@@ -63,6 +63,15 @@ export default {
     // Método ejecutado al montar el componente
     onMounted(async () => {
       await fetchUsersAccountingAsync(accountingId.value); // Carga inicial de usuarios de la contabilidad al montar el componente
+    });
+
+    // Computed property para obtener la lista de usuarios filtrada
+    const filteredUsersAccounting = computed(() => {
+      const currentUsername = localStorage.getItem('username');
+      if (Array.isArray(usersAccounting.value)) {
+        return usersAccounting.value.filter(user => user.username !== currentUsername);
+      }
+      return [];
     });
 
     // Cierra el modal emitiento un evento para actualizar la visibilidad
@@ -101,7 +110,6 @@ export default {
         location.reload(); // Recarga la página para reflejar los cambios
         closeModal(); // Cierra el modal
       } catch (error) {
-        console.error('Error al añadir usuario:', error); // Manejo de errores al añadir usuario
         saveToastMessage('error', 'Ocurrión un error al añadir el usuario'); // Muestra un mensaje de error
       }
       newUserName.value = ''; // Limpia el campo del nombre del nuevo usuario después de añadirlo
@@ -110,6 +118,7 @@ export default {
     // Retorna todas las variables y métodos que deben estar disponibles en el template del componente
     return {
       usersAccounting,
+      filteredUsersAccounting,
       newUserName,
       newUserRole,
       selectedUsers,

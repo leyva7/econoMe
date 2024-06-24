@@ -27,17 +27,17 @@
           <!-- Campo de nombre -->
           <div class="mb-3">
             <label for="name" class="form-label">Nombre</label>
-            <input type="text" class="form-control" id="name" v-model.trim="user.name" :disabled="!isEditMode">
+            <input type="text" class="form-control" id="name" v-model.trim="user.name" :disabled="!isEditMode" autocomplete="off">
           </div>
           <!-- Campo de apellidos -->
           <div class="mb-3">
             <label for="surname" class="form-label">Apellidos</label>
-            <input type="text" class="form-control" id="surname" v-model.trim="user.surname" :disabled="!isEditMode">
+            <input type="text" class="form-control" id="surname" v-model.trim="user.surname" :disabled="!isEditMode" autocomplete="off">
           </div>
           <!-- Campo de correo electrónico -->
           <div class="mb-3">
             <label for="mail" class="form-label">Correo Electrónico</label>
-            <input type="email" class="form-control" id="mail" v-model.trim="user.mail" :disabled="!isEditMode">
+            <input type="email" class="form-control" id="mail" v-model.trim="user.mail" :disabled="!isEditMode" autocomplete="off">
           </div>
           <!-- Botones de acción (Editar/Guardar o Cancelar/Cerrar) -->
           <div class="text-end">

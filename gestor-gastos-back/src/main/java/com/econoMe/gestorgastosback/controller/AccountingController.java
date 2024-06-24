@@ -302,7 +302,7 @@ public class AccountingController {
     public ResponseEntity<?> deleteUser(@PathVariable Long id, @RequestBody Map<String, String> body) {
         String username = body.get("username");
         User user = userService.getUserByUsername(username);
-        rolesService.deleteRole(new RolesId(user.getId(), id));
+        accountingService.deleteUserOfAccounting(id, user);
         return ResponseEntity.ok().build();
     }
 

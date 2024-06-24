@@ -14,7 +14,7 @@
       <TopBar/>
       <div class="dynamic-content p-3 overflow-auto position-relative">
         <!-- Botón para abrir el modal de información de contabilidad -->
-        <button @click="openModal('infoAccounting')" class="btn button-custom position-absolute top-0 end-0 mt-3 me-3">
+        <button v-if="isUserCreator" @click="openModal('infoAccounting')" class="btn button-custom position-absolute top-0 end-0 mt-3 me-3">
           <i class="fa-solid fa-circle-info me-2"></i>Información
         </button>
         <!-- Componente de ruta dinámica -->
@@ -51,6 +51,7 @@ export default {
     const toast = useToast();
     const router = useRouter();
     const shouldShowAddButton = ref(false);
+    const isUserCreator = ref(false);
 
     // Actualiza el estado de shouldShowAddButton basado en la ruta y el rol del usuario
     const updateShouldShowAddButton = async () => {
@@ -62,6 +63,7 @@ export default {
       await loadAccountings();
       await fetchUserRoleAsync(accountingId.value);
       await updateShouldShowAddButton();
+      calculateIsUserCreator();
       showToastFromStorage(toast); // Muestra mensajes de tostadas almacenados en el localStorage
     });
 
@@ -69,14 +71,22 @@ export default {
     watch(() => router.currentRoute.value.name, async () => {
       await fetchUserRoleAsync(accountingId.value);
       await updateShouldShowAddButton();
+      calculateIsUserCreator();
     });
+
+    // Calcula si el usuario actual es el creador de la contabilidad
+    const calculateIsUserCreator = () => {
+      const currentAccounting = accountings.value.find(accounting => accounting.id === Number(accountingId.value));
+      isUserCreator.value = currentAccounting ? currentAccounting.userCreator === localStorage.getItem('username') : false;
+    };
 
     return {
       userRole, fetchUserRoleAsync,
       categories, fetchCategories,
       sharedAccountings, accountings,
       handleOpenModal, isModalOpen, modalContentType, openModal, toggleModal,
-      shouldShowAddButton, router
+      shouldShowAddButton, router,
+      isUserCreator
     };
   },
 };
