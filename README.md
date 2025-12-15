@@ -157,4 +157,5 @@ The full written report for this project is available in the repository root as:
 
 - **`TFG Jesus Leyva Fernandez.pdf`** – complete documentation of the system (requirements, design, implementation, and evaluation).
 
+It also includes the **demo of the application** (screens, main flows, and examples of use).  
 You can open it directly from your IDE or file explorer, or view/download it from the repository hosting service (e.g. GitHub) where it will appear alongside this `README.md`.
